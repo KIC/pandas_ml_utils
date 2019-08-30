@@ -27,3 +27,8 @@ def drop_re(df, *args: str):
 
     return df.drop(drop_list, axis=1)
 
+
+def extend_forecast(df, periods):
+    df_ext = pd.DataFrame(index=pd.date_range(df.index[-1], periods=periods, closed='right'))
+    return pd.concat([df, df_ext], axis=0, sort=True)
+
