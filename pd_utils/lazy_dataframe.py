@@ -9,12 +9,25 @@ class LazyDataFrame(object):
         self.kwargs = kwargs
 
     def __getitem__(self, item: str):
-        if item in self.df:
-            return self.df[item]
-        elif item in self.kwargs:
-            return self.kwargs[item](self.df)
+        if isinstance(item, list):
+            df = self.df[[value for value in item if value in self.df.columns]]
+            for key in item:
+                if key in self.kwargs:
+                    res = self.kwargs[key](self.df)
+                    if isinstance(res, pd.Series):
+                        res.name = key
+                        df = df.join(res)
+                    elif isinstance(res, pd.DataFrame):
+                        df = df.join(res.add_prefix(f'{key}_'))
+
+            return df
         else:
-            raise ValueError(f"invalid item {item}")
+            if item in self.df:
+                return self.df[item]
+            elif item in self.kwargs:
+                return self.kwargs[item](self.df)
+            else:
+                raise ValueError(f"invalid item {item}")
 
     def __setitem__(self, key: str, value: Callable[[pd.DataFrame], Union[pd.DataFrame, pd.Series]]):
         if callable(value):
