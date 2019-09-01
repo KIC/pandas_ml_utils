@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from typing import Dict, Union, Callable, List, Iterable
+from .training_test_data import TrainTestData
 
 
 def add_apply(df, **kwargs: Callable[[pd.DataFrame], Union[pd.Series, pd.DataFrame]]):
@@ -72,6 +73,6 @@ def make_training_data(df: pd.DataFrame,
         train_test_split(x, y, test_size=test_size, random_state=seed) if test_size > 0 else (x, None, y, None)
 
     if len(labels) == 1:
-        return x_train, x_test, y_train.ravel(), y_test.ravel(), names
+        return TrainTestData(x_train, x_test, y_train.ravel(), y_test.ravel(), names)
     else:
-        return x_train, x_test, y_train, y_test, names
+        return TrainTestData(x_train, x_test, y_train, y_test, names)

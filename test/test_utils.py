@@ -15,7 +15,7 @@ class TestUtils(unittest.TestCase):
         x_train, x_test, y_train, y_test, _ = df.make_training_data(features=["featureA", "featureB"],
                                                                     labels=["labelA"],
                                                                     test_size=0.5,
-                                                                    feature_lags=None)
+                                                                    feature_lags=None).values()
 
         np.testing.assert_array_almost_equal(x_test, np.array([[2, 4], [5, 1], [3, 3]]))
         np.testing.assert_array_almost_equal(y_test, np.array([2, 5, 3]))
@@ -29,7 +29,7 @@ class TestUtils(unittest.TestCase):
         x_train, x_test, y_train, y_test, _ = df.make_training_data(features=["featureA", "featureB"],
                                                                     labels=["labelA", "labelB"],
                                                                     test_size=0.5,
-                                                                    feature_lags=None)
+                                                                    feature_lags=None).values()
 
         np.testing.assert_array_almost_equal(x_test, np.array([[2, 4], [5, 1], [3, 3]]))
         np.testing.assert_array_almost_equal(y_test, np.array([[2, 4], [5, 1], [3, 3]]))
@@ -43,7 +43,7 @@ class TestUtils(unittest.TestCase):
         x_train, x_test, y_train, y_test, names = df.make_training_data(features=["featureA", "featureB"],
                                                                         labels=["labelA"],
                                                                         test_size=0.5,
-                                                                        feature_lags=[0, 1])
+                                                                        feature_lags=[0, 1]).values()
 
         # test whole shape and labels
         np.testing.assert_array_almost_equal(x_test, np.array([[[3, 3], [2, 4]], [[5, 1], [4, 2]]]))
@@ -67,7 +67,7 @@ class TestUtils(unittest.TestCase):
         x_train, x_test, y_train, y_test, _ = df.make_training_data(features=["featureA"],
                                                                     labels=["featureA"],
                                                                     test_size=0.5,
-                                                                    feature_lags=[1, 2])
+                                                                    feature_lags=[1, 2]).values()
 
         np.testing.assert_array_almost_equal(x_test, np.array([[[2], [1]], [[3], [2]]]))
         np.testing.assert_array_almost_equal(y_test, np.array([3, 4]))
