@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from typing import Dict, Union, Callable, List, Iterable
+from sortedcontainers import SortedDict
 from .training_test_data import TrainTestData
 
 
@@ -50,11 +51,23 @@ def make_training_data(df: pd.DataFrame,
         # copy features and labels
         df = df[set(features + labels)].copy()
         for feature in features:
+            feature_series = df[feature]
+            smoothers = None
+
+            # smooth out feature if requested
+            if lag_smoothing is not None:
+                smoothers = SortedDict({lag: smoother(feature_series.to_frame()) for lag, smoother in lag_smoothing.items()})
+
             for lag in feature_lags:
-                # TODO if lag > x then use averaged values
-                df[f'{feature}_{lag}'] = df[feature].shift(lag)
+                # if smoothed values are applicable use smoothed values
+                if smoothers is not None and len(smoothers) > 0 and smoothers.peekitem(0)[0] <= lag:
+                    feature_series = smoothers.popitem(0)[1]
+
+                # assign the lagged (eventually smoothed) feature to the features frame
+                df[f'{feature}_{lag}'] = feature_series.shift(lag)
 
         df = df.dropna()
+        index = df.index
         y = df[labels].values
 
         # RNN shape need to be [row, time_step, feature]
@@ -67,12 +80,15 @@ def make_training_data(df: pd.DataFrame,
         df = df.dropna()
         x = df[features].values
         y = df[labels].values
+        index = df.index
         names = (features, labels)
 
-    x_train, x_test, y_train, y_test = \
-        train_test_split(x, y, test_size=test_size, random_state=seed) if test_size > 0 else (x, None, y, None)
+    x_train, x_test, y_train, y_test, index_train, index_test = \
+        train_test_split(x, y, index, test_size=test_size, random_state=seed) if test_size > 0 else (x, None, y, None, df.index, None)
 
+    # ravel one dimensional labels
     if len(labels) == 1:
-        return TrainTestData(x_train, x_test, y_train.ravel(), y_test.ravel(), names)
-    else:
-        return TrainTestData(x_train, x_test, y_train, y_test, names)
+        y_train = y_train.ravel()
+        y_test = y_test.ravel() if y_test is not None else None
+
+    return TrainTestData(x_train, x_test, y_train, y_test, names)
