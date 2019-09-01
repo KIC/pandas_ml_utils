@@ -45,13 +45,13 @@ def make_training_data(df: pd.DataFrame,
     from sklearn.model_selection import train_test_split
 
     if feature_lags is not None:
+        # return RNN shaped 3D arrays
         # copy features and labels
-        df = df[features + labels]
+        df = df[set(features + labels)].copy()
         for feature in features:
             for lag in feature_lags:
                 # TODO if lag > x then use averaged values
                 df[f'{feature}_{lag}'] = df[feature].shift(lag)
-                pass
 
         df = df.dropna()
         y = df[labels].values
@@ -59,9 +59,19 @@ def make_training_data(df: pd.DataFrame,
         # RNN shape need to be [row, time_step, feature]
         x = np.array([[[df.iloc[row][f'{feat}_{lag}'] for feat in features] for lag in feature_lags] for row in range(len(df))],
                      ndmin=3)
+
+        names = (np.array([[f'{feat}_{lag}' for feat in features] for lag in feature_lags], ndmin=2), labels)
     else:
+        # return simple 2D arrays
         df = df.dropna()
         x = df[features].values
         y = df[labels].values
+        names = (features, labels)
 
-    return train_test_split(x, y, test_size=test_size, random_state=seed) if test_size > 0 else (x, None, y, None)
+    x_train, x_test, y_train, y_test = \
+        train_test_split(x, y, test_size=test_size, random_state=seed) if test_size > 0 else (x, None, y, None)
+
+    if len(labels) == 1:
+        return x_train, x_test, y_train.ravel(), y_test.ravel(), names
+    else:
+        return x_train, x_test, y_train, y_test, names
