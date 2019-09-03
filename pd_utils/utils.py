@@ -1,10 +1,12 @@
 import re
+from typing import Union, Callable, Tuple
+
 import numpy as np
 import pandas as pd
 
-from typing import Dict, Union, Callable, List, Iterable
-from sortedcontainers import SortedDict
-from .training_test_data import TrainTestData
+from pd_utils.make_train_test_data import make_training_data
+from .training_test_data import FeaturesAndLabels, Model, Classification
+from .make_train_test_data import reshape_rnn_as_ar
 
 
 def add_apply(df, **kwargs: Callable[[pd.DataFrame], Union[pd.Series, pd.DataFrame]]):
@@ -36,59 +38,45 @@ def extend_forecast(df, periods: int):
     return pd.concat([df, df_ext], axis=0, sort=True)
 
 
-def make_training_data(df: pd.DataFrame,
-                       features: List[str],
-                       labels: List[str],
-                       test_size: float = 0.4,
-                       feature_lags: Iterable[int] = None,
-                       lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
-                       seed = 42):
-    # only import if this method is needed
-    from sklearn.model_selection import train_test_split
+def fit_skit_classifier(df: pd.DataFrame,
+                        features_and_labels: FeaturesAndLabels,
+                        sklearn_model: Model,
+                        test_size: float = 0.4,
+                        test_validate_split_seed = 42) -> Tuple[Model, Classification]:
+    return fit_classifier(df,
+                          features_and_labels,
+                          lambda: sklearn_model,
+                          lambda model, x, y, x_validate, y_validate: model.fit(reshape_rnn_as_ar(x), y),
+                          lambda model, x: model.predict_proba(reshape_rnn_as_ar(x))[:, 1],
+                          test_size,
+                          test_validate_split_seed)
 
-    if feature_lags is not None:
-        # return RNN shaped 3D arrays
-        # copy features and labels
-        df = df[set(features + labels)].copy()
-        for feature in features:
-            feature_series = df[feature]
-            smoothers = None
 
-            # smooth out feature if requested
-            if lag_smoothing is not None:
-                smoothers = SortedDict({lag: smoother(feature_series.to_frame()) for lag, smoother in lag_smoothing.items()})
+def fit_classifier(df: pd.DataFrame,
+                   features_and_labels: FeaturesAndLabels,
+                   model_provider: Callable[[], Model],
+                   model_fitter: Callable[[Model, np.ndarray, np.ndarray, np.ndarray, np.ndarray], Model],
+                   model_predictor: Callable[[Model, np.ndarray], np.ndarray],
+                   test_size: float = 0.4,
+                   test_validate_split_seed = 42) -> Tuple[Model, Classification]:
+    x_train, x_test, y_train, y_test, index_train, index_test, names = \
+        make_training_data(df, features_and_labels, test_size, test_validate_split_seed)
 
-            for lag in feature_lags:
-                # if smoothed values are applicable use smoothed values
-                if smoothers is not None and len(smoothers) > 0 and smoothers.peekitem(0)[0] <= lag:
-                    feature_series = smoothers.popitem(0)[1]
+    model = model_provider()
+    res = model_fitter(model, x_train, y_train, x_test, y_test)
 
-                # assign the lagged (eventually smoothed) feature to the features frame
-                df[f'{feature}_{lag}'] = feature_series.shift(lag)
+    if isinstance(res, type(model)):
+        model = res
 
-        df = df.dropna()
-        index = df.index
-        y = df[labels].values
+    #FIXME train_confusion = confusion_matrix(self.y_train, model_predictor(model, self.x_train) > probability_cutoff)
+    #FIXME test_confusion = confusion_matrix(self.y_test, model_predictor(model, self.x_test) > probability_cutoff)
 
-        # RNN shape need to be [row, time_step, feature]
-        x = np.array([[[df.iloc[row][f'{feat}_{lag}'] for feat in features] for lag in feature_lags] for row in range(len(df))],
-                     ndmin=3)
+    return model, None #FIXME , train_confusion, test_confusion
 
-        names = (np.array([[f'{feat}_{lag}' for feat in features] for lag in feature_lags], ndmin=2), labels)
-    else:
-        # return simple 2D arrays
-        df = df.dropna()
-        x = df[features].values
-        y = df[labels].values
-        index = df.index
-        names = (features, labels)
 
-    x_train, x_test, y_train, y_test, index_train, index_test = \
-        train_test_split(x, y, index, test_size=test_size, random_state=seed) if test_size > 0 else (x, None, y, None, df.index, None)
+def classify(df: pd.DataFrame,
+             features_and_labels: FeaturesAndLabels,
+             model_predictor: Callable[[np.ndarray], np.ndarray]) -> Classification:
+    x, _, _, _, index_train, _, names = make_training_data(df, features_and_labels, 0, 0)
 
-    # ravel one dimensional labels
-    if len(labels) == 1:
-        y_train = y_train.ravel()
-        y_test = y_test.ravel() if y_test is not None else None
-
-    return TrainTestData(x_train, x_test, y_train, y_test, names)
+    return model_predictor(x)

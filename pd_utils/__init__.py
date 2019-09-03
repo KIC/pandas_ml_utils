@@ -3,6 +3,7 @@ import pandas as pd
 from .utils import *
 from .lazy_dataframe import *
 from .fetch_yahoo import *
+from .training_test_data import *
 from pandas.core.base import PandasObject
 
 
@@ -13,5 +14,8 @@ PandasObject.add_apply = add_apply
 PandasObject.shift_inplace = shift_inplace
 PandasObject.extend_forecast = extend_forecast
 PandasObject.make_training_data = make_training_data
+PandasObject.fit_skit_classifier = fit_skit_classifier
+PandasObject.fit_classifier = fit_classifier
+PandasObject.classify = classify
 
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
