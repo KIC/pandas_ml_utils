@@ -2,12 +2,15 @@ import numpy as np
 import pandas as pd
 
 from sortedcontainers import SortedDict
+from typing import Type
+
 from .training_test_data import FeaturesAndLabels
 
 
 def make_training_data(df: pd.DataFrame,
                        features_and_labels: FeaturesAndLabels,
                        test_size: float = 0.4,
+                       label_type: Type = int,
                        seed = 42):
     # only import if this method is needed
     from sklearn.model_selection import train_test_split
@@ -60,8 +63,8 @@ def make_training_data(df: pd.DataFrame,
 
     # ravel one dimensional labels
     if len(features_and_labels.labels) == 1:
-        y_train = y_train.ravel()
-        y_test = y_test.ravel() if y_test is not None else None
+        y_train = y_train.ravel().astype(label_type)
+        y_test = y_test.ravel().astype(label_type) if y_test is not None else None
 
     return x_train, x_test, y_train, y_test, index_train, index_test, names
 

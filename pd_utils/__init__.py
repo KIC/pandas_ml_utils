@@ -19,3 +19,5 @@ PandasObject.fit_classifier = fit_classifier
 PandasObject.classify = classify
 
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
+
+__version = 1

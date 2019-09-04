@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from pd_utils.make_train_test_data import make_training_data
-from .training_test_data import FeaturesAndLabels, Model, Classification
+from .training_test_data import FeaturesAndLabels, Model, ClassificationSummary
 from .make_train_test_data import reshape_rnn_as_ar
 
 
@@ -40,12 +40,12 @@ def extend_forecast(df, periods: int):
 
 def fit_skit_classifier(df: pd.DataFrame,
                         features_and_labels: FeaturesAndLabels,
-                        sklearn_model: Model,
+                        skitlearn_model: Model,
                         test_size: float = 0.4,
-                        test_validate_split_seed = 42) -> Tuple[Model, Classification]:
+                        test_validate_split_seed = 42) -> Tuple[Model, ClassificationSummary, ClassificationSummary]:
     return fit_classifier(df,
                           features_and_labels,
-                          lambda: sklearn_model,
+                          lambda: skitlearn_model,
                           lambda model, x, y, x_validate, y_validate: model.fit(reshape_rnn_as_ar(x), y),
                           lambda model, x: model.predict_proba(reshape_rnn_as_ar(x))[:, 1],
                           test_size,
@@ -58,9 +58,9 @@ def fit_classifier(df: pd.DataFrame,
                    model_fitter: Callable[[Model, np.ndarray, np.ndarray, np.ndarray, np.ndarray], Model],
                    model_predictor: Callable[[Model, np.ndarray], np.ndarray],
                    test_size: float = 0.4,
-                   test_validate_split_seed = 42) -> Tuple[Model, Classification]:
+                   test_validate_split_seed = 42) -> Tuple[Model, ClassificationSummary, ClassificationSummary]:
     x_train, x_test, y_train, y_test, index_train, index_test, names = \
-        make_training_data(df, features_and_labels, test_size, test_validate_split_seed)
+        make_training_data(df, features_and_labels, test_size, int, test_validate_split_seed)
 
     model = model_provider()
     res = model_fitter(model, x_train, y_train, x_test, y_test)
@@ -68,15 +68,23 @@ def fit_classifier(df: pd.DataFrame,
     if isinstance(res, type(model)):
         model = res
 
-    #FIXME train_confusion = confusion_matrix(self.y_train, model_predictor(model, self.x_train) > probability_cutoff)
-    #FIXME test_confusion = confusion_matrix(self.y_test, model_predictor(model, self.x_test) > probability_cutoff)
+    pc = features_and_labels.probability_cutoff
+    training_classification = ClassificationSummary(y_train, model_predictor(model, x_train), index_train, pc)
+    test_classification = ClassificationSummary(y_test, model_predictor(model, x_test), index_test, pc)
 
-    return model, None #FIXME , train_confusion, test_confusion
+    return model, training_classification, test_classification
 
 
 def classify(df: pd.DataFrame,
              features_and_labels: FeaturesAndLabels,
-             model_predictor: Callable[[np.ndarray], np.ndarray]) -> Classification:
-    x, _, _, _, index_train, _, names = make_training_data(df, features_and_labels, 0, 0)
+             model_predictor: Callable[[np.ndarray], np.ndarray]) -> Tuple[np.ndarray, ClassificationSummary]:
+    # FIXME double check this is actually correct and working, shifting might be wrong
+    #  potentially there is the newest features data missing because we drop the rows of not existing labels
+    x, _, y, _, index, _, names = make_training_data(df, features_and_labels, 0, 0)
 
-    return model_predictor(x)
+    prediction = model_predictor(x)
+
+    pc = features_and_labels.probability_cutoff
+    classification = ClassificationSummary(y, prediction, index, pc)
+
+    return prediction, classification
