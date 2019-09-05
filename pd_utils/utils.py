@@ -77,7 +77,7 @@ def fit_classifier(df: pd.DataFrame,
 
 def skit_classify(df: pd.DataFrame,
                   features_and_labels: FeaturesAndLabels,
-                  model: Model):
+                  model: Model) -> pd.DataFrame:
     return classify(df,
                     features_and_labels,
                     lambda x: model.predict_proba(reshape_rnn_as_ar(x))[:, 1])
@@ -85,7 +85,7 @@ def skit_classify(df: pd.DataFrame,
 
 def classify(df: pd.DataFrame,
              features_and_labels: FeaturesAndLabels,
-             model_predictor: Callable[[np.ndarray], np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
+             model_predictor: Callable[[np.ndarray], np.ndarray]) -> pd.DataFrame:
 
     # first save target columns
     target = df[features_and_labels.target_columns] if features_and_labels.target_columns is not None else None
