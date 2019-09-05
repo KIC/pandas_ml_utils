@@ -101,6 +101,23 @@ class TestTrainTestData(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(x_train[-1], [[7], [12], [10], [16]])
 
+    def test_lag_smoothing_nan(self):
+        # test lag smoothing using shift (introducing nan)
+        df = pd.DataFrame({"featureA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                           "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                           "labelB": [5, 4, 3, 2, 1, 0, 1, 2, 3, None]})
+
+        from pd_utils.make_train_test_data import _make_features
+        df, x, names = _make_features(df, ["featureA"], [0, 1], {1: lambda df: df["featureA"].shift(2)})
+
+        len_features = 10 - 1 - 2
+        len_none_lables = 1
+
+        self.assertEqual(len(df), len_features - len_none_lables)
+        np.testing.assert_array_equal(names, np.array( [['featureA_0'], ['featureA_1']]))
+        self.assertAlmostEqual(df["featureA_1"].iloc[0], 1.0)
+        self.assertAlmostEqual(df["featureA_1"].iloc[-1], 6.0)
+
     def test_reshape_rnn_as_ar(self):
         np.testing.assert_array_almost_equal(pdu.reshape_rnn_as_ar(np.array([[[1], [2]]], ndmin=3)),
                                              np.array([[1, 2]], ndmin=2))

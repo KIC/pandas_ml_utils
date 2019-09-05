@@ -12,11 +12,13 @@ class FeaturesAndLabels(object):
     def __init__(self,
                  features: List[str],
                  labels: List[str],
+                 target_columns: List[str] = None,
                  feature_lags: Iterable[int] = None,
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
                  probability_cutoff: float = 0.5):
         self.features = features
         self.labels = labels
+        self.target_columns = target_columns
         self.feature_lags = feature_lags
         self.lag_smoothing = lag_smoothing
         self.probability_cutoff = probability_cutoff
@@ -29,8 +31,9 @@ class FeaturesAndLabels(object):
         return len(self.labels)
 
     def __repr__(self):
-        return f'FeaturesAndLabels({self.features},{self.labels},{self.feature_lags},{self.lag_smoothing},' \
-               f'{self.probability_cutoff}) #{len(self.features)} features expand to {self.expanded_feature_length}'
+        return f'FeaturesAndLabels({self.features},{self.labels},{self.target_columns}{self.feature_lags},' \
+               f'{self.lag_smoothing},{self.probability_cutoff}) #{len(self.features)}' \
+               f' features expand to {self.expanded_feature_length}'
 
     def __str__(self):
         return self.__repr__()

@@ -1,10 +1,10 @@
 import re
-from typing import Union, Callable, Tuple
+from typing import Union, Callable, Tuple, List
 
 import numpy as np
 import pandas as pd
 
-from pd_utils.make_train_test_data import make_training_data
+from pd_utils.make_train_test_data import make_training_data, make_forecast_data
 from .training_test_data import FeaturesAndLabels, Model, ClassificationSummary
 from .make_train_test_data import reshape_rnn_as_ar
 
@@ -75,16 +75,30 @@ def fit_classifier(df: pd.DataFrame,
     return model, training_classification, test_classification
 
 
+def skit_classify(df: pd.DataFrame,
+                  features_and_labels: FeaturesAndLabels,
+                  model: Model):
+    return classify(df,
+                    features_and_labels,
+                    lambda x: model.predict_proba(reshape_rnn_as_ar(x))[:, 1])
+
+
 def classify(df: pd.DataFrame,
              features_and_labels: FeaturesAndLabels,
-             model_predictor: Callable[[np.ndarray], np.ndarray]) -> Tuple[np.ndarray, ClassificationSummary]:
-    # FIXME double check this is actually correct and working, shifting might be wrong
-    #  potentially there is the newest features data missing because we drop the rows of not existing labels
-    x, _, y, _, index, _, names = make_training_data(df, features_and_labels, 0, 0)
+             model_predictor: Callable[[np.ndarray], np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
 
+    # first save target columns
+    target = df[features_and_labels.target_columns] if features_and_labels.target_columns is not None else None
+
+    # then re assign data frame with features only
+    dff, x, _ = make_forecast_data(df, features_and_labels)
+
+    # predict on features
     prediction = model_predictor(x)
-
     pc = features_and_labels.probability_cutoff
-    classification = ClassificationSummary(y, prediction, index, pc)
 
-    return prediction, classification
+    # return result
+    dff["prediction"] = prediction > pc
+    dff["prediction_proba"] = prediction
+    dff["target"] = target
+    return dff

@@ -16,8 +16,9 @@ PandasObject.extend_forecast = extend_forecast
 PandasObject.make_training_data = make_training_data
 PandasObject.fit_skit_classifier = fit_skit_classifier
 PandasObject.fit_classifier = fit_classifier
+PandasObject.skit_classify = skit_classify
 PandasObject.classify = classify
 
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
 
-__version = 1
+__version = 6
