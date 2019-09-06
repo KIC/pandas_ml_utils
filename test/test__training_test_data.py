@@ -12,7 +12,7 @@ class TestClassificationSummary(TestCase):
         pred = np.array([1.0, 0.0, 1.0, 1.0, 0.0])
         truth = np.array([True, True, True, False, False])
 
-        cs = ClassificationSummary(truth, pred, index)
+        cs = ClassificationSummary(truth, pred, index, None)
         cm = cs._confusion_matrix_indices()
 
         expected = np.array([[np.array([1, 3]), np.array([4])],

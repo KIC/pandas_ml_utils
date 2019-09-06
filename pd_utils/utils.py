@@ -69,10 +69,31 @@ def fit_classifier(df: pd.DataFrame,
         model = res
 
     pc = features_and_labels.probability_cutoff
-    training_classification = ClassificationSummary(y_train, model_predictor(model, x_train), index_train, pc)
-    test_classification = ClassificationSummary(y_test, model_predictor(model, x_test), index_test, pc)
+    training_classification = ClassificationSummary(y_train, model_predictor(model, x_train), index_train, df[features_and_labels.target_columns], pc)
+    test_classification = ClassificationSummary(y_test, model_predictor(model, x_test), index_test, df[features_and_labels.target_columns], pc)
 
     return model, training_classification, test_classification
+
+
+def skit_backtest(df: pd.DataFrame,
+                  features_and_labels: FeaturesAndLabels,
+                  model: Model) -> ClassificationSummary:
+    return backtest(df,
+                    features_and_labels,
+                    lambda x: model.predict_proba(reshape_rnn_as_ar(x))[:, 1])
+
+
+def backtest(df: pd.DataFrame,
+             features_and_labels: FeaturesAndLabels,
+             model_predictor: Callable[[np.ndarray], np.ndarray]) -> ClassificationSummary:
+
+    # make training and test data with no 0 test data fraction
+    x, _, y, _, index, _, names = make_training_data(df, features_and_labels, 0, int)
+
+    # precidict probabilities
+    y_hat = model_predictor(x)
+
+    return ClassificationSummary(y, y_hat, index, df[features_and_labels.target_columns], features_and_labels.probability_cutoff)
 
 
 def skit_classify(df: pd.DataFrame,

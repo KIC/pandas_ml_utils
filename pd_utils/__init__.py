@@ -18,7 +18,9 @@ PandasObject.fit_skit_classifier = fit_skit_classifier
 PandasObject.fit_classifier = fit_classifier
 PandasObject.skit_classify = skit_classify
 PandasObject.classify = classify
+PandasObject.backtest = backtest
+PandasObject.skit_backtest = skit_backtest
 
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
 
-__version = 6
+__version = 0.001

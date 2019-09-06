@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import List, Tuple, Callable, Iterable, Dict
+from typing import List, Tuple, Callable, Iterable, Dict, Union
 
 
 class Model(object):
@@ -45,10 +45,12 @@ class ClassificationSummary(object):
                  y_true: np.ndarray,
                  y_prediction: np.ndarray,
                  index: np.ndarray,
+                 target: pd.Series,
                  probability_cutoff: float = 0.5):
         self.y_true = y_true
         self.y_prediction = y_prediction
         self.index = index
+        self.target = target
         self.probability_cutoff = probability_cutoff
         self.confusion_matrix = self._confusion_matrix_indices()
 
@@ -62,6 +64,28 @@ class ClassificationSummary(object):
                               [index[(truth == True) & (pred <= co)], index[(truth == False) & (pred <= co)]]])
 
         return confusion
+
+    def plot_backtest(self, y: pd.Series = None, size: Union[int, pd.Series] = None):
+        # only import if required
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+
+        # scatter plot where confusion squares are the colors, the loss is the size
+        y = y if y is not None \
+                else self.target if isinstance(self.target, pd.Series) \
+                    else self.target[self.target.columns[0]]
+
+        color = pd.Series(0, index=y.index)
+        color.loc[self.confusion_matrix[0, 0]] = 1
+        color.loc[self.confusion_matrix[1, 0]] = 2
+        plt.figure(figsize=(16, 6))
+
+        # get colors from: https://xkcd.com/color/rgb/
+        return sns.scatterplot(x=y.index,
+                               y=y,
+                               size=size if size is not None else y * -1,
+                               hue=color,
+                               palette=[sns.xkcd_rgb['white'], sns.xkcd_rgb['pale green'], sns.xkcd_rgb['cerise']])
 
     def __repr__(self) -> str:
         return self.__str__()
