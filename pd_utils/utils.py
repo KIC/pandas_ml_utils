@@ -69,8 +69,8 @@ def fit_classifier(df: pd.DataFrame,
         model = res
 
     pc = features_and_labels.probability_cutoff
-    training_classification = ClassificationSummary(y_train, model_predictor(model, x_train), index_train, df[features_and_labels.target_columns], pc)
-    test_classification = ClassificationSummary(y_test, model_predictor(model, x_test), index_test, df[features_and_labels.target_columns], pc)
+    training_classification = ClassificationSummary(y_train, model_predictor(model, x_train), index_train, df[features_and_labels.loss_column], pc)
+    test_classification = ClassificationSummary(y_test, model_predictor(model, x_test), index_test, df[features_and_labels.loss_column], pc)
 
     return model, training_classification, test_classification
 
@@ -93,7 +93,7 @@ def backtest(df: pd.DataFrame,
     # precidict probabilities
     y_hat = model_predictor(x)
 
-    return ClassificationSummary(y, y_hat, index, df[features_and_labels.target_columns], features_and_labels.probability_cutoff)
+    return ClassificationSummary(y, y_hat, index, df[features_and_labels.loss_column], features_and_labels.probability_cutoff)
 
 
 def skit_classify(df: pd.DataFrame,

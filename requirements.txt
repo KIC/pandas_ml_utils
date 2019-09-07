@@ -4,3 +4,4 @@ cachetools
 sortedcontainers
 scikit-learn
 yfinance
+vdom
