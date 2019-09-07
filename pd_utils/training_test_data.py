@@ -67,7 +67,10 @@ class ClassificationSummary(object):
 
         return confusion
 
-    def plot_backtest(self, y: pd.Series = None, size: Union[int, pd.Series] = None):
+    def plot_backtest(self,
+                      y: pd.Series = None,
+                      size: Union[int, pd.Series] = None,
+                      figsize: Tuple[int, int] = (16, 6)):
         # only import if required
         import seaborn as sns
         import matplotlib.pyplot as plt
@@ -88,7 +91,7 @@ class ClassificationSummary(object):
         color = pd.Series(0, index=y.index)
         color.loc[self.confusion_matrix[0, 0]] = 1
         color.loc[self.confusion_matrix[1, 0]] = 2
-        plt.figure(figsize=(16, 6))
+        plt.figure(figsize)
 
         # get colors from: https://xkcd.com/color/rgb/
         return sns.scatterplot(x=y.index,
@@ -111,35 +114,41 @@ class ClassificationSummary(object):
 
     def _repr_html_(self):
         # only import it needed
-        from vdom.helpers import div, h1, p, img, b, table, tr, td, tbody, thead
+        from vdom.helpers import div, h1, p, img, b, table, tr, td, tbody, thead, th
         import matplotlib.pyplot as plt
+        import base64
         import io
 
-        # TODO also output the plot as svg
+        img=''
         # with io.BytesIO() as f:
-        #   self.plot_backtest()
-        #   plt.savefig(f, format="svg")
-        #   svg = f.getvalue()
-        # alternatively use base64 and <img src="data:image/png;base64,..."
-        # import base64
-        # base64.b16decode()
-
-        #return display(table(
-        #    # thead(tr(td(""))),
-        #    tbody(
-        #        [tr([td(col)] for col in row) for row in self.confusion_matrix]
-        #    )
-        #)
+        #     self.plot_backtest()
+        #     plt.savefig(f, format="png")
+        #     img = str(base64.b64encode(f.getvalue()))
 
         cmc = self.confusion_count()
         cml = self.confusion_loss()
 
-
         return div(
-            p("Classification Count"),
-            self._matrix_table(cmc),
-            p("Classification Loss"),
-            self._matrix_table(cml)
+            table(
+                thead(
+                    tr(
+                        th("Classification Count", style={'text-align': 'left'}),
+                        th("Classification Loss", style={'text-align': 'right'})
+                    )
+                ),
+                tbody(
+                    tr(
+                        td(self._matrix_table(cmc)),
+                        td(self._matrix_table(cml), style={'float': 'right'})
+                    ),
+                    tr(
+                        td('dasdsa',
+                            #img(src=f'data:image/png;base64, '),
+                            colspan='2', style={'float': 'left'})
+                    )
+                ),
+                style={'width': '100%'}
+            ), style={'width': '800px'}
         )._repr_html_()
 
     def _matrix_table(self, mx: np.array):
