@@ -116,6 +116,9 @@ class ClassificationSummary(object):
         ])
 
     def _repr_html_(self):
+        self._html_()._repr_html_()
+
+    def _html_(self, width: str = '100%'):
         # only import it needed
         from vdom.helpers import div, h1, p, img, b, table, tr, td, tbody, thead, th
         import matplotlib.pyplot as plt
@@ -152,8 +155,8 @@ class ClassificationSummary(object):
                     )
                 ),
                 style={'width': '100%'}
-            ), style={'width': '800px'}
-        )._repr_html_()
+            ), style={'width': width}
+        )
 
     def _matrix_table(self, mx: np.array):
         from vdom.helpers import table, tr, td, tbody, thead
@@ -187,3 +190,53 @@ class ClassificationSummary(object):
     def __str__(self) -> str:
         return f'\n{len(self.confusion_matrix[0,0])}\t{len(self.confusion_matrix[0,1])}' \
                f'\n{len(self.confusion_matrix[1,0])}\t{len(self.confusion_matrix[1,1])}'
+
+
+class Fit(object):
+
+    def __init__(self,
+                 model: Model,
+                 training_classification: ClassificationSummary,
+                 test_classification: ClassificationSummary):
+        self.model = model
+        self.training_classification = training_classification
+        self.test_classification = test_classification
+
+    def values(self):
+        return self.model, self.training_classification, self.test_classification
+
+    def _repr_html_(self):
+        return self._html_()._repr_html_()
+
+    def _html_(self):
+        # only import it needed
+        from vdom.helpers import div, h1, p, img, b, table, tr, td, tbody, thead, th
+
+        model = self.model.__repr__()
+        if model is None:
+            model = str(self.model)
+
+        return div(
+            table(
+                thead(
+                    tr(
+                        th("Training Data", style={'text-align': 'left'}),
+                        th("Test Data", style={'text-align': 'right'})
+                    )
+                ),
+                tbody(
+                    tr(
+                        td(self.training_classification._html_()),
+                        td(self.test_classification._html_())
+                    ),
+                    tr(
+                        td(
+                            model,
+                            colspan="2"
+                        )
+                    )
+                ),
+                style={'width': '100%'}
+            ),
+            style={'width': '100%', 'float': 'left'}
+        )

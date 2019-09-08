@@ -3,7 +3,6 @@ import pandas as pd
 from .utils import *
 from .lazy_dataframe import *
 from .fetch_yahoo import *
-from .training_test_data import *
 from pandas.core.base import PandasObject
 
 

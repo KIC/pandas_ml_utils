@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from pd_utils.make_train_test_data import make_training_data, make_forecast_data
-from .training_test_data import FeaturesAndLabels, Model, ClassificationSummary
+from .training_test_data import FeaturesAndLabels, Model, ClassificationSummary, Fit
 from .make_train_test_data import reshape_rnn_as_ar
 
 
@@ -72,7 +72,7 @@ def fit_classifier(df: pd.DataFrame,
     training_classification = ClassificationSummary(y_train, model_predictor(model, x_train), index_train, df[features_and_labels.loss_column], pc)
     test_classification = ClassificationSummary(y_test, model_predictor(model, x_test), index_test, df[features_and_labels.loss_column], pc)
 
-    return model, training_classification, test_classification
+    return Fit(model, training_classification, test_classification)
 
 
 def skit_backtest(df: pd.DataFrame,
