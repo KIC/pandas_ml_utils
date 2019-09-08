@@ -91,14 +91,17 @@ class ClassificationSummary(object):
         color = pd.Series(0, index=y.index)
         color.loc[self.confusion_matrix[0, 0]] = 1
         color.loc[self.confusion_matrix[1, 0]] = 2
-        plt.figure(figsize)
 
         # get colors from: https://xkcd.com/color/rgb/
-        return sns.scatterplot(x=y.index,
-                               y=y,
-                               size=size if size is not None else y * -1,
-                               hue=color,
-                               palette=[sns.xkcd_rgb['white'], sns.xkcd_rgb['pale green'], sns.xkcd_rgb['cerise']])
+        fig = plt.figure(figsize=figsize)
+        scatt =  sns.scatterplot(x=y.index,
+                                 y=y,
+                                 size=size if size is not None else y * -1,
+                                 hue=color,
+                                 palette=[sns.xkcd_rgb['white'], sns.xkcd_rgb['pale green'], sns.xkcd_rgb['cerise']])
+
+        plt.close()
+        return fig
 
     def confusion_loss(self):
         cm = self.confusion_matrix
@@ -119,11 +122,12 @@ class ClassificationSummary(object):
         import base64
         import io
 
-        img=''
-        # with io.BytesIO() as f:
-        #     self.plot_backtest()
-        #     plt.savefig(f, format="png")
-        #     img = str(base64.b64encode(f.getvalue()))
+        image=''
+        with io.BytesIO() as f:
+            fig = self.plot_backtest()
+            fig.savefig(f, format="png", bbox_inches='tight')
+            image = base64.encodebytes(f.getvalue()).decode("utf-8")
+            plt.close(fig)
 
         cmc = self.confusion_count()
         cml = self.confusion_loss()
@@ -142,9 +146,9 @@ class ClassificationSummary(object):
                         td(self._matrix_table(cml), style={'float': 'right'})
                     ),
                     tr(
-                        td('dasdsa',
-                            #img(src=f'data:image/png;base64, '),
-                            colspan='2', style={'float': 'left'})
+                        td(
+                            img(src=f'data:image/png;base64,{image}'),
+                            colspan='2')
                     )
                 ),
                 style={'width': '100%'}
