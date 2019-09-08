@@ -85,21 +85,23 @@ class ClassificationSummary(object):
 
         # scatter plot where confusion squares are the colors, the loss is the size
         y = y if y is not None \
-                else self.loss if isinstance(self.loss, pd.Series) \
-                    else self.loss[self.loss.columns[0]]
+                else self.loss.loc[self.index] if isinstance(self.loss, pd.Series) \
+                    else self.loss[self.loss.columns[0]].loc[self.index]
 
         color = pd.Series(0, index=y.index)
         color.loc[self.confusion_matrix[0, 0]] = 1
         color.loc[self.confusion_matrix[1, 0]] = 2
 
         # get colors from: https://xkcd.com/color/rgb/
-        fig = plt.figure(figsize=figsize)
+        fig, ax = plt.subplots(figsize=figsize)
         scatt =  sns.scatterplot(x=y.index,
                                  y=y,
+                                 ax=ax,
                                  size=size if size is not None else y * -1,
                                  hue=color,
                                  palette=[sns.xkcd_rgb['white'], sns.xkcd_rgb['pale green'], sns.xkcd_rgb['cerise']])
 
+        bar = sns.lineplot(x=y.index, y=self.y_prediction, ax=ax)
         plt.close()
         return fig
 
@@ -116,7 +118,7 @@ class ClassificationSummary(object):
         ])
 
     def _repr_html_(self):
-        self._html_()._repr_html_()
+        return self._html_()._repr_html_()
 
     def _html_(self, width: str = '100%'):
         # only import it needed
@@ -183,9 +185,6 @@ class ClassificationSummary(object):
 
     def __len__(self):
         return len(self.y_true)
-
-    def __repr__(self) -> str:
-        return self.__str__()
 
     def __str__(self) -> str:
         return f'\n{len(self.confusion_matrix[0,0])}\t{len(self.confusion_matrix[0,1])}' \
