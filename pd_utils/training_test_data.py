@@ -94,6 +94,8 @@ class ClassificationSummary(object):
 
         # get colors from: https://xkcd.com/color/rgb/
         fig, ax = plt.subplots(figsize=figsize)
+        ax.set_ylim([y.min() * 1.1, 1])
+
         scatt =  sns.scatterplot(x=y.index,
                                  y=y,
                                  ax=ax,
@@ -102,6 +104,7 @@ class ClassificationSummary(object):
                                  palette=[sns.xkcd_rgb['white'], sns.xkcd_rgb['pale green'], sns.xkcd_rgb['cerise']])
 
         bar = sns.lineplot(x=y.index, y=self.y_prediction, ax=ax)
+
         plt.close()
         return fig
 
@@ -152,8 +155,9 @@ class ClassificationSummary(object):
                     ),
                     tr(
                         td(
-                            img(src=f'data:image/png;base64,{image}'),
-                            colspan='2')
+                            img(src=f'data:image/png;base64,{image}', style={'width': '100%'}),
+                            colspan='2'
+                        )
                     )
                 ),
                 style={'width': '100%'}
