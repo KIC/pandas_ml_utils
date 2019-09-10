@@ -1,3 +1,5 @@
+import sys
+
 import pandas as pd
 import numpy as np
 from typing import List, Tuple, Callable, Iterable, Dict, Union
@@ -24,10 +26,11 @@ class FeaturesAndLabels(object):
         self.feature_lags = feature_lags
         self.lag_smoothing = lag_smoothing
         self.probability_cutoff = probability_cutoff
-        self.expanded_feature_length = len(features) * sum(1 for _ in feature_lags) if feature_lags is not None else len(features)
+        self.len_feature_lags = sum(1 for _ in feature_lags)
+        self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
 
     def len_features(self):
-        return len(self.features), self.expanded_feature_length
+        return len(self.features), self.len_feature_lags, self.expanded_feature_length
 
     def len_labels(self):
         return len(self.labels)
@@ -50,9 +53,13 @@ class ClassificationSummary(object):
                  loss: pd.Series,
                  probability_cutoff: float = 0.5):
         self.y_true = y_true
-        self.y_prediction = y_prediction
+        self.y_prediction = y_prediction.ravel() if len(y_prediction.shape) > 1 else y_prediction
         self.index = index
         self.loss = loss
+        self.probability_cutoff = probability_cutoff
+        self.confusion_matrix = self._confusion_matrix_indices()
+
+    def set_probability_cutoff(self, probability_cutoff: float = 0.5):
         self.probability_cutoff = probability_cutoff
         self.confusion_matrix = self._confusion_matrix_indices()
 
@@ -62,10 +69,15 @@ class ClassificationSummary(object):
         pred = self.y_prediction
         co = self.probability_cutoff
 
-        confusion = np.array([[index[(truth == True) & (pred > co)], index[(truth == False) & (pred > co)]],
-                              [index[(truth == True) & (pred <= co)], index[(truth == False) & (pred <= co)]]])
+        try:
+            confusion = np.array([[index[(truth == True) & (pred > co)], index[(truth == False) & (pred > co)]],
+                                  [index[(truth == True) & (pred <= co)], index[(truth == False) & (pred <= co)]]])
 
-        return confusion
+            return confusion
+        except:
+            print(f"shapes: y_true: {self.y_true.shape}, y_pred: {self.y_prediction.shape}, index: {self.index.shape}")
+            print("Unexpected error:", sys.exc_info()[0])
+            return None
 
     def plot_backtest(self,
                       y: pd.Series = None,
@@ -204,6 +216,10 @@ class Fit(object):
         self.model = model
         self.training_classification = training_classification
         self.test_classification = test_classification
+
+    def set_probability_cutoff(self, probability_cutoff: float = 0.5):
+        self.training_classification.set_probability_cutoff(probability_cutoff)
+        self.test_classification.set_probability_cutoff(probability_cutoff)
 
     def values(self):
         return self.model, self.training_classification, self.test_classification

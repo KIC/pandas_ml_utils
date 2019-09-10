@@ -1,3 +1,4 @@
+import uuid
 import pandas as pd
 from typing import Callable, Union
 
@@ -5,6 +6,7 @@ from typing import Callable, Union
 class LazyDataFrame(object):
 
     def __init__(self, df: pd.DataFrame, **kwargs: Callable[[pd.DataFrame], Union[pd.DataFrame, pd.Series]]) -> None:
+        self.hash = uuid.uuid4()
         self.df: pd.DataFrame = df
         self.kwargs = kwargs
 
@@ -30,8 +32,9 @@ class LazyDataFrame(object):
                 raise ValueError(f"invalid item {item}")
 
     def __setitem__(self, key: str, value: Callable[[pd.DataFrame], Union[pd.DataFrame, pd.Series]]):
+        self.hash = uuid.uuid4()
         if callable(value):
-            self.kwargs[key] = value
+            self.kwargs[key] = value(self.df)
         else:
             self.df[key] = value
 
@@ -40,6 +43,12 @@ class LazyDataFrame(object):
 
     def __contains__(self, key):
         return key in self.df or key in self.kwargs
+
+    def __hash__(self):
+        return int(self.hash)
+
+    def __eq__(self, other):
+        return self.hash == other.hash if isinstance(other, LazyDataFrame) else False
 
     def to_dataframe(self):
         df = self.df.copy()
