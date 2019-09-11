@@ -73,6 +73,9 @@ class ClassificationSummary(object):
             confusion = np.array([[index[(truth == True) & (pred > co)], index[(truth == False) & (pred > co)]],
                                   [index[(truth == True) & (pred <= co)], index[(truth == False) & (pred <= co)]]])
 
+            if len(confusion[0, 0]) <= 0:
+                print("Very bad fit with 0 TP, which leads to problems in the plot")
+
             return confusion
         except:
             print(f"shapes: y_true: {self.y_true.shape}, y_pred: {self.y_prediction.shape}, index: {self.index.shape}")
@@ -141,6 +144,9 @@ class ClassificationSummary(object):
         import matplotlib.pyplot as plt
         import base64
         import io
+
+        if len(self.confusion_count()[0, 0]) <= 0:
+            return p('very bad fit with 0 TP!')
 
         image=''
         with io.BytesIO() as f:

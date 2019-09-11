@@ -1,10 +1,16 @@
 import numpy as np
 import pandas as pd
+import logging
 
+from time import perf_counter as pc
 from sortedcontainers import SortedDict
 from typing import Type, Iterable, List, Callable, Dict
 
+from pd_utils.utils import log_with_time
 from .training_test_data import FeaturesAndLabels
+
+
+log = logging.getLogger(__name__)
 
 
 def make_backtest_data(df: pd.DataFrame,
@@ -23,6 +29,7 @@ def make_training_data(df: pd.DataFrame,
     from sklearn.model_selection import train_test_split
 
     # use only feature and label columns
+    start_pc = log_with_time(lambda: log.debug("make training / test data split ..."))
     df = df[set(features_and_labels.features + features_and_labels.labels)]
 
     # re-assign data frame with all nan rows dropped
@@ -33,15 +40,18 @@ def make_training_data(df: pd.DataFrame,
     y = df[features_and_labels.labels].values
 
     # split training and test data
+    start_split_pc = log_with_time(lambda: log.debug("  splitting ..."))
     x_train, x_test, y_train, y_test, index_train, index_test = \
         train_test_split(x, y, df.index, test_size=test_size, random_state=seed) if test_size > 0 \
             else (x, None, y, None, df.index, None)
+    log.debug(f"  splitting ... done in {pc() - start_split_pc: .2f} sec!")
 
     # ravel one dimensional labels
     if len(features_and_labels.labels) == 1:
         y_train = y_train.ravel().astype(label_type)
         y_test = y_test.ravel().astype(label_type) if y_test is not None else None
 
+    log.debug(f"make training / test data split ... done in {pc() - start_pc: .2f} sec!")
     return x_train, x_test, y_train, y_test, index_train, index_test, (names, features_and_labels.labels)
 
 
@@ -56,6 +66,8 @@ def _make_features(df: pd.DataFrame,
                    features: List[str],
                    feature_lags: Iterable[int] = None,
                    lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None):
+
+    start_pc = log_with_time(lambda: log.debug(" make features ..."))
 
     # drop nan's and copy frame
     df = df.dropna().copy()
@@ -97,6 +109,7 @@ def _make_features(df: pd.DataFrame,
         x = df[features].values
         names = features
 
+    log.debug(f" make features ... done in {pc() - start_pc: .2f} sec!")
     return df, x, names
 
 

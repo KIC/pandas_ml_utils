@@ -1,6 +1,6 @@
 import pandas as pd
 
-from .utils import *
+from .pandas_extensions import *
 from .lazy_dataframe import *
 from .fetch_yahoo import *
 from pandas.core.base import PandasObject
