@@ -127,7 +127,6 @@ class TestTrainTestData(unittest.TestCase):
         np.testing.assert_array_almost_equal(pdu.reshape_rnn_as_ar(np.array([[1, 2]], ndmin=2)),
                                              np.array([[1, 2]], ndmin=2))
 
-
     def test_hashable_features_and_labels(self):
         a = pdu.FeaturesAndLabels(["featureA"],
                                   ["featureA"],
@@ -148,6 +147,27 @@ class TestTrainTestData(unittest.TestCase):
         self.assertEqual(a, b)
         self.assertEqual(hash(a), hash(b))
 
+    def test_cache_feature_matrix(self):
+        from pd_utils.make_train_test_data import make_training_data, _make_features_with_cache
+
+        df = pd.DataFrame({"featureA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                           "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                           "labelB": [5, 4, 3, 2, 1, 0, 1, 2, 3, None]})
+
+        ful = pdu.FeaturesAndLabels(["featureA"],
+                                    ["featureA"],
+                                    feature_lags=[1, 2, 3, 4],
+                                    lag_smoothing={2: lambda df: df[["featureA"]] * 2,
+                                                   4: lambda df: df[["featureA"]] * 4})
+
+        x_train, x_test, y_train, y_test, index_train, index_test, names = make_training_data(df, ful, cache=True)
+        x_train, x_test, y_train, y_test, index_train, index_test, names = make_training_data(df, ful, cache=True)
+
+        cache_info = _make_features_with_cache.cache_info()
+        print(cache_info)
+
+        self.assertEqual(cache_info.misses, 1)  # miss the first call
+        self.assertEqual(cache_info.hits, 1)    # fetch the first cached call
 
 
 if __name__ == '__main__':

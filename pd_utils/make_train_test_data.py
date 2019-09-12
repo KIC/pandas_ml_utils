@@ -66,6 +66,7 @@ def make_forecast_data(df: pd.DataFrame, features_and_labels: FeaturesAndLabels)
 
 @lru_cache(maxsize=int(os.getenv('CACHE_FEATUES_AND_LABELS', '1')))
 def _make_features_with_cache(df: HashableDataFrame, features_and_labels: FeaturesAndLabels):
+    log.info(f"no cache entry available for {hash(df), hash(features_and_labels)}")
     return _make_features(df, features_and_labels)
 
 

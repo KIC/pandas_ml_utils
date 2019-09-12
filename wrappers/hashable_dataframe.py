@@ -17,7 +17,7 @@ class HashableDataFrame(object):
 
     def __eq__(self, other):
         try:
-            pd.testing.assert_frame_equal(self, other)
+            pd.testing.assert_frame_equal(self.df, other.df)
             return True
         except:
             return False
