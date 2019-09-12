@@ -5,3 +5,4 @@ sortedcontainers
 scikit-learn
 yfinance
 vdom
+dill

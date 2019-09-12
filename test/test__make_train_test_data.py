@@ -108,7 +108,9 @@ class TestTrainTestData(unittest.TestCase):
                            "labelB": [5, 4, 3, 2, 1, 0, 1, 2, 3, None]})
 
         from pd_utils.make_train_test_data import _make_features
-        df, x, names = _make_features(df, ["featureA"], [0, 1], {1: lambda df: df["featureA"].shift(2)})
+        df, x, names = _make_features(df, pdu.FeaturesAndLabels(["featureA"], None,
+                                                                feature_lags=[0, 1],
+                                                                lag_smoothing={1: lambda df: df["featureA"].shift(2)}))
 
         len_features = 10 - 1 - 2
         len_none_lables = 1
@@ -124,6 +126,28 @@ class TestTrainTestData(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(pdu.reshape_rnn_as_ar(np.array([[1, 2]], ndmin=2)),
                                              np.array([[1, 2]], ndmin=2))
+
+
+    def test_hashable_features_and_labels(self):
+        a = pdu.FeaturesAndLabels(["featureA"],
+                                  ["featureA"],
+                                  feature_lags=[1, 2, 3, 4],
+                                  lag_smoothing={2: lambda df: df[["featureA"]] * 2,
+                                                 4: lambda df: df[["featureA"]] * 4})
+
+        b = pdu.FeaturesAndLabels(["featureA"],
+                                  ["featureA"],
+                                  feature_lags=[1, 2, 3, 4],
+                                  lag_smoothing={2: lambda df: df[["featureA"]] * 2,
+                                                 4: lambda df: df[["featureA"]] * 4})
+
+        self.assertEqual(hash(a), hash(a))
+        self.assertEqual(a, a)
+
+        self.assertEqual(a.__id__(), b.__id__())
+        self.assertEqual(a, b)
+        self.assertEqual(hash(a), hash(b))
+
 
 
 if __name__ == '__main__':

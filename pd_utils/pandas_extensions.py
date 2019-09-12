@@ -1,12 +1,23 @@
 import re
 from typing import Union, Callable, Tuple, List
 
+import logging
 import numpy as np
 import pandas as pd
 
+from time import perf_counter
 from pd_utils.make_train_test_data import make_training_data, make_forecast_data
+from pd_utils.utils import log_with_time
+from wrappers.hashable_dataframe import HashableDataFrame
 from .training_test_data import FeaturesAndLabels, Model, ClassificationSummary, Fit
 from .make_train_test_data import reshape_rnn_as_ar
+
+
+log = logging.getLogger(__name__)
+
+
+def hashable(df):
+    return HashableDataFrame(df)
 
 
 def add_apply(df, **kwargs: Callable[[pd.DataFrame], Union[pd.Series, pd.DataFrame]]):
@@ -58,12 +69,17 @@ def fit_classifier(df: pd.DataFrame,
                    model_fitter: Callable[[Model, np.ndarray, np.ndarray, np.ndarray, np.ndarray], Model],
                    model_predictor: Callable[[Model, np.ndarray], np.ndarray],
                    test_size: float = 0.4,
+                   cache_feature_matrix: bool = False,
                    test_validate_split_seed = 42) -> Tuple[Model, ClassificationSummary, ClassificationSummary]:
     x_train, x_test, y_train, y_test, index_train, index_test, names = \
-        make_training_data(df, features_and_labels, test_size, int, test_validate_split_seed)
+        make_training_data(df, features_and_labels, test_size, int, test_validate_split_seed, cache=cache_feature_matrix)
 
+    log.info("create model")
     model = model_provider()
+
+    start_pc = log_with_time(lambda: log.info("fit model"))
     res = model_fitter(model, x_train, y_train, x_test, y_test)
+    log.info(f"fitting model done in {perf_counter() - start_pc: .2f} sec!")
 
     if isinstance(res, type(model)):
         model = res

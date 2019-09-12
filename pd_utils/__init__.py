@@ -7,6 +7,7 @@ from pandas.core.base import PandasObject
 
 
 # add functions to pandas
+PandasObject.hashable = hashable
 PandasObject.inner_join = inner_join
 PandasObject.drop_re = drop_re
 PandasObject.add_apply = add_apply
