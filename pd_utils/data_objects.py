@@ -1,9 +1,13 @@
 import inspect
+import logging
 import sys
 
 import pandas as pd
 import numpy as np
 from typing import List, Tuple, Callable, Iterable, Dict, Union
+
+
+log = logging.getLogger(__name__)
 
 
 class Model(object):
@@ -29,6 +33,7 @@ class FeaturesAndLabels(object):
         self.probability_cutoff = probability_cutoff
         self.len_feature_lags = sum(1 for _ in feature_lags) if feature_lags is not None else 1
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
+        log.info(f'number of features, lags and total: {self.len_features()}')
 
     def len_features(self):
         return len(self.features), self.len_feature_lags, self.expanded_feature_length

@@ -2,7 +2,7 @@ import numpy as np
 
 from unittest import TestCase
 from sklearn.metrics import confusion_matrix
-from pd_utils.training_test_data import ClassificationSummary
+from pd_utils.data_objects import ClassificationSummary
 
 
 class TestClassificationSummary(TestCase):

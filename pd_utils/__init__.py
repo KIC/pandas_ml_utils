@@ -1,6 +1,7 @@
 import pandas as pd
 
 from .pandas_extensions import *
+from .classifier import *
 from .lazy_dataframe import *
 from .fetch_yahoo import *
 from pandas.core.base import PandasObject
@@ -23,4 +24,4 @@ PandasObject.skit_backtest = skit_backtest
 
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
 
-__version = 0.001
+__version = 0.002
