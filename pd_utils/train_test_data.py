@@ -11,21 +11,20 @@ from typing import Type, Iterable, List, Callable, Dict
 
 from wrappers.hashable_dataframe import HashableDataFrame
 from pd_utils.utils import log_with_time
-from .data_objects import FeaturesAndLabels
 
 
 log = logging.getLogger(__name__)
 
 
 def make_backtest_data(df: pd.DataFrame,
-                       features_and_labels: FeaturesAndLabels,
+                       features_and_labels: 'FeaturesAndLabels',
                        test_size: float = 0.4,
                        label_type: Type = int):
     return make_training_data(df, features_and_labels, 0, label_type)
 
 
 def make_training_data(df: pd.DataFrame,
-                       features_and_labels: FeaturesAndLabels,
+                       features_and_labels: 'FeaturesAndLabels',
                        test_size: float = 0.4,
                        label_type: Type = int,
                        seed: int = 42,
@@ -67,17 +66,17 @@ def make_training_data(df: pd.DataFrame,
     return x_train, x_test, y_train, y_test, index_train, index_test, (names, features_and_labels.labels)
 
 
-def make_forecast_data(df: pd.DataFrame, features_and_labels: FeaturesAndLabels):
+def make_forecast_data(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
     return _make_features(df[features_and_labels.features], features_and_labels)
 
 
 @lru_cache(maxsize=int(os.getenv('CACHE_FEATUES_AND_LABELS', '1')))
-def _make_features_with_cache(df: HashableDataFrame, features_and_labels: FeaturesAndLabels):
+def _make_features_with_cache(df: HashableDataFrame, features_and_labels: 'FeaturesAndLabels'):
     log.info(f"no cache entry available for {hash(df), hash(features_and_labels)}")
     return _make_features(df, features_and_labels)
 
 
-def _make_features(df: pd.DataFrame, features_and_labels: FeaturesAndLabels):
+def _make_features(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
     start_pc = log_with_time(lambda: log.debug(" make features ..."))
     feature_lags = features_and_labels.feature_lags
     features = features_and_labels.features

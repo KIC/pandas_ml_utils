@@ -5,13 +5,47 @@ import sys
 import pandas as pd
 import numpy as np
 from typing import List, Tuple, Callable, Iterable, Dict, Union
-
+from pd_utils.train_test_data import reshape_rnn_as_ar
 
 log = logging.getLogger(__name__)
 
 
 class Model(object):
-    pass
+
+    def fit(self, x, y, x_val, y_val) -> None:
+        pass
+
+    def predict(self, x) -> np.ndarray:
+        pass
+
+    def set_min_needed_data(self, min_needed_rows: int):
+        pass
+
+    def get_min_needed_data(self) -> int:
+        pass
+
+    # this lets the model also act as a provider
+    def __call__(self, *args, **kwargs):
+        return self
+
+
+class SkitModel(Model):
+
+    def __init__(self, skit_model):
+        self.skit_model = skit_model
+        self.min_needed_data = None
+
+    def fit(self, x, y, x_val, y_val):
+        self.skit_model.fit(reshape_rnn_as_ar(x), y),
+
+    def predict(self, x):
+        return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
+
+    def set_min_needed_data(self, min_needed_rows: int):
+        self.min_needed_data = min_needed_rows
+
+    def get_min_needed_data(self):
+        return self.min_needed_data
 
 
 class FeaturesAndLabels(object):
@@ -91,7 +125,7 @@ class ClassificationSummary(object):
                                   [index[(truth == True) & (pred <= co)], index[(truth == False) & (pred <= co)]]])
 
             if len(confusion[0, 0]) <= 0:
-                print("Very bad fit with 0 TP, which leads to problems in the plot")
+                log.warning("Very bad fit with 0 TP, which leads to problems in the plot")
 
             return confusion
         except:
