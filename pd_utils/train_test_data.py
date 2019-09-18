@@ -18,7 +18,6 @@ log = logging.getLogger(__name__)
 
 def make_backtest_data(df: pd.DataFrame,
                        features_and_labels: 'FeaturesAndLabels',
-                       test_size: float = 0.4,
                        label_type: Type = int):
     return make_training_data(df, features_and_labels, 0, label_type)
 
@@ -38,17 +37,20 @@ def make_training_data(df: pd.DataFrame,
     df = df[set(features_and_labels.features + features_and_labels.labels)]
 
     # create features and re-assign data frame with all nan rows dropped
-    df, x, names = _make_features_with_cache(HashableDataFrame(df), features_and_labels) if cache else \
-                   _make_features(df, features_and_labels)
+    df_new, x, names = _make_features_with_cache(HashableDataFrame(df), features_and_labels) if cache else \
+                       _make_features(df, features_and_labels)
+
+    # calculate the minimum required data
+    min_required_data = len(df) - len(df_new) + 1
 
     # assign labels
-    y = df[features_and_labels.labels].values
+    y = df_new[features_and_labels.labels].values
 
     # split training and test data
     start_split_pc = log_with_time(lambda: log.debug("  splitting ..."))
     x_train, x_test, y_train, y_test, index_train, index_test = \
-        train_test_split(x, y, df.index, test_size=test_size, random_state=seed) if test_size > 0 \
-            else (x, None, y, None, df.index, None)
+        train_test_split(x, y, df_new.index, test_size=test_size, random_state=seed) if test_size > 0 \
+            else (x, None, y, None, df_new.index, None)
     log.info(f"  splitting ... done in {pc() - start_split_pc: .2f} sec!")
 
     # ravel one dimensional labels
@@ -63,7 +65,7 @@ def make_training_data(df: pd.DataFrame,
         summary_printer(y, y_train, y_test)
 
     # return the split
-    return x_train, x_test, y_train, y_test, index_train, index_test, (names, features_and_labels.labels)
+    return x_train, x_test, y_train, y_test, index_train, index_test, min_required_data, (names, features_and_labels.labels)
 
 
 def make_forecast_data(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):

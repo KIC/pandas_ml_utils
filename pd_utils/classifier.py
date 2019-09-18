@@ -16,14 +16,14 @@ log = logging.getLogger(__name__)
 
 def fit_classifier(df: pd.DataFrame,
                    features_and_labels: FeaturesAndLabels,
-                   model_provider: Callable[[], Model],
+                   model_provider: Callable[[int], Model],
                    test_size: float = 0.4,
                    number_of_cross_validation_splits: int = None,
                    cache_feature_matrix: bool = False,
                    test_validate_split_seed = 42,
                    summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None
                    ) -> Tuple[Model, ClassificationSummary, ClassificationSummary]:
-    x_train, x_test, y_train, y_test, index_train, index_test, names = \
+    x_train, x_test, y_train, y_test, index_train, index_test, min_required_data, names = \
         make_training_data(df,
                            features_and_labels,
                            test_size,
@@ -32,8 +32,8 @@ def fit_classifier(df: pd.DataFrame,
                            cache=cache_feature_matrix,
                            summary_printer=summary_printer)
 
-    log.info("create model")
-    model = model_provider()
+    log.info(f"create model (min required data = {min_required_data}")
+    model = model_provider(min_required_data=min_required_data)
 
     start_performance_count = log_with_time(lambda: log.info("fit model"))
     if number_of_cross_validation_splits is not None:
@@ -52,8 +52,9 @@ def fit_classifier(df: pd.DataFrame,
 
     # assemble the result objects
     pc = features_and_labels.probability_cutoff
-    training_classification = ClassificationSummary(y_train, model.predict(x_train), index_train, df[features_and_labels.loss_column], pc)
-    test_classification = ClassificationSummary(y_test, model.predict(x_test), index_test, df[features_and_labels.loss_column], pc)
+    loss = df[features_and_labels.loss_column if features_and_labels.loss_column is not None else []]
+    training_classification = ClassificationSummary(y_train, model.predict(x_train), index_train, loss, pc)
+    test_classification = ClassificationSummary(y_test, model.predict(x_test), index_test, loss, pc)
     return Fit(model, training_classification, test_classification)
 
 
@@ -62,7 +63,7 @@ def backtest(df: pd.DataFrame,
              model: Model) -> ClassificationSummary:
 
     # make training and test data with no 0 test data fraction
-    x, _, y, _, index, _, names = make_training_data(df, features_and_labels, 0, int)
+    x, _, y, _, index, _, _, names = make_training_data(df, features_and_labels, 0, int)
 
     # precidict probabilities
     y_hat = model.predict(x)

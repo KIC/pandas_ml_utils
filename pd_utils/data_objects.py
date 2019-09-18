@@ -2,15 +2,32 @@ import inspect
 import logging
 import sys
 
+import dill as pickle
 import pandas as pd
 import numpy as np
 from typing import List, Tuple, Callable, Iterable, Dict, Union
-from pd_utils.train_test_data import reshape_rnn_as_ar
+from pd_utils.train_test_data import reshape_rnn_as_ar, make_forecast_data
 
 log = logging.getLogger(__name__)
 
 
 class Model(object):
+
+    @staticmethod
+    def load(filename: str):
+        with open(filename, 'rb') as file:
+            model = pickle.load(file)
+            if isinstance(model, Model):
+                return model
+            else:
+                raise ValueError("Deserialized pickle was not a Model!")
+
+    def __init__(self):
+        self.min_required_data: int = None
+
+    def save(self, filename: str):
+        with open(filename, 'wb') as file:
+            pickle.dump(self, file)
 
     def fit(self, x, y, x_val, y_val) -> None:
         pass
@@ -18,14 +35,12 @@ class Model(object):
     def predict(self, x) -> np.ndarray:
         pass
 
-    def set_min_needed_data(self, min_needed_rows: int):
-        pass
-
-    def get_min_needed_data(self) -> int:
-        pass
-
     # this lets the model also act as a provider
     def __call__(self, *args, **kwargs):
+        log.debug(f'initialize new Model with args: {args}; kwargs: {kwargs}')
+        if 'min_required_data' in kwargs:
+            self.min_required_data = kwargs['min_required_data']
+
         return self
 
 

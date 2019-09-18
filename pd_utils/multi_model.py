@@ -2,7 +2,7 @@ import logging
 from collections.abc import Iterable
 
 from typing import Tuple, Dict, Callable, Any, Union, List
-from .data_objects import FeaturesAndLabels, Model
+from .data_objects import FeaturesAndLabels, Model, Fit
 import dill as pickle
 import pandas as pd
 import numpy as np
@@ -30,7 +30,7 @@ class MultiModel(object):
         self.features_and_labels = features_and_labels
         self.parameter_space = self._evaluate_full_parameter_space(parameter_space.copy(), {})
         self.data: pd.DataFrame = None
-        self.classification_summaries = None
+        self.fits = None
 
     def save(self, filename: str):
         with open(filename, 'wb') as file:
@@ -53,14 +53,17 @@ class MultiModel(object):
         self.data = self.data_provider()
 
     def fit(self, test_size: float = 0.4, test_validate_split_seed: int=None):
-        def model_fitter(**kwargs):
-            self.data_engineer(self.data, **kwargs) \
-                .fit_classifier(self.features_and_labels,
-                                self.model_provider,
-                                test_size=test_size,
-                                test_validate_split_seed=test_validate_split_seed)
+        def model_fitter(**kwargs) -> Fit:
+            fit = self.data_engineer(self.data, **kwargs) \
+                      .fit_classifier(self.features_and_labels,
+                                      self.model_provider,
+                                      test_size=test_size,
+                                      test_validate_split_seed=test_validate_split_seed)
 
-        self.classification_summaries = self._execute_on_parameter_space(self.parameter_space, model_fitter)
+            log.info(f'fit for { {**kwargs}}\n{fit.training_classification.confusion_count()}\n{fit.test_classification.confusion_count()}')
+            return fit
+
+        self.fits = self._execute_on_parameter_space(self.parameter_space, model_fitter)
 
     def predict(self):
         # return a prediction of every model
