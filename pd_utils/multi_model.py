@@ -2,8 +2,9 @@ import logging
 from collections.abc import Iterable
 
 from typing import Tuple, Dict, Callable, Any, Union, List
-from .data_objects import FeaturesAndLabels, Fit
+from .data_objects import Fit
 from .classifier_models import Model
+from .features_and_Labels import FeaturesAndLabels
 import dill as pickle
 import pandas as pd
 import numpy as np

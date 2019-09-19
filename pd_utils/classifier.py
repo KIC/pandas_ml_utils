@@ -8,8 +8,9 @@ import logging
 
 from pd_utils.train_test_data import make_training_data, make_forecast_data
 from pd_utils.utils import log_with_time
-from .data_objects import FeaturesAndLabels, Model, ClassificationSummary, Fit
-
+from .data_objects import ClassificationSummary, Fit
+from .classifier_models import Model
+from .features_and_Labels import FeaturesAndLabels
 
 log = logging.getLogger(__name__)
 
