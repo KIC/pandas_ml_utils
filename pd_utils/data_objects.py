@@ -26,6 +26,10 @@ class ClassificationSummary(object):
         self.probability_cutoff = probability_cutoff
         self.confusion_matrix = self._confusion_matrix_indices()
 
+        # immediately log some fit quality measures
+        ratios = self.get_ratios()
+        log.info(f"FN Ratio = {ratios[0]}, FP Ratio = {ratios[1]}")
+
     def set_probability_cutoff(self, probability_cutoff: float = 0.5):
         self.probability_cutoff = probability_cutoff
         self.confusion_matrix = self._confusion_matrix_indices()
@@ -48,6 +52,10 @@ class ClassificationSummary(object):
             print(f"shapes: y_true: {self.y_true.shape}, y_pred: {self.y_prediction.shape}, index: {self.index.shape}")
             print("Unexpected error:", sys.exc_info()[0])
             return None
+
+    def get_ratios(self):
+        cm = self.confusion_count()
+        return cm[0,0] / (cm[1,0]  + 1), cm[0,0] / (cm[0,1]  + 1)
 
     def plot_backtest(self,
                       y: pd.Series = None,

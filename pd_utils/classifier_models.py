@@ -3,7 +3,8 @@ import logging
 import dill as pickle
 import numpy as np
 
-from pd_utils.train_test_data import reshape_rnn_as_ar
+from .train_test_data import reshape_rnn_as_ar
+from .features_and_Labels import FeaturesAndLabels
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +20,8 @@ class Model(object):
             else:
                 raise ValueError("Deserialized pickle was not a Model!")
 
-    def __init__(self):
+    def __init__(self, features_and_labels: FeaturesAndLabels):
+        self.features_and_labels = features_and_labels
         self.min_required_data: int = None
 
     def save(self, filename: str):
@@ -34,16 +36,13 @@ class Model(object):
 
     # this lets the model also act as a provider
     def __call__(self, *args, **kwargs):
-        log.debug(f'initialize new Model with args: {args}; kwargs: {kwargs}')
-        if 'min_required_data' in kwargs:
-            self.min_required_data = kwargs['min_required_data']
-
         return self
 
 
 class SkitModel(Model):
 
-    def __init__(self, skit_model):
+    def __init__(self, skit_model, features_and_labels: FeaturesAndLabels):
+        super().__init__(features_and_labels)
         self.skit_model = skit_model
         self.min_needed_data = None
 

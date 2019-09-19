@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 
 
 def fit_classifier(df: pd.DataFrame,
-                   features_and_labels: FeaturesAndLabels,
                    model_provider: Callable[[int], Model],
                    test_size: float = 0.4,
                    number_of_cross_validation_splits: int = None,
@@ -24,6 +23,11 @@ def fit_classifier(df: pd.DataFrame,
                    test_validate_split_seed = 42,
                    summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None
                    ) -> Tuple[Model, ClassificationSummary, ClassificationSummary]:
+    # get a new model
+    model = model_provider()
+    features_and_labels = model.features_and_labels
+
+    # make training and test data sets
     x_train, x_test, y_train, y_test, index_train, index_test, min_required_data, names = \
         make_training_data(df,
                            features_and_labels,
@@ -34,8 +38,9 @@ def fit_classifier(df: pd.DataFrame,
                            summary_printer=summary_printer)
 
     log.info(f"create model (min required data = {min_required_data}")
-    model = model_provider(min_required_data=min_required_data)
+    model.min_required_data = min_required_data
 
+    # fit the model
     start_performance_count = log_with_time(lambda: log.info("fit model"))
     if number_of_cross_validation_splits is not None:
         # cross validation
@@ -59,22 +64,21 @@ def fit_classifier(df: pd.DataFrame,
     return Fit(model, training_classification, test_classification)
 
 
-def backtest(df: pd.DataFrame,
-             features_and_labels: FeaturesAndLabels,
-             model: Model) -> ClassificationSummary:
+def backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:
+    features_and_labels = model.features_and_labels
 
     # make training and test data with no 0 test data fraction
     x, _, y, _, index, _, _, names = make_training_data(df, features_and_labels, 0, int)
 
-    # precidict probabilities
+    # predict probabilities
     y_hat = model.predict(x)
 
-    return ClassificationSummary(y, y_hat, index, df[features_and_labels.loss_column], features_and_labels.probability_cutoff)
+    loss = df[features_and_labels.loss_column if features_and_labels.loss_column is not None else []]
+    return ClassificationSummary(y, y_hat, index, loss, features_and_labels.probability_cutoff)
 
 
-def classify(df: pd.DataFrame,
-             features_and_labels: FeaturesAndLabels,
-             model: Model) -> pd.DataFrame:
+def classify(df: pd.DataFrame, model: Model) -> pd.DataFrame:
+    features_and_labels = model.features_and_labels
 
     # first save target columns
     target = df[features_and_labels.target_columns] if features_and_labels.target_columns is not None else None
