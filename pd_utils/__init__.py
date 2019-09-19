@@ -5,6 +5,7 @@ from .classifier import *
 from .lazy_dataframe import *
 from .fetch_yahoo import *
 from .data_objects import *
+from .classifier_models import *
 from pandas.core.base import PandasObject
 
 
