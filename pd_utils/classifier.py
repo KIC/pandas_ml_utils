@@ -1,16 +1,15 @@
-from sklearn.model_selection import KFold
+import logging
 from time import perf_counter
 from typing import Callable, Tuple
 
 import numpy as np
 import pandas as pd
-import logging
+from sklearn.model_selection import KFold
 
 from pd_utils.train_test_data import make_training_data, make_forecast_data
 from pd_utils.utils import log_with_time
-from .data_objects import ClassificationSummary, Fit
 from .classifier_models import Model
-from .features_and_Labels import FeaturesAndLabels
+from .data_objects import ClassificationSummary, Fit
 
 log = logging.getLogger(__name__)
 

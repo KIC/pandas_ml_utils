@@ -3,6 +3,10 @@ import logging
 import dill as pickle
 import numpy as np
 
+from copy import deepcopy
+
+from typing import Callable
+
 from .train_test_data import reshape_rnn_as_ar
 from .features_and_Labels import FeaturesAndLabels
 
@@ -36,7 +40,7 @@ class Model(object):
 
     # this lets the model also act as a provider
     def __call__(self, *args, **kwargs):
-        return self
+        return deepcopy(self)
 
 
 class SkitModel(Model):
@@ -44,7 +48,6 @@ class SkitModel(Model):
     def __init__(self, skit_model, features_and_labels: FeaturesAndLabels):
         super().__init__(features_and_labels)
         self.skit_model = skit_model
-        self.min_needed_data = None
 
     def fit(self, x, y, x_val, y_val):
         self.skit_model.fit(reshape_rnn_as_ar(x), y),
@@ -52,8 +55,16 @@ class SkitModel(Model):
     def predict(self, x):
         return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
 
-    def set_min_needed_data(self, min_needed_rows: int):
-        self.min_needed_data = min_needed_rows
 
-    def get_min_needed_data(self):
-        return self.min_needed_data
+# class MultiModel(Model):
+#
+#     def __init__(self, model_provider: Callable[[], Model], features_and_labels: FeaturesAndLabels):
+#         super().__init__(features_and_labels)
+#         self.model_provider = model_provider
+#
+#     def fit(self, x, y, x_val, y_val) -> None:
+#         pass
+#
+#     def predict(self, x) -> np.ndarray:
+#         # we would need to return a prediction for every and each parameters dict in the parameter space
+#         pass

@@ -1,10 +1,10 @@
 import logging
 from collections.abc import Iterable
+from itertools import groupby
 
 from typing import Tuple, Dict, Callable, Any, Union, List
-from .data_objects import Fit
-from .classifier_models import Model
-from .features_and_Labels import FeaturesAndLabels
+from .utils import unfold_parameter_space
+import pd_utils as pdu
 import dill as pickle
 import pandas as pd
 import numpy as np
@@ -23,29 +23,19 @@ class MultiModel(object):
     def __init__(self,
                  data_provider: Callable[[], pd.DataFrame],
                  data_engineer: Callable[[pd.DataFrame], pd.DataFrame],
-                 model_provider: Callable[[], Model],
-                 features_and_labels: FeaturesAndLabels,
+                 model_provider: Callable[[], pdu.Model],
                  parameter_space: Dict[str, Iterable]):
         self.data_provider = data_provider
         self.data_engineer = data_engineer
         self.model_provider = model_provider
-        self.features_and_labels = features_and_labels
-        self.parameter_space = self._evaluate_full_parameter_space(parameter_space.copy(), {})
+        self.parameter_space = unfold_parameter_space(parameter_space.copy(), {})
+        self.min_needed_data: int = None
         self.data: pd.DataFrame = None
-        self.fits = None
+        self.fits: List[pdu.Fit] = None
 
     def save(self, filename: str):
         with open(filename, 'wb') as file:
             pickle.dump(self, file)
-
-    def _evaluate_full_parameter_space(self, parameter_space: Dict[str, Iterable], parameters: Dict[str, Any]):
-        if len(parameter_space) > 0:
-            # more parameters need to be unfolded
-            parameter, space = parameter_space.popitem()
-            return [self._evaluate_full_parameter_space(parameter_space.copy(), {**parameters, parameter: argument}) for argument in space]
-        else:
-            # all needed parameters are unfolded, execute code using parameters as **kwargs
-            return parameters
 
     # def fetch_data_and_fit(self, test_size: float = 0.4, test_validate_split_seed: int=None):
     #     self.fetch_data()
@@ -54,28 +44,50 @@ class MultiModel(object):
     def fetch_data(self):
         self.data = self.data_provider()
 
-    def fit(self, test_size: float = 0.4, test_validate_split_seed: int=None):
-        def model_fitter(**kwargs) -> Fit:
+    def fit(self, test_size: float = 0.4, test_validate_split_seed: int = None) -> None:
+        def model_fitter(**kwargs) -> pdu.Fit:
             fit = self.data_engineer(self.data, **kwargs) \
-                      .fit_classifier(self.features_and_labels,
-                                      self.model_provider,
+                      .fit_classifier(self.model_provider,
                                       test_size=test_size,
                                       test_validate_split_seed=test_validate_split_seed)
 
             log.info(f'fit for { {**kwargs}}\n{fit.training_classification.confusion_count()}\n{fit.test_classification.confusion_count()}')
             return fit
 
-        self.fits = self._execute_on_parameter_space(self.parameter_space, model_fitter)
+        # TODO there should be a way to generate one ClassificationSummary out of several by summing or averaging
+        self.fits = [model_fitter(**kwargs) for kwargs in self.parameter_space]
+        self.min_needed_data = max([fit.model.min_required_data for fit in self.fits])
 
-    def predict(self):
-        # return a prediction of every model
-        pass
+    def predict(self) -> pd.DataFrame:
+        import pd_utils as pdu  # FIXME remove
+        df = self.data[-self.min_needed_data:] if self.min_needed_data is not None else self.data
 
-    def _execute_on_parameter_space(self, space: Union[List, Dict], script: Callable):
-        if isinstance(space, list):
-            return [self._execute_on_parameter_space(subspace, script) for subspace in space]
-        else:
-            log.debug(f"call script for parameters: { {**space} }")
-            return script(**space)
+        def model_predictor(model, **kwargs) -> pd.DataFrame:
+            prediction = self.data_engineer(df, **kwargs) \
+                             .classify(model)
 
+            return prediction[-1:]
 
+        predictions = [model_predictor(self.fits[i].model, **kwargs) for i, kwargs in enumerate(self.parameter_space)]
+        return predictions
+
+    def plot_heatmap(self, parameter_as_column: str):
+        import seaborn as sns
+        sns.heatmap(self.compute_heatmap(parameter_as_column))
+
+    def compute_heatmap(self, parameter_as_column: str):
+        predictions = self.predict()
+
+        # first group all ro indices per column index
+        columns = {col: [value[0] for value in parameter]
+                   for col, parameter in groupby(enumerate(self.parameter_space), lambda x: x[1][parameter_as_column])}
+
+        # assign a dataframe for each column
+        predictions = [pd.concat([predictions[row][["target", "prediction_proba"]] for row in rows], axis=0, sort=True) \
+                         .set_index("target") \
+                         .sort_index(ascending=False) \
+                         .rename(columns={"prediction_proba": column})
+                       for column, rows in columns.items()]
+
+        predictions = pd.concat(predictions, axis=1, sort=True)
+        return predictions

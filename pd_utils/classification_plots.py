@@ -8,15 +8,16 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 
-from .classifier_models import Model
+from .multi_model import MultiModel
 
 log = logging.getLogger(__name__)
 
 
 def plot_forecast_heatmap(df: pd.DataFrame,
-                          model: Model,
-                          tail: int = 1):
+                          multi_model: MultiModel,
+                          parameter_as_column: str):
 
-    # we need a dataframe with the target values as row index and the forecast periods as columns
-    df.classify(model, tail=1)
+    # we need a data frame with the target values as row index and the forecast periods as columns
+    # if we have one data frame (which is effectively one row) per "target" we just need to concatenete them
+    # and join the same frames as new column for each forecast period
     pass
