@@ -1,15 +1,11 @@
 # pandas_utils
 ## TODO
 
-* provide rations: TP / (FP + 1) and TP / (FN + 1) from the ClassificationSummary
- 
-* features and labels need to be part of model
-
-* everything is to be applied on the data frame
-
 * multi model is just another implementation of model
 
 * introduce df.heatmap(model, x, y, index=-1)
+
+* everything is to be applied on the data frame
 
 * whole strategy need to be a function/class itself which then can be pickled and loaded
 

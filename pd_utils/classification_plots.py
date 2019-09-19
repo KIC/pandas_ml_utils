@@ -14,6 +14,9 @@ log = logging.getLogger(__name__)
 
 
 def plot_forecast_heatmap(df: pd.DataFrame,
-                          model: Model):
+                          model: Model,
+                          tail: int = 1):
 
+    # we need a dataframe with the target values as row index and the forecast periods as columns
+    df.classify(model, tail=1)
     pass

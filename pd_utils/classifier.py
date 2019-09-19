@@ -77,11 +77,21 @@ def backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:
     return ClassificationSummary(y, y_hat, index, loss, features_and_labels.probability_cutoff)
 
 
-def classify(df: pd.DataFrame, model: Model) -> pd.DataFrame:
+def classify(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     features_and_labels = model.features_and_labels
+
+    if tail is not None:
+        if tail <= 0:
+            raise ValueError("tail must be > 0 or None")
+        elif model.min_required_data is not None:
+            # just use the tail for feature engineering
+            df = df[-(tail + (model.min_required_data - 1)):]
+        else:
+            log.warning("could not determine the minimum required data from the model")
 
     # first save target columns
     target = df[features_and_labels.target_columns] if features_and_labels.target_columns is not None else None
+    loss = df[features_and_labels.loss_column] if features_and_labels.loss_column is not None else None
 
     # then re assign data frame with features only
     dff, x, _ = make_forecast_data(df, features_and_labels)
@@ -94,4 +104,5 @@ def classify(df: pd.DataFrame, model: Model) -> pd.DataFrame:
     dff["prediction"] = prediction > pc
     dff["prediction_proba"] = prediction
     dff["target"] = target
+    dff["loss"] = loss
     return dff

@@ -37,4 +37,13 @@ class ComponentTest(unittest.TestCase):
         # classify
         fitted_model = fit.model
         classified_df = df.classify(fitted_model)
-        # FIXME self assert something
+        print(classified_df.tail())
+
+        self.assertEqual(len(classified_df[classified_df["prediction"] == False]), 3437)
+        self.assertListEqual(classified_df.columns.tolist(),
+                             ["vix_Close", "prediction", "prediction_proba", "target", "loss"])
+
+        # classify tail
+        fitted_model = fit.model
+        classified_df = df.classify(fitted_model, 2)
+        self.assertEqual(len(classified_df), 2)
