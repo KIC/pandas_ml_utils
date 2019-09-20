@@ -18,7 +18,11 @@ class MultiModel(object):
     @staticmethod
     def load(filename: str):
         with open(filename, 'rb') as file:
-            return pickle.load(file)
+            multi_model = pickle.load(file)
+            if isinstance(multi_model, MultiModel):
+                return multi_model
+            else:
+                raise ValueError("file provided was not a MultiModel")
 
     def __init__(self,
                  data_provider: Callable[[], pd.DataFrame],
@@ -59,7 +63,6 @@ class MultiModel(object):
         self.min_needed_data = max([fit.model.min_required_data for fit in self.fits])
 
     def predict(self) -> pd.DataFrame:
-        import pd_utils as pdu  # FIXME remove
         df = self.data[-self.min_needed_data:] if self.min_needed_data is not None else self.data
 
         def model_predictor(model, **kwargs) -> pd.DataFrame:
@@ -78,16 +81,17 @@ class MultiModel(object):
     def compute_heatmap(self, parameter_as_column: str):
         predictions = self.predict()
 
-        # first group all ro indices per column index
-        columns = {col: [value[0] for value in parameter]
-                   for col, parameter in groupby(enumerate(self.parameter_space), lambda x: x[1][parameter_as_column])}
+        # to group all ro indices per column index we first need to sort accordingly
+        sorted_parameter_space = sorted(enumerate(self.parameter_space), key=lambda x: x[1][parameter_as_column])
 
-        # assign a dataframe for each column
+        columns = {col: [value[0] for value in parameter]
+                   for col, parameter in groupby(sorted_parameter_space, lambda x: x[1][parameter_as_column])}
+
+        # assign a data frame for each column
         predictions = [pd.concat([predictions[row][["target", "prediction_proba"]] for row in rows], axis=0, sort=True) \
                          .set_index("target") \
-                         .sort_index(ascending=False) \
                          .rename(columns={"prediction_proba": column})
                        for column, rows in columns.items()]
 
-        predictions = pd.concat(predictions, axis=1, sort=True)
+        predictions = pd.concat(predictions, axis=1, sort=True).sort_index(ascending=False)
         return predictions
