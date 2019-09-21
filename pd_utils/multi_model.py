@@ -90,6 +90,7 @@ class MultiModel(object):
         # assign a data frame for each column
         predictions = [pd.concat([predictions[row][["target", "prediction_proba"]] for row in rows], axis=0, sort=True) \
                          .set_index("target") \
+                         .groupby(level=0).max() \
                          .rename(columns={"prediction_proba": column})
                        for column, rows in columns.items()]
 
