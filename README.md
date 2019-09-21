@@ -58,9 +58,9 @@ fit = df.fit_classifier(pmu.SkitModel(LogisticRegression(solver='lbfgs'),
 Now you can see the loss in % of dollars of your miss classification. The classification
  probabilities are plotted on the very top of the plot.
 
-### Autoregressive Models and RNN Shape
+### Auto-Regressive Models and RNN Shape
 It is also possible to use the FeaturesAndLabels object to generate a auto regressive 
- features. By default lagging features results in an RNN shape as Keras liks to have it.
+ features. By default lagging features results in an RNN shape as Keras likes to have it.
  However we can also use SkitModels the features will be implicitly transformed back 
  into a 2D array.  
 
@@ -90,7 +90,7 @@ pmu.FeaturesAndLabels(features=['feature'],
 Every lag from 6 onwards will be smoothed by a 3 period average, every lag from 35 onwards
  with a 5 periods moving average.
  
-## Back-Tesing a Model
+## Back-Testing a Model
 todo ...
 
 ## Save, load reuse a Model
@@ -99,8 +99,8 @@ To save a model you simply call the save method on the model inside of the fit.
 fit.model.save('/tmp/foo.model')
 ```
 
-Loading is as simpy as calling load on the Model object. You can immediately apply
- the model on the dataframe to get back the featires along with the classification
+Loading is as simply as calling load on the Model object. You can immediately apply
+ the model on the dataframe to get back the features along with the classification
  (which is just another data frame).
 
 ```python
@@ -116,9 +116,9 @@ df.classify(pmu.Model.load('/tmp/foo.model')).tail()
 ```  
 
 NOTE If you have a target level for your binary classifier like all houses cheaper then
- 50k then you can define this target level to the FeaturesAndLabesl obejct likes so:
- `FeaturesAndLabels(target_columns=['House Price'])`. This target colum is simply fed 
- through to the classified dataframe as target colmumns.
+ 50k then you can define this target level to the FeaturesAndLabels object likes so:
+ `FeaturesAndLabels(target_columns=['House Price'])`. This target column is simply fed 
+ through to the classified dataframe as target columns.
  
 ### Other utility objects
 TODO describe ...
