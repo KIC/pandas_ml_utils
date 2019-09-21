@@ -1,4 +1,4 @@
-# pandas_utils
+# pandas-ml-utils
 
 I was really sick of converting data frames to numpy arrays back and forth just to try out a 
  simple logistic regression. So I have started a pandas ml utilities library where
