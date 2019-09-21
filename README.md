@@ -127,9 +127,11 @@ TODO describe ...
 * MultiModel
 
 ## TODO
-
-* rename pandas util to pandas ml utils and use pmu as abbreviation
 * multi model is just another implementation of model
+* provide better and more flexible option to do k folds or any other "optimization"
+  on training data like over weighting certain events 
+* add keras model
+* add more tests
 * add horizontal line at prob. cutoff https://stackoverflow.com/a/12864466/1298461
   to the chart
 
