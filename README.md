@@ -59,10 +59,10 @@ Now you can see the loss in % of dollars of your miss classification. The classi
  probabilities are plotted on the very top of the plot.
 
 ### Auto-Regressive Models and RNN Shape
-It is also possible to use the FeaturesAndLabels object to generate a auto regressive 
- features. By default lagging features results in an RNN shape as Keras likes to have it.
+It is also possible to use the FeaturesAndLabels object to generate auto regressive 
+ features. By default lagging features results in an RNN shaped 3D array as Keras likes it.
  However we can also use SkitModels the features will be implicitly transformed back 
- into a 2D array.  
+ into a 2D array (by using the `reshape_rnn_as_ar` function).  
 
 ```python
 import pandas_ml_utils as pmu
