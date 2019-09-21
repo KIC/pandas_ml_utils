@@ -1,7 +1,6 @@
 import logging
 import traceback
 import pandas as pd
-import yfinance as yf
 import cachetools.func
 
 
@@ -11,6 +10,8 @@ def inner_join(df, join: pd.DataFrame, prefix: str = ''):
 
 @cachetools.func.ttl_cache(maxsize=1, ttl=10 * 60)
 def fetch_yahoo(period='max', **kwargs: str):
+    import yfinance as yf
+
     df = None
     for k, v in kwargs.items():
         px = f'{k}_'

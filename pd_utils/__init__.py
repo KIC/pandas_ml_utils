@@ -23,5 +23,3 @@ PandasObject.classify = classify
 PandasObject.backtest = backtest
 
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
-
-__version = 0.002

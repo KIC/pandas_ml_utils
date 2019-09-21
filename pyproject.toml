@@ -1,0 +1,25 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "pandas_ml_utils"
+dist-name = "pandas-ml-utils"
+author = "KIC"
+author-email = "kic@mindbusters.com"
+description-file = "README.md"
+classifiers = ["License :: OSI Approved :: MIT License"]
+requires = [
+    "pandas",
+    "cachetools",
+    "sortedcontainers",
+    "scikit-learn",
+    "dill"
+]
+requires-extra = [
+    "yfinance",
+    "vdom",
+    "matplotlib",
+    "seaborn"
+]
+

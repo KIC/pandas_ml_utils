@@ -14,6 +14,10 @@ logger.setLevel(logging.DEBUG)
 
 class ComponentTest(unittest.TestCase):
 
+    def test_fetch_yahoo(self):
+        df = pd.fetch_yahoo(spy="SPY").tail()
+        self.assertTrue(df["spy_Close"].sum() > 0)
+
     def test_fit_classifier(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')
         df['label'] = df["spy_Close"] > df["spy_Open"]
