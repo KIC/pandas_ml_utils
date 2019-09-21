@@ -57,7 +57,7 @@ def fit_classifier(df: pd.DataFrame,
 
     # assemble the result objects
     pc = features_and_labels.probability_cutoff
-    loss = df[features_and_labels.loss_column if features_and_labels.loss_column is not None else []]
+    loss = df[features_and_labels.loss_column] if features_and_labels.loss_column is not None else None
     training_classification = ClassificationSummary(y_train, model.predict(x_train), index_train, loss, pc)
     test_classification = ClassificationSummary(y_test, model.predict(x_test), index_test, loss, pc)
     return Fit(model, training_classification, test_classification)

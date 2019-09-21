@@ -17,7 +17,7 @@ class ClassificationSummary(object):
                  y_true: np.ndarray,
                  y_prediction: np.ndarray,
                  index: np.ndarray,
-                 loss: pd.Series,
+                 loss: pd.Series = None,
                  probability_cutoff: float = 0.5):
         self.y_true = y_true
         self.y_prediction = y_prediction.ravel() if len(y_prediction.shape) > 1 else y_prediction
@@ -101,8 +101,8 @@ class ClassificationSummary(object):
     def confusion_loss(self):
         cm = self.confusion_matrix
         df = self.loss
-        return np.array([[df.loc[cm[0, 0]].sum()[0], df.loc[cm[0, 1]].sum()[0]],
-                         [df.loc[cm[1, 0]].sum()[0], df.loc[cm[1, 1]].sum()[0]]])
+        return np.array([[df.loc[cm[0, 0]].sum(), df.loc[cm[0, 1]].sum()],
+                         [df.loc[cm[1, 0]].sum(), df.loc[cm[1, 1]].sum()]])
 
     def confusion_count(self):
         return np.array([
@@ -123,15 +123,16 @@ class ClassificationSummary(object):
         if self.confusion_count()[0, 0] <= 0:
             return p('very bad fit with 0 TP!')
 
-        image=''
-        with io.BytesIO() as f:
-            fig = self.plot_backtest()
-            fig.savefig(f, format="png", bbox_inches='tight')
-            image = base64.encodebytes(f.getvalue()).decode("utf-8")
-            plt.close(fig)
+        image = None
+        if self.loss is not None:
+            with io.BytesIO() as f:
+                fig = self.plot_backtest()
+                fig.savefig(f, format="png", bbox_inches='tight')
+                image = base64.encodebytes(f.getvalue()).decode("utf-8")
+                plt.close(fig)
 
         cmc = self.confusion_count()
-        cml = self.confusion_loss()
+        cml = self.confusion_loss() if self.loss is not None else np.array([[0, 0], [0, 0]])
 
         return div(
             table(
@@ -148,7 +149,7 @@ class ClassificationSummary(object):
                     ),
                     tr(
                         td(
-                            img(src=f'data:image/png;base64,{image}', style={'width': '100%'}),
+                            img(src=f'data:image/png;base64,{image}', style={'width': '100%'}) if image is not None else "",
                             colspan='2'
                         )
                     )
