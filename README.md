@@ -122,10 +122,12 @@ NOTE If you have a target level for your binary classifier like all houses cheap
  
 ## TODO
 
+* rename pandas util to pandas ml utils and use pmu as abbreviation
 * multi model is just another implementation of model
-
 * add horizontal line at prob. cutoff https://stackoverflow.com/a/12864466/1298461
+  to the chart
 
-* rename pandas util to pandas ml utils and use pml as abbreviation
-
-* write a nice readme
+## Wanna help?
+* currently I only need binary classification, maybe you want to enable multiple
+  classification categories.     
+* write some tests
