@@ -1,5 +1,5 @@
 import unittest
-import pd_utils as pdu
+import pandas_ml_utils as pdu
 import numpy as np
 import pandas as pd
 
@@ -111,7 +111,7 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                            "labelB": [5, 4, 3, 2, 1, 0, 1, 2, 3, None]})
 
-        from pd_utils.train_test_data import _make_features
+        from pandas_ml_utils.train_test_data import _make_features
         df, x, names = _make_features(df, pdu.FeaturesAndLabels(["featureA"], None,
                                                                 feature_lags=[0, 1],
                                                                 lag_smoothing={1: lambda df: df["featureA"].shift(2)}))
@@ -152,7 +152,7 @@ class TestTrainTestData(unittest.TestCase):
         self.assertEqual(hash(a), hash(b))
 
     def test_cache_feature_matrix(self):
-        from pd_utils.train_test_data import make_training_data, _make_features_with_cache
+        from pandas_ml_utils.train_test_data import make_training_data, _make_features_with_cache
 
         df = pd.DataFrame({"featureA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                            "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],

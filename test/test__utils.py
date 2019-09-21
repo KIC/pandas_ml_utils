@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from pd_utils.utils import unfold_parameter_space
+from pandas_ml_utils.utils import unfold_parameter_space
 
 
 class TestUtils(TestCase):

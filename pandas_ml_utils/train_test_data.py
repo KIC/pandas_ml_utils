@@ -10,7 +10,7 @@ from sortedcontainers import SortedDict
 from typing import Type, Iterable, List, Callable, Dict
 
 from wrappers.hashable_dataframe import HashableDataFrame
-from pd_utils.utils import log_with_time
+from pandas_ml_utils.utils import log_with_time
 
 
 log = logging.getLogger(__name__)

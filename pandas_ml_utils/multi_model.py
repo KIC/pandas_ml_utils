@@ -4,7 +4,7 @@ from itertools import groupby
 
 from typing import Tuple, Dict, Callable, Any, Union, List
 from .utils import unfold_parameter_space
-import pd_utils as pdu
+import pandas_ml_utils as pdu
 import dill as pickle
 import pandas as pd
 import numpy as np
