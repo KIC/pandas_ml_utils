@@ -1,4 +1,5 @@
-import pandas as pd
+"""Augment pandas data frames with methods for machine learning"""
+__version__ = '0.0.1'
 
 from .pandas_extensions import *
 from .classifier import *
@@ -23,3 +24,4 @@ PandasObject.classify = classify
 PandasObject.backtest = backtest
 
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
+
