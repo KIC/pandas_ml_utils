@@ -120,6 +120,12 @@ NOTE If you have a target level for your binary classifier like all houses cheap
  `FeaturesAndLabels(target_columns=['House Price'])`. This target colum is simply fed 
  through to the classified dataframe as target colmumns.
  
+### Other utility objects
+TODO describe ...
+* LazyDataFrame
+* HashableDataFrame
+
+
 ## TODO
 
 * rename pandas util to pandas ml utils and use pmu as abbreviation
