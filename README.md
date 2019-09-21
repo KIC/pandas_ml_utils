@@ -124,7 +124,7 @@ NOTE If you have a target level for your binary classifier like all houses cheap
 TODO describe ...
 * LazyDataFrame
 * HashableDataFrame
-
+* MultiModel
 
 ## TODO
 
