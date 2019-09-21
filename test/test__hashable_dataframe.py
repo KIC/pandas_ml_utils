@@ -1,6 +1,5 @@
 import unittest
 import pandas as pd
-from pd_utils.lazy_dataframe import LazyDataFrame
 import math
 
 from wrappers.hashable_dataframe import HashableDataFrame

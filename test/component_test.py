@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import unittest
-import pd_utils as pdu
+import pandas_ml_utils as pdu
 
 from sklearn.neural_network import MLPClassifier
 

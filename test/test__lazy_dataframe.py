@@ -1,6 +1,6 @@
 import unittest
 import pandas as pd
-from pd_utils.lazy_dataframe import LazyDataFrame
+from pandas_ml_utils.lazy_dataframe import LazyDataFrame
 
 
 class TestLazyDataFrame(unittest.TestCase):

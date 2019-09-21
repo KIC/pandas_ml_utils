@@ -1,4 +1,4 @@
-# pandas_utils
+# pandas-ml-utils
 
 I was really sick of converting data frames to numpy arrays back and forth just to try out a 
  simple logistic regression. So I have started a pandas ml utilities library where
@@ -10,7 +10,7 @@ I was really sick of converting data frames to numpy arrays back and forth just 
 ### Ordinary Binary Classification
 ```python
 import pandas as pd
-import pd_utils as pmu
+import pandas_ml_utils as pmu
 from sklearn.datasets import load_breast_cancer
 from sklearn.linear_model import LogisticRegression
 
@@ -39,7 +39,7 @@ As you can see in the above example are two confusion matrices the regular well 
  i.e. a loss in dollars. 
 ```python
 import pandas as pd
-import pd_utils as pmu
+import pandas_ml_utils as pmu
 from sklearn.linear_model import LogisticRegression
 
 df = pd.fetch_yahoo(spy='SPY')
@@ -65,7 +65,7 @@ It is also possible to use the FeaturesAndLabels object to generate a auto regre
  into a 2D array.  
 
 ```python
-import pd_utils as pmu
+import pandas_ml_utils as pmu
 pmu.FeaturesAndLabels(features=['feature'],
                       labels=['label'],
                       feature_lags=range(0, 10))
@@ -75,7 +75,7 @@ One may like to use very long lags i.e. to catch seasonal effects. Since very lo
 are a bit fuzzy I usually like to smooth them a bit by using simple averages.
 
 ```python
-import pd_utils as pmu
+import pandas_ml_utils as pmu
 pmu.FeaturesAndLabels(features=['feature'], 
                       labels=['label'], 
                       target_columns=['strike'],
@@ -106,7 +106,7 @@ Loading is as simpy as calling load on the Model object. You can immediately app
 ```python
 
 import pandas as pd
-import pd_utils as pmu
+import pandas_ml_utils as pmu
 from sklearn.datasets import load_breast_cancer
 
 bc = load_breast_cancer()
@@ -122,10 +122,12 @@ NOTE If you have a target level for your binary classifier like all houses cheap
  
 ## TODO
 
+* rename pandas util to pandas ml utils and use pmu as abbreviation
 * multi model is just another implementation of model
-
 * add horizontal line at prob. cutoff https://stackoverflow.com/a/12864466/1298461
+  to the chart
 
-* rename pandas util to pandas ml utils and use pml as abbreviation
-
-* write a nice readme
+## Wanna help?
+* currently I only need binary classification, maybe you want to enable multiple
+  classification categories.     
+* write some tests

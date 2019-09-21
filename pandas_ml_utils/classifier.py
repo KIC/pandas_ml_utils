@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
 
-from pd_utils.train_test_data import make_training_data, make_forecast_data
-from pd_utils.utils import log_with_time
+from pandas_ml_utils.train_test_data import make_training_data, make_forecast_data
+from pandas_ml_utils.utils import log_with_time
 from .classifier_models import Model
 from .data_objects import ClassificationSummary, Fit
 

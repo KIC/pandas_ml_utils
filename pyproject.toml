@@ -7,6 +7,7 @@ module = "pandas_ml_utils"
 dist-name = "pandas-ml-utils"
 author = "KIC"
 author-email = "kic@mindbusters.com"
+home-page = "https://github.com/KIC/pandas_ml_utils"
 description-file = "README.md"
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires = [
