@@ -38,7 +38,8 @@ class Model(object):
     def predict(self, x) -> np.ndarray:
         pass
 
-    # this lets the model also act as a provider
+    # this lets the model itself act as a provider. However we want to use the same Model configuration
+    # for different datasets (i.e. as part of MultiModel)
     def __call__(self, *args, **kwargs):
         return deepcopy(self)
 

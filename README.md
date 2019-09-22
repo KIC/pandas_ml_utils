@@ -123,21 +123,51 @@ NOTE If you have a target level for your binary classifier like all houses cheap
  through to the classified dataframe as target columns.
  
 ### Other utility objects
-TODO describe ...
-* LazyDataFrame
-* HashableDataFrame
-* MultiModel
+#### LazyDataFrame
+Very often I need to do a lot of feature engineering. And very often I do not want to
+ treat averages or other engineering methods as part of the data(frame). For this use
+ case I have added a LazyDataFrame object wrapping around a regular DataFrame where
+ some columns will always be calculated on the fly.
+ 
+Here is an example:
+```python
+import pandas_ml_utils as pmu
+import pandas as pd
+import talib
+
+df = pd.fetch_yahoo(spy='SPY')
+ldf = pmu.LazyDataFrame(df,
+                        rolling_stddev=lambda x: talib.STDDEV(x['spy_Close'], timeperiod=30) / 100)
+
+ldf["rolling_stddev"].tail()  # Will always be calculated only the fly    
+```   
+
+#### HashableDataFrame
+The hashable dataframe is nothing which should be used directly. However this is just a 
+hack to allow caching of feature matrices. With heavy usage of LazyDataFrame and heavily 
+lagging of features for AR models the training data preparation might take a long time.
+To shorten this time i.e. for hyper parameter tuning a cache is very helpful (but keep
+in mind this is still kind of a hack).
+
+to set the cache size (default is 1) set the following environment variable before import
+ `os.environ["CACHE_FEATUES_AND_LABELS"] = "2"`. And to use the cache simply pass the 
+ argument to the fit_classifier method like so:`df.fit_classifier(..., cache_feature_matrix=True)`
+ 
+#### MultiModel
+TODO describe multi models ... 
 
 ## TODO
 * multi model is just another implementation of model
 * provide better and more flexible option to do k folds or any other "optimization"
-  on training data like over weighting certain events 
+  on training data like ove-weighting certain events 
 * add keras model
 * add more tests
 * add horizontal line at prob. cutoff https://stackoverflow.com/a/12864466/1298461
   to the chart
 
 ## Wanna help?
-* currently I only need binary classification, maybe you want to enable multiple
-  classification categories.     
+* currently I only need binary classification
+    * maybe you want to add a feature for multiple classes
+    * or you want to add non classification prediction models
 * write some tests
+* add different more charts for a better understanding/interpretation of the models
