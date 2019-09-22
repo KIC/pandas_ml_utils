@@ -1,9 +1,9 @@
 """Augment pandas data frames with methods for machine learning"""
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 from .pandas_extensions import *
 from .classifier import *
-from .lazy_dataframe import *
+from .wrappers.lazy_dataframe import *
 from .fetch_yahoo import *
 from .data_objects import *
 from .classifier_models import *
@@ -12,7 +12,6 @@ from pandas.core.base import PandasObject
 
 
 # add functions to pandas
-PandasObject.hashable = hashable
 PandasObject.inner_join = inner_join
 PandasObject.drop_re = drop_re
 PandasObject.add_apply = add_apply

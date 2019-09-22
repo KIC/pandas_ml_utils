@@ -2,7 +2,7 @@ import unittest
 import pandas as pd
 import math
 
-from wrappers.hashable_dataframe import HashableDataFrame
+from pandas_ml_utils.wrappers.hashable_dataframe import HashableDataFrame
 
 
 class TestHashableDataFrame(unittest.TestCase):

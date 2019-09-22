@@ -7,9 +7,9 @@ import logging
 
 from time import perf_counter as pc
 from sortedcontainers import SortedDict
-from typing import Type, Iterable, List, Callable, Dict
+from typing import Type, Callable
 
-from wrappers.hashable_dataframe import HashableDataFrame
+from pandas_ml_utils.wrappers.hashable_dataframe import HashableDataFrame
 from pandas_ml_utils.utils import log_with_time
 
 

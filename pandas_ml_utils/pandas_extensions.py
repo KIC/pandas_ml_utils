@@ -4,13 +4,7 @@ from typing import Union, Callable
 
 import pandas as pd
 
-from wrappers.hashable_dataframe import HashableDataFrame
-
 log = logging.getLogger(__name__)
-
-
-def hashable(df):
-    return HashableDataFrame(df)
 
 
 def add_apply(df, **kwargs: Callable[[pd.DataFrame], Union[pd.Series, pd.DataFrame]]):
