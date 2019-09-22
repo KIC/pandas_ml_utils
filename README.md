@@ -2,6 +2,9 @@
 
 # pandas-ml-utils
 
+**A note of caution**: this is a one man show hobby project in pre-alpha state mainly 
+ serving my own needs. Be my guest and use it or extend it. 
+
 I was really sick of converting data frames to numpy arrays back and forth just to try out a 
  simple logistic regression. So I have started a pandas ml utilities library where
  everything should be reachable from the data frame itself. Check out the following examples
@@ -162,8 +165,6 @@ TODO describe multi models ...
   on training data like ove-weighting certain events 
 * add keras model
 * add more tests
-* add horizontal line at prob. cutoff https://stackoverflow.com/a/12864466/1298461
-  to the chart
 
 ## Wanna help?
 * currently I only need binary classification

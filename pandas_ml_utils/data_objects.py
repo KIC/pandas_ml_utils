@@ -94,6 +94,7 @@ class ClassificationSummary(object):
                                  palette=[sns.xkcd_rgb['white'], sns.xkcd_rgb['pale green'], sns.xkcd_rgb['cerise']])
 
         bar = sns.lineplot(x=y.index, y=self.y_prediction, ax=ax)
+        plt.hlines(self.probability_cutoff, y.index.min(), y.index.max(), color=sns.xkcd_rgb['silver'])
 
         plt.close()
         return fig
