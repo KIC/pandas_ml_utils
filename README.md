@@ -125,6 +125,9 @@ NOTE If you have a target level for your binary classifier like all houses cheap
  `FeaturesAndLabels(target_columns=['House Price'])`. This target column is simply fed 
  through to the classified dataframe as target columns.
  
+### Fitting other models then classifiers
+TODO ... 
+ 
 ### Other utility objects
 #### LazyDataFrame
 Very often I need to do a lot of feature engineering. And very often I do not want to
@@ -160,9 +163,9 @@ to set the cache size (default is 1) set the following environment variable befo
 TODO describe multi models ... 
 
 ## TODO
-* multi model is just another implementation of model
 * provide better and more flexible option to do k folds or any other "optimization"
-  on training data like ove-weighting certain events 
+  on training data like over-weighting certain events 
+* multi model is just another implementation of model
 * add keras model
 * add more tests
 
@@ -172,3 +175,5 @@ TODO describe multi models ...
     * or you want to add non classification prediction models
 * write some tests
 * add different more charts for a better understanding/interpretation of the models
+* implement hyper parameter tuning
+* add feature importance 

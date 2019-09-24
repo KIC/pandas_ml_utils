@@ -1,14 +1,11 @@
 import logging
+from copy import deepcopy
 
 import dill as pickle
 import numpy as np
 
-from copy import deepcopy
-
-from typing import Callable
-
-from .train_test_data import reshape_rnn_as_ar
 from .features_and_Labels import FeaturesAndLabels
+from ..train_test_data import reshape_rnn_as_ar
 
 log = logging.getLogger(__name__)
 
@@ -24,9 +21,16 @@ class Model(object):
             else:
                 raise ValueError("Deserialized pickle was not a Model!")
 
-    def __init__(self, features_and_labels: FeaturesAndLabels):
+    def __init__(self, features_and_labels: FeaturesAndLabels, **kwargs):
         self.features_and_labels = features_and_labels
         self.min_required_data: int = None
+        self.kwargs = kwargs
+
+    def __getitem__(self, item):
+        if isinstance(item, tuple) and len(item) == 2:
+            return self.kwargs[item[0]] if item[0] in self.kwargs else item[1]
+        else:
+            return self.kwargs[item] if item in self.kwargs else None
 
     def save(self, filename: str):
         with open(filename, 'wb') as file:
@@ -46,8 +50,8 @@ class Model(object):
 
 class SkitModel(Model):
 
-    def __init__(self, skit_model, features_and_labels: FeaturesAndLabels):
-        super().__init__(features_and_labels)
+    def __init__(self, skit_model, features_and_labels: FeaturesAndLabels, **kwargs):
+        super().__init__(features_and_labels, **kwargs)
         self.skit_model = skit_model
 
     def fit(self, x, y, x_val, y_val):
@@ -56,6 +60,10 @@ class SkitModel(Model):
     def predict(self, x):
         return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
 
+
+# TODO add Keras Model
+class KerasModel(Model):
+    pass
 
 # class MultiModel(Model):
 #

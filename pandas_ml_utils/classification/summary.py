@@ -1,17 +1,16 @@
-import inspect
 import logging
 import sys
-from typing import List, Tuple, Callable, Iterable, Dict, Union
+from typing import Tuple, Union
 
 import numpy as np
 import pandas as pd
 
-from .classifier_models import Model
+from ..model.summary import Summary
 
 log = logging.getLogger(__name__)
 
 
-class ClassificationSummary(object):
+class ClassificationSummary(Summary):
 
     def __init__(self,
                  y_true: np.ndarray,
@@ -190,55 +189,3 @@ class ClassificationSummary(object):
                f'\n{len(self.confusion_matrix[1,0])}\t{len(self.confusion_matrix[1,1])}'
 
 
-class Fit(object):
-
-    def __init__(self,
-                 model: Model,
-                 training_classification: ClassificationSummary,
-                 test_classification: ClassificationSummary):
-        self.model = model
-        self.training_classification = training_classification
-        self.test_classification = test_classification
-
-    def set_probability_cutoff(self, probability_cutoff: float = 0.5):
-        self.training_classification.set_probability_cutoff(probability_cutoff)
-        self.test_classification.set_probability_cutoff(probability_cutoff)
-
-    def values(self):
-        return self.model, self.training_classification, self.test_classification
-
-    def _repr_html_(self):
-        return self._html_()._repr_html_()
-
-    def _html_(self):
-        # only import it needed
-        from vdom.helpers import div, table, tr, td, tbody, thead, th
-
-        model = self.model.__repr__()
-        if model is None:
-            model = str(self.model)
-
-        return div(
-            table(
-                thead(
-                    tr(
-                        th("Training Data", style={'text-align': 'left'}),
-                        th("Test Data", style={'text-align': 'right'})
-                    )
-                ),
-                tbody(
-                    tr(
-                        td(self.training_classification._html_()),
-                        td(self.test_classification._html_())
-                    ),
-                    tr(
-                        td(
-                            model,
-                            colspan="2"
-                        )
-                    )
-                ),
-                style={'width': '100%'}
-            ),
-            style={'width': '100%', 'float': 'left'}
-        )

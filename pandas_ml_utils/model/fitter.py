@@ -6,22 +6,22 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
 
-from pandas_ml_utils.train_test_data import make_training_data, make_forecast_data
-from pandas_ml_utils.utils import log_with_time
-from .classifier_models import Model
-from .data_objects import ClassificationSummary, Fit
+from ..train_test_data import make_training_data, make_forecast_data
+from ..utils import log_with_time
+from ..model.models import Model
+from ..classification.summary import ClassificationSummary
 
 log = logging.getLogger(__name__)
 
 
-def fit_classifier(df: pd.DataFrame,
-                   model_provider: Callable[[int], Model],
-                   test_size: float = 0.4,
-                   number_of_cross_validation_splits: int = None,
-                   cache_feature_matrix: bool = False,
-                   test_validate_split_seed = 42,
-                   summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None
-                   ) -> Tuple[Model, ClassificationSummary, ClassificationSummary]:
+def _fit(df: pd.DataFrame,
+        model_provider: Callable[[int], Model],
+        test_size: float = 0.4,
+        number_of_cross_validation_splits: int = None,  # FIXME provide some sort of labda instead
+        cache_feature_matrix: bool = False,
+        test_validate_split_seed = 42,
+        summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None
+        ) -> Tuple[Model, Tuple, Tuple, Tuple]:
     # get a new model
     model = model_provider()
     features_and_labels = model.features_and_labels
@@ -54,16 +54,10 @@ def fit_classifier(df: pd.DataFrame,
         model.fit(x_train, y_train, x_test, y_test)
 
     log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
-
-    # assemble the result objects
-    pc = features_and_labels.probability_cutoff
-    loss = df[features_and_labels.loss_column] if features_and_labels.loss_column is not None else None
-    training_classification = ClassificationSummary(y_train, model.predict(x_train), index_train, loss, pc)
-    test_classification = ClassificationSummary(y_test, model.predict(x_test), index_test, loss, pc)
-    return Fit(model, training_classification, test_classification)
+    return model, (x_train, y_train), (x_test, y_test), (index_train, index_test)
 
 
-def backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:
+def _backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:
     features_and_labels = model.features_and_labels
 
     # make training and test data with no 0 test data fraction
@@ -71,12 +65,10 @@ def backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:
 
     # predict probabilities
     y_hat = model.predict(x)
-
-    loss = df[features_and_labels.loss_column if features_and_labels.loss_column is not None else []]
-    return ClassificationSummary(y, y_hat, index, loss, features_and_labels.probability_cutoff)
+    return x, y, y_hat, index
 
 
-def classify(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
+def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     features_and_labels = model.features_and_labels
 
     if tail is not None:
@@ -88,20 +80,22 @@ def classify(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
         else:
             log.warning("could not determine the minimum required data from the model")
 
-    # first save target columns
-    target = df[features_and_labels.target_columns] if features_and_labels.target_columns is not None else None
-    loss = df[features_and_labels.loss_column] if features_and_labels.loss_column is not None else None
-
     # then re assign data frame with features only
     dff, x, _ = make_forecast_data(df, features_and_labels)
 
+    # first save target columns and loss column
+    if features_and_labels.target_columns is not None:
+        dff = dff.join(df[features_and_labels.target_columns].add_prefix("traget_"))
+
+    if features_and_labels.loss_column is not None:
+        dff["loss"] = df[features_and_labels.loss_column]
+
     # predict on features
     prediction = model.predict(x)
-    pc = features_and_labels.probability_cutoff
+    if len(prediction.shape) > 1 and prediction[1] > 1:
+        for i in range(prediction.shape[1]):
+            dff[f"prediction_{i}"] = prediction
+    else:
+        dff["prediction"] = prediction
 
-    # return result
-    dff["prediction"] = prediction > pc
-    dff["prediction_proba"] = prediction
-    dff["target"] = target
-    dff["loss"] = loss
     return dff
