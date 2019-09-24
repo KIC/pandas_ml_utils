@@ -8,13 +8,12 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 
-from .multi_model import MultiModel
 
 log = logging.getLogger(__name__)
 
 
 def plot_forecast_heatmap(df: pd.DataFrame,
-                          multi_model: MultiModel,
+                          multi_model: object,
                           parameter_as_column: str):
 
     # we need a data frame with the target values as row index and the forecast periods as columns

@@ -15,15 +15,13 @@ class FeaturesAndLabels(object):
                  target_columns: List[str] = None,
                  loss_column: str = None,
                  feature_lags: Iterable[int] = None,
-                 lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
-                 probability_cutoff: float = 0.5):
+                 lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None):
         self.features = features
         self.labels = labels
         self.target_columns = target_columns
         self.loss_column = loss_column
         self.feature_lags = feature_lags
         self.lag_smoothing = lag_smoothing
-        self.probability_cutoff = probability_cutoff
         self.len_feature_lags = sum(1 for _ in feature_lags) if feature_lags is not None else 1
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
         log.info(f'number of features, lags and total: {self.len_features()}')

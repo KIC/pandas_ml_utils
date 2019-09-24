@@ -1,7 +1,8 @@
 import logging
 import traceback
-import pandas as pd
+
 import cachetools.func
+import pandas as pd
 
 
 def inner_join(df, join: pd.DataFrame, prefix: str = ''):

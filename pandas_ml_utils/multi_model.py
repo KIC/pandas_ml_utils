@@ -3,6 +3,8 @@ from collections.abc import Iterable
 from itertools import groupby
 
 from typing import Tuple, Dict, Callable, Any, Union, List
+
+import pandas_ml_utils.model.fit
 from .utils import unfold_parameter_space
 import pandas_ml_utils as pdu
 import dill as pickle
@@ -13,6 +15,7 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
+# TODO we want multi model to somehow become a Model
 class MultiModel(object):
 
     @staticmethod
@@ -35,7 +38,7 @@ class MultiModel(object):
         self.parameter_space = unfold_parameter_space(parameter_space.copy(), {})
         self.min_needed_data: int = None
         self.data: pd.DataFrame = None
-        self.fits: List[pdu.Fit] = None
+        self.fits: List[pandas_ml_utils.model.fit.Fit] = None
 
     def save(self, filename: str):
         with open(filename, 'wb') as file:
@@ -49,7 +52,7 @@ class MultiModel(object):
         self.data = self.data_provider()
 
     def fit(self, test_size: float = 0.4, test_validate_split_seed: int = None) -> None:
-        def model_fitter(**kwargs) -> pdu.Fit:
+        def model_fitter(**kwargs) -> pandas_ml_utils.model.fit.Fit:
             fit = self.data_engineer(self.data, **kwargs) \
                       .fit_classifier(self.model_provider,
                                       test_size=test_size,
