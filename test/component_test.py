@@ -3,7 +3,7 @@ import numpy as np
 import unittest
 import pandas_ml_utils as pdu
 
-from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 
 import logging
 
@@ -46,6 +46,9 @@ class ComponentTest(unittest.TestCase):
 
         self.assertEqual(len(classified_df[classified_df["prediction"] == False]), 3437)
         self.assertTrue(classified_df["loss"].sum() > 0)
+        self.assertTrue(classified_df["prediction_proba"].sum() > 0)
+        self.assertTrue(classified_df["prediction_proba"].min() > 0)
+        self.assertTrue(classified_df["prediction_proba"].max() < 1)
         self.assertListEqual(classified_df.columns.tolist(),
                              ["vix_Close", "traget_vix_Open", "loss", "prediction", "prediction_proba"])
 
@@ -70,3 +73,28 @@ class ComponentTest(unittest.TestCase):
 
         self.assertListEqual(classified_df.columns.tolist(),
                              ["vix_Close", "prediction", "prediction_proba"])
+
+    def test_fit_regressor(self):
+        df = pd.read_csv(f'{__name__}.csv', index_col='Date') / 50.
+
+        # fit
+        fit = df.fit_regressor(pdu.SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(4, 3, 2, 1, 2, 3, 4),
+                                                          random_state=42),
+                                             pdu.FeaturesAndLabels(features=['vix_Open', 'vix_High', 'vix_Low', 'vix_Close'],
+                                                                   labels=['vix_Open', 'vix_High', 'vix_Low', 'vix_Close']),
+                                             is_autoencoder=True),
+                               test_size=0.4,
+                               test_validate_split_seed=42)
+
+        fitted_model = fit.model
+        regressed = df.regress(fitted_model)
+
+        print(regressed.tail())
+        self.assertListEqual(regressed.columns.tolist(),
+                             ['vix_Open', 'vix_High', 'vix_Low', 'vix_Close',
+                              'prediction_vix_Open', 'prediction_vix_High', 'prediction_vix_Low', 'prediction_vix_Close',
+                              'error'])
+
+        self.assertTrue(regressed["error"].sum() > 0)
+        self.assertTrue(regressed["error"].sum() > 0)
+        self.assertTrue(regressed["error"].min() > 0)
