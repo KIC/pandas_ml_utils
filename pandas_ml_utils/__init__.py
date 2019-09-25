@@ -8,6 +8,7 @@ from .model.models import *
 from .model.features_and_Labels import *
 from .classification.summary import *
 from .classification.classifier import *
+from .regression.regressor import *
 from .train_test_data import *
 from pandas.core.base import PandasObject
 
@@ -26,5 +27,11 @@ PandasObject.fit_classifier = fit_classifier
 PandasObject.classify = classify
 PandasObject.backtest = backtest
 
+# regression functions
+PandasObject.fit_regressor = fit_regressor
+PandasObject.regress = regress
+# TODO PandasObject.backtest = backtest
+
+# data fetcher
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
 

@@ -58,7 +58,10 @@ class SkitModel(Model):
         self.skit_model.fit(reshape_rnn_as_ar(x), y),
 
     def predict(self, x):
-        return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
+        if callable(getattr(self.skit_model, 'predict_proba', None)):
+            return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
+        else:
+            return self.skit_model.predict(reshape_rnn_as_ar(x))
 
 
 # TODO add Keras Model
