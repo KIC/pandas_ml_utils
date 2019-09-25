@@ -29,8 +29,8 @@ PandasObject.backtest = backtest
 
 # regression functions
 PandasObject.fit_regressor = fit_regressor
+PandasObject.backtest_regressor = backtest_regressor
 PandasObject.regress = regress
-# TODO PandasObject.backtest = backtest
 
 # data fetcher
 setattr(pd, 'fetch_yahoo', fetch_yahoo)

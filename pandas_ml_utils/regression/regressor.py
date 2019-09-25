@@ -43,7 +43,7 @@ def fit_regressor(df: pd.DataFrame,
 
 
 # FIXME
-def backtest__fixme(df: pd.DataFrame, model: Model) -> None:
+def backtest_regressor(df: pd.DataFrame, model: Model) -> None:
     x, y, y_hat, index = _backtest(df, model)
 
     features_and_labels = model.features_and_labels

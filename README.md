@@ -126,7 +126,12 @@ NOTE If you have a target level for your binary classifier like all houses cheap
  through to the classified dataframe as target columns.
  
 ### Fitting other models then classifiers
-TODO ... 
+For non classification tasks use the regressor functions the same way as the classifier 
+ functions.
+ 
+* df.fit_regressor(...)
+* df.backtest_regressor(...)
+* df.regress(...)
  
 ### Other utility objects
 #### LazyDataFrame
