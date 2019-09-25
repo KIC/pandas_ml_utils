@@ -39,7 +39,7 @@ def fit_classifier(df: pd.DataFrame,
     return Fit(model, training_classification, test_classification)
 
 
-def backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:
+def backtest_classifier(df: pd.DataFrame, model: Model) -> ClassificationSummary:
     x, y, y_hat, index = _backtest(df, model)
 
     features_and_labels = model.features_and_labels

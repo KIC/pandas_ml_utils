@@ -25,7 +25,7 @@ PandasObject.make_training_data = make_training_data
 # classification functions
 PandasObject.fit_classifier = fit_classifier
 PandasObject.classify = classify
-PandasObject.backtest = backtest
+PandasObject.backtest_classifier = backtest_classifier
 
 # regression functions
 PandasObject.fit_regressor = fit_regressor

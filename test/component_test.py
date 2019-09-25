@@ -35,7 +35,7 @@ class ComponentTest(unittest.TestCase):
 
         # backtest
         fitted_model = fit.model
-        backtest_classification = df.backtest(fitted_model)
+        backtest_classification = df.backtest_classifier(fitted_model)
         np.testing.assert_array_equal(backtest_classification.confusion_count(), np.array([[1811, 1458],
                                                                                            [1657, 1780]]))
 

@@ -96,7 +96,7 @@ Every lag from 6 onwards will be smoothed by a 3 period average, every lag from 
  with a 5 periods moving average.
  
 ## Back-Testing a Model
-todo ...
+todo ... `df.backtest_classifier(...)`
 
 ## Save, load reuse a Model
 To save a model you simply call the save method on the model inside of the fit.
