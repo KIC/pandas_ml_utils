@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 def fit_classifier(df: pd.DataFrame,
                    model_provider: Callable[[int], Model],
                    test_size: float = 0.4,
-                   number_of_cross_validation_splits: int = None,  # FIXME make some kind of lambda
+                   number_of_cross_validation_splits: int = None,
                    cache_feature_matrix: bool = False,
                    test_validate_split_seed = 42,
                    summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None
@@ -39,7 +39,7 @@ def fit_classifier(df: pd.DataFrame,
     return Fit(model, training_classification, test_classification)
 
 
-def backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:
+def backtest_classifier(df: pd.DataFrame, model: Model) -> ClassificationSummary:
     x, y, y_hat, index = _backtest(df, model)
 
     features_and_labels = model.features_and_labels
