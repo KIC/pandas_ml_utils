@@ -87,8 +87,13 @@ class ComponentTest(unittest.TestCase):
                                test_validate_split_seed=42)
 
         fitted_model = fit.model
-        regressed = df.regress(fitted_model)
 
+        # backtest
+        backtest_regression = df.backtest_regressor(fitted_model)
+        self.assertIsNotNone(backtest_regression) # FIXME better assertion
+
+        # regressed
+        regressed = df.regress(fitted_model)
         print(regressed.tail())
         self.assertListEqual(regressed.columns.tolist(),
                              ['vix_Open', 'vix_High', 'vix_Low', 'vix_Close',

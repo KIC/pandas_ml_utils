@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 def fit_classifier(df: pd.DataFrame,
                    model_provider: Callable[[int], Model],
                    test_size: float = 0.4,
-                   number_of_cross_validation_splits: int = None,  # FIXME make some kind of lambda
+                   number_of_cross_validation_splits: int = None,
                    cache_feature_matrix: bool = False,
                    test_validate_split_seed = 42,
                    summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None
