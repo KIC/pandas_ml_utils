@@ -4,7 +4,6 @@ from typing import Callable, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import KFold
 
 from ..train_test_data import make_training_data, make_forecast_data
 from ..utils import log_with_time
@@ -17,7 +16,7 @@ log = logging.getLogger(__name__)
 def _fit(df: pd.DataFrame,
         model_provider: Callable[[int], Model],
         test_size: float = 0.4,
-        number_of_cross_validation_splits: int = None,  # FIXME provide some sort of labda instead
+        cross_validation: Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]] = None,
         cache_feature_matrix: bool = False,
         test_validate_split_seed = 42,
         summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None
@@ -41,10 +40,9 @@ def _fit(df: pd.DataFrame,
 
     # fit the model
     start_performance_count = log_with_time(lambda: log.info("fit model"))
-    if number_of_cross_validation_splits is not None:
+    if cross_validation is not None and callable(cross_validation):
         # cross validation
-        cv = KFold(n_splits = number_of_cross_validation_splits)
-        folds = cv.split(x_train, y_train)
+        folds = cross_validation(x_train, y_train)
 
         for f, (train_idx, test_idx) in enumerate(folds):
             log.info(f'fit fold {f}')
