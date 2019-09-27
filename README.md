@@ -95,6 +95,17 @@ pmu.FeaturesAndLabels(features=['feature'],
 Every lag from 6 onwards will be smoothed by a 3 period average, every lag from 35 onwards
  with a 5 periods moving average.
  
+## Cross Validation
+The current implementation is just fitting the models on all folds one after the other 
+ without any averaging of the validation loss what soever. 
+ 
+```python
+from sklearn.model_selection import KFold
+
+cv = KFold(n_splits = 10)
+fit = df.fit_classifier(..., cross_validation = cv.split, ...)
+```  
+
 ## Back-Testing a Model
 todo ... `df.backtest_classifier(...)`
 
@@ -168,8 +179,6 @@ to set the cache size (default is 1) set the following environment variable befo
 TODO describe multi models ... 
 
 ## TODO
-* provide better and more flexible option to do k folds or any other "optimization"
-  on training data like over-weighting certain events 
 * multi model is just another implementation of model
 * add keras model
 * add more tests
