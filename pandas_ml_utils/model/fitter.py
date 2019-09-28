@@ -26,7 +26,7 @@ def _fit(df: pd.DataFrame,
     features_and_labels = model.features_and_labels
 
     # make training and test data sets
-    x_train, x_test, y_train, y_test, index_train, index_test, min_required_data, names = \
+    x_train, x_test, y_train, y_test, index_train, index_test, min_required_data = \
         make_training_data(df,
                            features_and_labels,
                            test_size,
@@ -59,7 +59,7 @@ def _backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:
     features_and_labels = model.features_and_labels
 
     # make training and test data with no 0 test data fraction
-    x, _, y, _, index, _, _, names = make_training_data(df, features_and_labels, 0, int)
+    x, _, y, _, index, _, _ = make_training_data(df, features_and_labels, 0, int)
 
     # predict probabilities
     y_hat = model.predict(x)
@@ -79,7 +79,7 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
             log.warning("could not determine the minimum required data from the model")
 
     # then re assign data frame with features only
-    dff, x, _ = make_forecast_data(df, features_and_labels)
+    dff, x = make_forecast_data(df, features_and_labels)
 
     # first save target columns and loss column
     if features_and_labels.target_columns is not None:

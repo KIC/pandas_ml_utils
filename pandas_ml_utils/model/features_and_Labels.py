@@ -3,6 +3,7 @@ import logging
 from typing import List, Callable, Iterable, Dict
 
 import pandas as pd
+import numpy as np
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +16,8 @@ class FeaturesAndLabels(object):
                  target_columns: List[str] = None,
                  loss_column: str = None,
                  feature_lags: Iterable[int] = None,
-                 lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None):
+                 lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
+                 **kwargs):
         self.features = features
         self.labels = labels
         self.target_columns = target_columns
@@ -24,6 +26,7 @@ class FeaturesAndLabels(object):
         self.lag_smoothing = lag_smoothing
         self.len_feature_lags = sum(1 for _ in feature_lags) if feature_lags is not None else 1
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
+        self.kwargs = kwargs
         log.info(f'number of features, lags and total: {self.len_features()}')
 
     def len_features(self):
@@ -31,6 +34,20 @@ class FeaturesAndLabels(object):
 
     def len_labels(self):
         return len(self.labels)
+
+    def get_feature_names(self):
+        if self.feature_lags is not None:
+            return np.array([[f'{feat}_{lag}'
+                              for feat in self.features]
+                             for lag in self.feature_lags], ndmin=2)
+        else:
+            return self.features
+
+    def __getitem__(self, item):
+        if isinstance(item, tuple) and len(item) == 2:
+            return self.kwargs[item[0]] if item[0] in self.kwargs else item[1]
+        else:
+            return self.kwargs[item] if item in self.kwargs else None
 
     def __repr__(self):
         return f'FeaturesAndLabels({self.features},{self.labels},{self.target_columns},{self.loss_column},' \

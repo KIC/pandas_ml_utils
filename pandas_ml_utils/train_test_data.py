@@ -37,8 +37,8 @@ def make_training_data(df: pd.DataFrame,
     df = df[set(features_and_labels.features + features_and_labels.labels)]
 
     # create features and re-assign data frame with all nan rows dropped
-    df_new, x, names = _make_features_with_cache(HashableDataFrame(df), features_and_labels) if cache else \
-                       _make_features(df, features_and_labels)
+    df_new, x = _make_features_with_cache(HashableDataFrame(df), features_and_labels) if cache else \
+                _make_features(df, features_and_labels)
 
     # calculate the minimum required data
     min_required_data = len(df) - len(df_new) + 1
@@ -65,7 +65,7 @@ def make_training_data(df: pd.DataFrame,
         summary_printer(y, y_train, y_test)
 
     # return the split
-    return x_train, x_test, y_train, y_test, index_train, index_test, min_required_data, (names, features_and_labels.labels)
+    return x_train, x_test, y_train, y_test, index_train, index_test, min_required_data
 
 
 def make_forecast_data(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
@@ -125,7 +125,7 @@ def _make_features(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
         names = features
 
     log.info(f" make features ... done in {pc() - start_pc: .2f} sec!")
-    return df, x, names
+    return df, x
 
 
 def reshape_rnn_as_ar(arr3d):

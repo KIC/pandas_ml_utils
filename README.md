@@ -179,6 +179,7 @@ to set the cache size (default is 1) set the following environment variable befo
 TODO describe multi models ... 
 
 ## TODO
+* replace hard coded summary objects by a summary provider function 
 * multi model is just another implementation of model
 * add keras model
 * add more tests
@@ -186,7 +187,7 @@ TODO describe multi models ...
 ## Wanna help?
 * currently I only need binary classification
     * maybe you want to add a feature for multiple classes
-    * or you want to add non classification prediction models
+* for non classification problems you might want to augment the `Summary` 
 * write some tests
 * add different more charts for a better understanding/interpretation of the models
 * implement hyper parameter tuning
