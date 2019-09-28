@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 def fit_regressor(df: pd.DataFrame,
                   model_provider: Callable[[int], Model],
                   test_size: float = 0.4,
-                  cross_validation: Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]] = None,
+                  cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None,
                   cache_feature_matrix: bool = False,
                   test_validate_split_seed = 42,
                   summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None

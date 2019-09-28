@@ -115,15 +115,15 @@ class ComponentTest(unittest.TestCase):
 
         # fit
         fit = df.fit_classifier(pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001,
-                                                            random_state=42),
+                                                            random_state=42, max_iter=10),
                                               pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
                                                                     target_columns=["vix_Open"],
                                                                     loss_column="spy_Volume")),
                                 test_size=0.4,
-                                cross_validation = cv.split,
+                                cross_validation = (2, cv.split),
                                 test_validate_split_seed=42)
 
         self.assertEqual(fit.model.min_required_data, 1)
-        np.testing.assert_array_equal(fit.test_summary.confusion_count(), np.array([[1218, 1078],
-                                                                                    [181, 206]]))
+        np.testing.assert_array_equal(fit.test_summary.confusion_count(), np.array([[257, 169],
+                                                                                    [1142, 1115]]))
 

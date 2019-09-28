@@ -16,10 +16,10 @@ log = logging.getLogger(__name__)
 def _fit(df: pd.DataFrame,
         model_provider: Callable[[int], Model],
         test_size: float = 0.4,
-        cross_validation: Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]] = None,
+        cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None, # FIXME make this a tuple and use [0] as loop
         cache_feature_matrix: bool = False,
         test_validate_split_seed = 42,
-        summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None
+        summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None # TODO lets provide a summary provider for the result like lambda model, df, fal, x, y, y_hat: ClassificationSummary(...)
         ) -> Tuple[Model, Tuple, Tuple, Tuple]:
     # get a new model
     model = model_provider()
@@ -40,13 +40,14 @@ def _fit(df: pd.DataFrame,
 
     # fit the model
     start_performance_count = log_with_time(lambda: log.info("fit model"))
-    if cross_validation is not None and callable(cross_validation):
-        # cross validation
-        folds = cross_validation(x_train, y_train)
+    if cross_validation is not None and isinstance(cross_validation, Tuple) and callable(cross_validation[1]):
+        for fold_epoch in range(cross_validation[0]):
+            # cross validation
+            folds = cross_validation[1](x_train, y_train)
 
-        for f, (train_idx, test_idx) in enumerate(folds):
-            log.info(f'fit fold {f}')
-            model.fit(x_train[train_idx], y_train[train_idx], x_train[test_idx], y_train[test_idx])
+            for f, (train_idx, test_idx) in enumerate(folds):
+                log.info(f'fit fold {f}')
+                model.fit(x_train[train_idx], y_train[train_idx], x_train[test_idx], y_train[test_idx])
     else:
         # fit without cross validation
         model.fit(x_train, y_train, x_test, y_test)
