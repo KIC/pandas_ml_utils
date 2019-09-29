@@ -36,6 +36,6 @@ PandasObject.regress = regress
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
 
 # very rarely beg for love
-if np.random.uniform() >= 0.98:
+if np.random.uniform() >= 0.99:
     print("If you like using pandas-ml-utils please show some love and star it on github: "
           "https://github.com/KIC/pandas_ml_utils")

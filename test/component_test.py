@@ -111,7 +111,7 @@ class ComponentTest(unittest.TestCase):
         df['label'] = df["spy_Close"] > df["spy_Open"]
 
         # KFold
-        cv = KFold(n_splits = 10)
+        cv = KFold(n_splits=10, shuffle=False)
 
         # fit
         fit = df.fit_classifier(pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001,

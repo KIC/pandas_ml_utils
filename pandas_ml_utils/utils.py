@@ -2,7 +2,8 @@ from time import perf_counter as pc
 from typing import Callable, Dict, Iterable, Any, List
 
 import numpy as np
-from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import KFold
+from sklearn.utils.validation import _num_samples, check_random_state, indexable
 
 
 def log_with_time(log_statement: Callable[[], None]):
@@ -20,9 +21,15 @@ def unfold_parameter_space(parameter_space: Dict[str, Iterable], parameters: Dic
         return parameters
 
 
-class kfold_with_overweigthing(BaseCrossValidator):
-    def _iter_test_indices(self, X=None, y=None, groups=None):
-        pass
+class KFoldBoostRareEvents(KFold):
 
-    def get_n_splits(self, X=None, y=None, groups=None):
-        pass
+    def __init__(self, n_splits='warn', shuffle=False, random_state=None):
+        super().__init__(n_splits, shuffle, random_state)
+
+    def split(self, X, y=None, groups=None):
+        n_samples = _num_samples(X)
+        indices = np.arange(n_samples)
+        rare_event_indices = indices[y >= 0.999]
+
+        for f, (train_idx, test_idx) in enumerate(super().split(X, y, groups)):
+            yield np.hstack([train_idx, rare_event_indices]), np.hstack([test_idx, rare_event_indices])

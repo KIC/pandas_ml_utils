@@ -42,10 +42,8 @@ def _fit(df: pd.DataFrame,
     start_performance_count = log_with_time(lambda: log.info("fit model"))
     if cross_validation is not None and isinstance(cross_validation, Tuple) and callable(cross_validation[1]):
         for fold_epoch in range(cross_validation[0]):
-            # cross validation
-            folds = cross_validation[1](x_train, y_train)
-
-            for f, (train_idx, test_idx) in enumerate(folds):
+            # cross validation, make sure we re-shuffle every fold_epoch
+            for f, (train_idx, test_idx) in enumerate(cross_validation[1](x_train, y_train)):
                 log.info(f'fit fold {f}')
                 model.fit(x_train[train_idx], y_train[train_idx], x_train[test_idx], y_train[test_idx])
     else:
