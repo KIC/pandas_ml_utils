@@ -95,6 +95,26 @@ pmu.FeaturesAndLabels(features=['feature'],
 Every lag from 6 onwards will be smoothed by a 3 period average, every lag from 35 onwards
  with a 5 periods moving average.
  
+## Cross Validation
+It is possible to apply a cross validation algorithm to the training data (after the train
+ test split). In case you only want cross validation pass `test_size=0`
+ 
+Note that the current implementation is just fitting the models on all folds one after the
+ other without any averaging of the validation loss. However the folds can be looped many
+ times which essentially means we invented something like fold epochs. Therefore your fitter
+ epochs can be reduced by division of the number of fold epochs.
+ 
+```python
+from sklearn.model_selection import KFold
+
+cv = KFold(n_splits = 10)
+fit = df.fit_classifier(...,
+                        SomeModel(epochs=100/10),
+                        test_size=0.1 # keep 10% very unseen
+                        cross_validation=(10, cv.split), 
+                        ...)
+```  
+
 ## Back-Testing a Model
 todo ... `df.backtest_classifier(...)`
 
@@ -168,8 +188,7 @@ to set the cache size (default is 1) set the following environment variable befo
 TODO describe multi models ... 
 
 ## TODO
-* provide better and more flexible option to do k folds or any other "optimization"
-  on training data like over-weighting certain events 
+* replace hard coded summary objects by a summary provider function 
 * multi model is just another implementation of model
 * add keras model
 * add more tests
@@ -177,7 +196,7 @@ TODO describe multi models ...
 ## Wanna help?
 * currently I only need binary classification
     * maybe you want to add a feature for multiple classes
-    * or you want to add non classification prediction models
+* for non classification problems you might want to augment the `Summary` 
 * write some tests
 * add different more charts for a better understanding/interpretation of the models
 * implement hyper parameter tuning

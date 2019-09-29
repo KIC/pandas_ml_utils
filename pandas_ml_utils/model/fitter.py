@@ -4,7 +4,6 @@ from typing import Callable, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import KFold
 
 from ..train_test_data import make_training_data, make_forecast_data
 from ..utils import log_with_time
@@ -17,17 +16,17 @@ log = logging.getLogger(__name__)
 def _fit(df: pd.DataFrame,
         model_provider: Callable[[int], Model],
         test_size: float = 0.4,
-        number_of_cross_validation_splits: int = None,  # FIXME provide some sort of labda instead
+        cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None, # FIXME make this a tuple and use [0] as loop
         cache_feature_matrix: bool = False,
         test_validate_split_seed = 42,
-        summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None
+        summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None # TODO lets provide a summary provider for the result like lambda model, df, fal, x, y, y_hat: ClassificationSummary(...)
         ) -> Tuple[Model, Tuple, Tuple, Tuple]:
     # get a new model
     model = model_provider()
     features_and_labels = model.features_and_labels
 
     # make training and test data sets
-    x_train, x_test, y_train, y_test, index_train, index_test, min_required_data, names = \
+    x_train, x_test, y_train, y_test, index_train, index_test, min_required_data = \
         make_training_data(df,
                            features_and_labels,
                            test_size,
@@ -41,14 +40,12 @@ def _fit(df: pd.DataFrame,
 
     # fit the model
     start_performance_count = log_with_time(lambda: log.info("fit model"))
-    if number_of_cross_validation_splits is not None:
-        # cross validation
-        cv = KFold(n_splits = number_of_cross_validation_splits)
-        folds = cv.split(x_train, y_train)
-
-        for f, (train_idx, test_idx) in enumerate(folds):
-            log.info(f'fit fold {f}')
-            model.fit(x_train[train_idx], y_train[train_idx], x_train[test_idx], y_train[test_idx])
+    if cross_validation is not None and isinstance(cross_validation, Tuple) and callable(cross_validation[1]):
+        for fold_epoch in range(cross_validation[0]):
+            # cross validation, make sure we re-shuffle every fold_epoch
+            for f, (train_idx, test_idx) in enumerate(cross_validation[1](x_train, y_train)):
+                log.info(f'fit fold {f}')
+                model.fit(x_train[train_idx], y_train[train_idx], x_train[test_idx], y_train[test_idx])
     else:
         # fit without cross validation
         model.fit(x_train, y_train, x_test, y_test)
@@ -61,7 +58,7 @@ def _backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:
     features_and_labels = model.features_and_labels
 
     # make training and test data with no 0 test data fraction
-    x, _, y, _, index, _, _, names = make_training_data(df, features_and_labels, 0, int)
+    x, _, y, _, index, _, _ = make_training_data(df, features_and_labels, 0, int)
 
     # predict probabilities
     y_hat = model.predict(x)
@@ -81,7 +78,7 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
             log.warning("could not determine the minimum required data from the model")
 
     # then re assign data frame with features only
-    dff, x, _ = make_forecast_data(df, features_and_labels)
+    dff, x = make_forecast_data(df, features_and_labels)
 
     # first save target columns and loss column
     if features_and_labels.target_columns is not None:

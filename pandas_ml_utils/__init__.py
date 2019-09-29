@@ -1,5 +1,5 @@
 """Augment pandas DataFrame with methods for machine learning"""
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 
 from .pandas_utils_extension import *
 from .wrappers.lazy_dataframe import *
@@ -35,3 +35,7 @@ PandasObject.regress = regress
 # data fetcher
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
 
+# very rarely beg for love
+if np.random.uniform() >= 0.99:
+    print("If you like using pandas-ml-utils please show some love and star it on github: "
+          "https://github.com/KIC/pandas_ml_utils")
