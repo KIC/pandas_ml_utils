@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 def _fit(df: pd.DataFrame,
         model_provider: Callable[[int], Model],
         test_size: float = 0.4,
-        cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None, # FIXME make this a tuple and use [0] as loop
+        cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None,
         cache_feature_matrix: bool = False,
         test_validate_split_seed = 42,
         summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None # TODO lets provide a summary provider for the result like lambda model, df, fal, x, y, y_hat: ClassificationSummary(...)

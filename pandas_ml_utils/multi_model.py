@@ -51,14 +51,19 @@ class MultiModel(object):
     def fetch_data(self):
         self.data = self.data_provider()
 
-    def fit(self, test_size: float = 0.4, test_validate_split_seed: int = None) -> None:
+    def fit(self,
+            test_size: float = 0.4,
+            test_validate_split_seed: int = None,
+            cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None
+            ) -> None:
         def model_fitter(**kwargs) -> pandas_ml_utils.model.fit.Fit:
             fit = self.data_engineer(self.data, **kwargs) \
                       .fit_classifier(self.model_provider,
                                       test_size=test_size,
+                                      cross_validation=cross_validation,
                                       test_validate_split_seed=test_validate_split_seed)
 
-            log.info(f'fit for { {**kwargs}}\n{fit.training_classification.confusion_count()}\n{fit.test_classification.confusion_count()}')
+            log.info(f'fit for { {**kwargs}}\n{fit.test_summary.confusion_count()}\n{fit.test_summary.confusion_count()}')
             return fit
 
         # TODO there should be a way to generate one ClassificationSummary out of several by summing or averaging
@@ -91,8 +96,8 @@ class MultiModel(object):
                    for col, parameter in groupby(sorted_parameter_space, lambda x: x[1][parameter_as_column])}
 
         # assign a data frame for each column
-        predictions = [pd.concat([predictions[row][["target", "prediction_proba"]] for row in rows], axis=0, sort=True) \
-                         .set_index("target") \
+        predictions = [pd.concat([predictions[row][["traget_target", "prediction_proba"]] for row in rows], axis=0, sort=True) \
+                         .set_index("traget_target") \
                          .groupby(level=0).max() \
                          .rename(columns={"prediction_proba": column})
                        for column, rows in columns.items()]

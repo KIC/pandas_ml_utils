@@ -1,5 +1,5 @@
 """Augment pandas DataFrame with methods for machine learning"""
-__version__ = '0.0.6'
+__version__ = '0.0.7'
 
 from .pandas_utils_extension import *
 from .wrappers.lazy_dataframe import *
