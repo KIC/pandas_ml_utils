@@ -39,6 +39,7 @@ class MultiModel(object):
         self.min_needed_data: int = None
         self.data: pd.DataFrame = None
         self.fits: List[pandas_ml_utils.model.fit.Fit] = None
+        self._heatmap_cache = None
 
     def save(self, filename: str):
         with open(filename, 'wb') as file:
@@ -49,6 +50,7 @@ class MultiModel(object):
     #     self.fit()
 
     def fetch_data(self):
+        self._heatmap_cache = None
         self.data = self.data_provider()
 
     def fit(self,
@@ -82,9 +84,15 @@ class MultiModel(object):
         predictions = [model_predictor(self.fits[i].model, **kwargs) for i, kwargs in enumerate(self.parameter_space)]
         return predictions
 
-    def plot_heatmap(self, parameter_as_column: str):
+    def plot_heatmap(self, parameter_as_column: str, figsize=(15, 12)):
+        import matplotlib.pyplot as plt
         import seaborn as sns
-        sns.heatmap(self.compute_heatmap(parameter_as_column))
+
+        if self._heatmap_cache is None:
+            self._heatmap_cache = self.compute_heatmap(parameter_as_column)
+
+        plt.figure(figsize=figsize)
+        sns.heatmap(self._heatmap_cache)
 
     def compute_heatmap(self, parameter_as_column: str):
         predictions = self.predict()
