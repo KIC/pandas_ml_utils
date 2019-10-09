@@ -91,8 +91,9 @@ class MultiModel(object):
         if self._heatmap_cache is None:
             self._heatmap_cache = self.compute_heatmap(parameter_as_column)
 
-        plt.figure(figsize=figsize)
+        fig = plt.figure(figsize=figsize)
         sns.heatmap(self._heatmap_cache)
+        return fig
 
     def compute_heatmap(self, parameter_as_column: str):
         predictions = self.predict()
