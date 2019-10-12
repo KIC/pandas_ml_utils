@@ -7,8 +7,7 @@ class TestFeaturesAndLabels(TestCase):
 
     def test_1d(self):
         """given"""
-        fl = FeaturesAndLabels(["a", "b", "c"],
-                               ["d", "e"])
+        fl = FeaturesAndLabels(["a", "b", "c"], ["d", "e"])
 
         """when"""
         shape = fl.shape()
@@ -19,9 +18,7 @@ class TestFeaturesAndLabels(TestCase):
 
     def test_2d(self):
         """given"""
-        fl = FeaturesAndLabels(["a", "b", "c"],
-                               ["d", "e"],
-                               feature_lags=range(4))
+        fl = FeaturesAndLabels(["a", "b", "c"], ["d", "e"], feature_lags=range(4))
 
         """when"""
         shape = fl.shape()

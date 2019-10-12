@@ -1,6 +1,6 @@
 import inspect
 import logging
-from typing import List, Callable, Iterable, Dict
+from typing import List, Callable, Iterable, Dict, Type
 
 import pandas as pd
 import numpy as np
@@ -10,17 +10,12 @@ log = logging.getLogger(__name__)
 
 class FeaturesAndLabels(object):
 
-    def __init__(self,
-                 features: List[str],
-                 labels: List[str],
-                 target_columns: List[str] = None,
-                 loss_column: str = None,
-                 feature_lags: Iterable[int] = None,
-                 lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
-                 **kwargs):
+    def __init__(self, features: List[str], labels: List[str], label_type:Type = int, target_columns: List[str] = None,
+                 loss_column: str = None, feature_lags: Iterable[int] = None,
+                 lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None, **kwargs):
         self.features = features
         self.labels = labels
-        self.label_type = int #FIXME must be provided!
+        self.label_type = label_type
         self.target_columns = target_columns
         self.loss_column = loss_column
         self.feature_lags = feature_lags

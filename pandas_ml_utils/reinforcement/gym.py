@@ -57,3 +57,6 @@ class RowWiseGym(gym.Env):
         # TODO print something
         #print("something")
         pass
+
+    def get_reward_history(self):
+        return np.array(self.reward_history)
