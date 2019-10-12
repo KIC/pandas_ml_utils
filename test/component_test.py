@@ -163,7 +163,7 @@ class ComponentTest(unittest.TestCase):
                                                   lambda y: 0, # do nothing
                                                   lambda y: y  # get trade reward
                                               ],
-                                              [-1000, 100]),
+                                              [df['label'].min(), df['label'].max()]),
                            test_size=0.4,
                            test_validate_split_seed=42)
 

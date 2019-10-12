@@ -20,6 +20,7 @@ class FeaturesAndLabels(object):
                  **kwargs):
         self.features = features
         self.labels = labels
+        self.label_type = int #FIXME must be provided!
         self.target_columns = target_columns
         self.loss_column = loss_column
         self.feature_lags = feature_lags

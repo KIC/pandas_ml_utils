@@ -28,27 +28,32 @@ class RowWiseGym(gym.Env):
         self.action_space = spaces.Discrete(len(action_reward_functions))
         self.observation_space = spaces.Box(low=-1, high=1, shape=features_and_labels.shape()[0], dtype=np.float16)
 
+        # define history
+        self.reward_history = []
+
     metadata = {'render.modes': ['human']}
 
     def reset(self):
         # Reset the state of the environment to an initial state
-        return self.step(INIT_ACTION)
+        return self.step(INIT_ACTION)[0]
 
     def step(self, action):
         # Execute one time step within the environment
         if action is not INIT_ACTION:
             reward = self.action_reward_functions[action](self.environment[1][self.state])
+            self.reward_history.append(reward)
             self.state += 1
         else:
             reward = 0
             self.state = 0
 
-        done = self.state >= self.environment[0].shape[0]
-        obs = self.environment[0][self.state]
+        done = self.state >= len(self.environment[0])
+        obs = self.environment[0][self.state if not done else None]
 
         return obs, reward, done, {}
 
     def render(self, mode='human', close=False):
         # Render the environment to the screen
         # TODO print something
-        print("something")
+        #print("something")
+        pass

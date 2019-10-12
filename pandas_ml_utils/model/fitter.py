@@ -30,7 +30,7 @@ def _fit(df: pd.DataFrame,
         make_training_data(df,
                            features_and_labels,
                            test_size,
-                           label_type=int,
+                           label_type=features_and_labels.label_type,
                            seed=test_validate_split_seed,
                            cache=cache_feature_matrix,
                            summary_printer=summary_printer)
