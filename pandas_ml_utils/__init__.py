@@ -1,13 +1,15 @@
 """Augment pandas DataFrame with methods for machine learning"""
-__version__ = '0.0.8'
+__version__ = '0.0.9'
 
 from .pandas_utils_extension import *
 from .wrappers.lazy_dataframe import *
 from .datafetching.fetch_yahoo import *
 from .model.models import *
 from .model.features_and_Labels import *
+from .model.selection import *
 from .classification.summary import *
 from .classification.classifier import *
+from .reinforcement.agent import *
 from .regression.regressor import *
 from .train_test_data import *
 from pandas.core.base import PandasObject
@@ -22,6 +24,9 @@ PandasObject.shift_inplace = shift_inplace
 PandasObject.extend_forecast = extend_forecast
 PandasObject.make_training_data = make_training_data
 
+# feature selection
+PandasObject.filtration = filtration
+
 # classification functions
 PandasObject.fit_classifier = fit_classifier
 PandasObject.classify = classify
@@ -32,10 +37,8 @@ PandasObject.fit_regressor = fit_regressor
 PandasObject.backtest_regressor = backtest_regressor
 PandasObject.regress = regress
 
+# reinforcement learning
+PandasObject.fit_agent = fit_agent
+
 # data fetcher
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
-
-# very rarely beg for love
-if np.random.uniform() >= 0.99:
-    print("If you like using pandas-ml-utils please show some love and star it on github: "
-          "https://github.com/KIC/pandas_ml_utils")

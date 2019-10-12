@@ -4,7 +4,10 @@ scikit-learn
 matplotlib
 cachetools
 yfinance
+keras-rl
 seaborn
 pandas
+keras
 vdom
 dill
+gym

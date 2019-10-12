@@ -92,7 +92,7 @@ class MultiModel(object):
             self._heatmap_cache = self.compute_heatmap(parameter_as_column)
 
         fig = plt.figure(figsize=figsize)
-        sns.heatmap(self._heatmap_cache)
+        sns.heatmap(self._heatmap_cache, annot=True, cmap=plt.cm.Reds)
         return fig
 
     def compute_heatmap(self, parameter_as_column: str):

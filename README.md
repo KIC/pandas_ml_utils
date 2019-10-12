@@ -7,12 +7,24 @@
 
 I was really sick of converting data frames to numpy arrays back and forth just to try out a 
  simple logistic regression. So I have started a pandas ml utilities library where
- everything should be reachable from the data frame itself. Check out the following examples
- to see what I mean by that.
+ everything should be reachable from the data frame itself. Something along the lines
+ `model = df.fit(my_super_model)`
 
-## Fitting
+Provided utils include:
+ * basic feature analysis / selection
+ * fit various kinds of models directly from data frames 
+    * fit binary classifiers 
+    * fit regression models
+    * fit reinforcement agents
+ * develop, save, load and deploy models
+ 
+ 
+## Basic Feature Analysis / Selection
+TODO ... write this stuff 
 
-### Ordinary Binary Classification
+## Fitting Models Directly from DataFrames 
+
+### Binary Classification
 ```python
 import pandas as pd
 import pandas_ml_utils as pmu

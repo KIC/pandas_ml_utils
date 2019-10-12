@@ -2,6 +2,11 @@ import pandas as pd
 import numpy as np
 import unittest
 
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Flatten
+from keras.optimizers import Adam
+from rl.agents import SARSAAgent
+from rl.policy import BoltzmannQPolicy
 from sklearn.model_selection import KFold
 
 import pandas_ml_utils as pdu
@@ -127,3 +132,40 @@ class ComponentTest(unittest.TestCase):
         np.testing.assert_array_equal(fit.test_summary.confusion_count(), np.array([[257, 169],
                                                                                     [1142, 1115]]))
 
+    def test_reinforcement_model(self):
+        df = pd.read_csv(f'{__name__}.csv', index_col='Date')
+        df['vix_Close'] = df['vix_Close'] / 50
+        df['label'] = df["spy_Close"] - df["spy_Open"]
+
+        # define agent with model:
+        def agent_provider(observation_space_shape, nb_actions):
+            # define model
+            model = Sequential()
+            model.add(Flatten(input_shape=(1,) + observation_space_shape))
+            model.add(Dense(16))
+            model.add(Activation('relu'))
+            model.add(Dense(nb_actions))
+            model.add(Activation('relu'))
+
+            # define agent
+            policy = BoltzmannQPolicy()
+            sarsa = SARSAAgent(model=model, nb_actions=nb_actions, nb_steps_warmup=10, policy=policy)
+            sarsa.compile(Adam(lr=1e-3), metrics=['mae'])
+
+            return sarsa
+
+        # fit
+        fit = df.fit_agent(pdu.OpenAiGymModel(agent_provider,
+                                              pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
+                                                                    target_columns=["vix_Open"],
+                                                                    loss_column="spy_Volume"),
+                                              [
+                                                  lambda y: 0, # do nothing
+                                                  lambda y: y  # get trade reward
+                                              ],
+                                              [-1000, 100]),
+                           test_size=0.4,
+                           test_validate_split_seed=42)
+
+        self.assertTrue(True)
+        pass

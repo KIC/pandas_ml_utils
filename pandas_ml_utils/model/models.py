@@ -1,11 +1,14 @@
+from __future__ import annotations
 import logging
 from copy import deepcopy
 
 import dill as pickle
 import numpy as np
+from typing import List, Callable, Tuple
 
 from .features_and_Labels import FeaturesAndLabels
 from ..train_test_data import reshape_rnn_as_ar
+from ..reinforcement.gym import RowWiseGym
 
 log = logging.getLogger(__name__)
 
@@ -80,3 +83,46 @@ class KerasModel(Model):
 #     def predict(self, x) -> np.ndarray:
 #         # we would need to return a prediction for every and each parameters dict in the parameter space
 #         pass
+
+
+class OpenAiGymModel(Model):
+    from typing import TYPE_CHECKING
+    if TYPE_CHECKING:
+        from rl.core import Agent
+
+    def __init__(self,
+                 agent_provider: Callable[[Tuple, int], Agent],
+                 features_and_labels: FeaturesAndLabels,
+                 action_reward_functions: List[Callable[[np.ndarray], float]],
+                 reward_range: Tuple[int, int],
+                 episodes: int = 1000,
+                 **kwargs):
+        super().__init__(features_and_labels, **kwargs)
+        self.agent_provider = agent_provider
+        self.action_reward_functions = action_reward_functions
+        self.reward_range = reward_range
+        self.episodes = episodes
+        self.agent = agent_provider(features_and_labels.shape()[0], len(action_reward_functions))
+
+    def fit(self, x, y, x_val, y_val):
+        training_gym = RowWiseGym((x, y), self.features_and_labels, self.action_reward_functions, self.reward_range)
+        test_gmy = RowWiseGym((x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range)
+
+        history = self.agent.fit(training_gym, nb_steps=self.episodes)
+
+        self.agent.test(test_gmy, nb_episodes=1)
+
+        return None # FIXME return Fit with som information of the total reward
+
+    def predict(self, x):
+        # gym = RowWiseGym(self.features_and_labels, self.action_reward_functions, self.reward_range)
+        # fixme
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return OpenAiGymModel(self.agent_provider,
+                              self.features_and_labels,
+                              self.action_reward_functions,
+                              self.reward_range,
+                              self.episodes,
+                              **self.kwargs)
