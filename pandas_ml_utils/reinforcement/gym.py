@@ -12,7 +12,7 @@ INIT_ACTION = -1
 class RowWiseGym(gym.Env):
 
     def __init__(self,
-                 environment: Tuple[np.ndarray, np.ndarray],
+                 environment: Tuple[np.ndarray, np.ndarray, np.ndarray],
                  features_and_labels: FeaturesAndLabels,
                  action_reward_functions: List[Callable[[np.ndarray], float]],
                  reward_range: Tuple[int, int]):
@@ -30,25 +30,29 @@ class RowWiseGym(gym.Env):
 
         # define history
         self.reward_history = []
+        self.action_history = []
 
     metadata = {'render.modes': ['human']}
 
     def reset(self):
-        # Reset the state of the environment to an initial state
+        # Reset the state of the environment to an initial state and reset history
+        self.reward_history = []
+        self.action_history = []
         return self.step(INIT_ACTION)[0]
 
     def step(self, action):
         # Execute one time step within the environment
         if action is not INIT_ACTION:
-            reward = self.action_reward_functions[action](self.environment[1][self.state])
+            reward = self.action_reward_functions[action](self.environment[2][self.state])
             self.reward_history.append(reward)
+            self.action_history.append(action)
             self.state += 1
         else:
             reward = 0
             self.state = 0
 
-        done = self.state >= len(self.environment[0])
-        obs = self.environment[0][self.state if not done else None]
+        done = self.state >= len(self.environment[1])
+        obs = self.environment[1][self.state if not done else 0]
 
         return obs, reward, done, {}
 
@@ -58,5 +62,7 @@ class RowWiseGym(gym.Env):
         #print("something")
         pass
 
-    def get_reward_history(self):
-        return np.array(self.reward_history)
+    def get_history(self):
+        return pd.DataFrame({"reward_history": self.reward_history,
+                             "action_history": self.action_history},
+                            index=self.environment[0]).sort_index()

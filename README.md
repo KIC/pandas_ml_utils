@@ -18,6 +18,8 @@ Provided utils include:
     * fit reinforcement agents
  * develop, save, load and deploy models
  
+Check the [component tests](https://github.com/KIC/pandas_ml_utils/blob/master/test/component_test.py) for some more 
+ concrete examples. 
  
 ## Basic Feature Analysis / Selection
 TODO ... write this stuff 

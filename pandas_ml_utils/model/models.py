@@ -39,7 +39,7 @@ class Model(object):
         with open(filename, 'wb') as file:
             pickle.dump(self, file)
 
-    def fit(self, x, y, x_val, y_val) -> None:
+    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> None:
         pass
 
     def predict(self, x) -> np.ndarray:
@@ -57,7 +57,7 @@ class SkitModel(Model):
         super().__init__(features_and_labels, **kwargs)
         self.skit_model = skit_model
 
-    def fit(self, x, y, x_val, y_val):
+    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
         self.skit_model.fit(reshape_rnn_as_ar(x), y),
 
     def predict(self, x):
@@ -69,7 +69,23 @@ class SkitModel(Model):
 
 # TODO add Keras Model
 class KerasModel(Model):
-    pass
+
+    def __init__(self, keras_model_provider, features_and_labels: FeaturesAndLabels, **kwargs):
+        super().__init__(features_and_labels, **kwargs)
+        self.keras_model_provider = keras_model_provider
+
+    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> None:
+        pass
+
+    def predict(self, x) -> np.ndarray:
+        # we would need to return a prediction for every and each parameters dict in the parameter space
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return KerasModel(self.keras_model_provider,
+                          self.features_and_labels,
+                          **self.kwargs)
+
 
 # class MultiModel(Model):
 #
@@ -104,14 +120,14 @@ class OpenAiGymModel(Model):
         self.episodes = episodes
         self.agent = agent_provider(features_and_labels.shape()[0], len(action_reward_functions))
 
-    def fit(self, x, y, x_val, y_val):
-        training_gym = RowWiseGym((x, y), self.features_and_labels, self.action_reward_functions, self.reward_range)
-        test_gmy = RowWiseGym((x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range)
+    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
+        training_gym = RowWiseGym((df_index_train, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range)
+        test_gmy = RowWiseGym((df_index_test, x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range)
 
-        history = self.agent.fit(training_gym, nb_steps=self.episodes)
+        keras_train_history = self.agent.fit(training_gym, nb_steps=len(x) * self.episodes)
+        keras_test_history =  self.agent.test(test_gmy, nb_episodes=1)
 
-        self.agent.test(test_gmy, nb_episodes=1)
-
+        training_gym.get_history()
         return None # FIXME return Fit with som information of the total reward
 
     def predict(self, x):

@@ -65,6 +65,7 @@ def make_training_data(df: pd.DataFrame,
         summary_printer(y, y_train, y_test)
 
     # return the split
+    #log.debug(f"${len(x_train)}, {len(x_test)}, {len(y_train)}, {len(y_test)}, {len(index_train)}, {len(index_test)}, {min_required_data}")
     return x_train, x_test, y_train, y_test, index_train, index_test, min_required_data
 
 
