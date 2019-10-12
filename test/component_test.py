@@ -139,7 +139,8 @@ class ComponentTest(unittest.TestCase):
     def test_reinforcement_model(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')
         df['vix_Close'] = df['vix_Close'] / 50
-        df['label'] = df["spy_Close"] - df["spy_Open"]
+        df['label'] = (df["spy_Close"] - df["spy_Open"]).shift(-1)
+        df = df.drop('2019-09-13').dropna()
 
         # define agent with model:
         def agent_provider(observation_space_shape, nb_actions):
@@ -161,8 +162,9 @@ class ComponentTest(unittest.TestCase):
         # fit
         fit = df.fit_agent(pdu.OpenAiGymModel(agent_provider,
                                               pdu.FeaturesAndLabels(features=['vix_Close'],
-                                                                    labels=['label'], label_type=float,
-                                                                    target_columns=["vix_Open"],
+                                                                    labels=['label'],
+                                                                    label_type=float,
+                                                                    target_columns=["vix_Close", "spy_Close"],
                                                                     loss_column="spy_Volume"),
                                               [
                                                   lambda y: 0, # do nothing
@@ -173,5 +175,6 @@ class ComponentTest(unittest.TestCase):
                            test_size=0.4,
                            test_validate_split_seed=42)
 
+        print(fit.training_summary.get_data_frame().tail())
+        print(fit.test_summary.get_data_frame().tail())
         self.assertTrue(True)
-        pass
