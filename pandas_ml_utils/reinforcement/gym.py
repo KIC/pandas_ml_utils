@@ -15,6 +15,7 @@ class RowWiseGym(gym.Env):
                  environment: Tuple[np.ndarray, np.ndarray, np.ndarray],
                  features_and_labels: FeaturesAndLabels,
                  action_reward_functions: List[Callable[[np.ndarray], float]],
+                 observation_range: Tuple[int, int],
                  reward_range: Tuple[int, int]):
         super().__init__()
         self.environment = environment
@@ -26,7 +27,8 @@ class RowWiseGym(gym.Env):
 
         # define spaces
         self.action_space = spaces.Discrete(len(action_reward_functions))
-        self.observation_space = spaces.Box(low=-1, high=1, shape=features_and_labels.shape()[0], dtype=np.float16)
+        self.observation_space = spaces.Box(low=observation_range[0], high=observation_range[1],
+                                            shape=features_and_labels.shape()[0], dtype=np.float16)
 
         # define history
         self.reward_history = []

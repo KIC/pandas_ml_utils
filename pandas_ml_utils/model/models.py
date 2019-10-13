@@ -122,8 +122,9 @@ class OpenAiGymModel(Model):
         self.history = ()
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
-        training_gym = RowWiseGym((df_index_train, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range)
-        test_gym = RowWiseGym((df_index_test, x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range)
+        mm = (min([x.min(), x_val.min()]), max([x.max(), x_val.max()]))
+        training_gym = RowWiseGym((df_index_train, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
+        test_gym = RowWiseGym((df_index_test, x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
 
         keras_train_history = self.agent.fit(training_gym, nb_steps=len(x) * self.episodes)
         keras_test_history = self.agent.test(test_gym, nb_episodes=1)

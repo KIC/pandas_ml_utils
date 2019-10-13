@@ -6,7 +6,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
 from keras.optimizers import Adam
 from rl.agents import SARSAAgent
-from rl.policy import BoltzmannQPolicy
+from rl.policy import MaxBoltzmannQPolicy
 from sklearn.model_selection import KFold
 
 import pandas_ml_utils as pdu
@@ -140,22 +140,24 @@ class ComponentTest(unittest.TestCase):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')
         df['vix_Close'] = df['vix_Close'] / 50
         df['label'] = (df["spy_Close"] - df["spy_Open"]).shift(-1)
-        df = df.drop('2019-09-13').dropna()
+        df = df.drop('2019-09-13').dropna()[-100:]
 
         # define agent with model:
         def agent_provider(observation_space_shape, nb_actions):
+            print(f"observation_space_shape: {observation_space_shape}")
+
             # define model
             model = Sequential()
             model.add(Flatten(input_shape=(1,) + observation_space_shape))
             model.add(Dense(16))
-            model.add(Activation('relu'))
+            model.add(Activation('sigmoid'))
             model.add(Dense(nb_actions))
             model.add(Activation('relu'))
 
             # define agent
-            policy = BoltzmannQPolicy()
-            sarsa = SARSAAgent(model=model, nb_actions=nb_actions, nb_steps_warmup=10, policy=policy)
-            sarsa.compile(Adam(lr=1e-3), metrics=['mae'])
+            policy = MaxBoltzmannQPolicy()
+            sarsa = SARSAAgent(model=model, nb_actions=nb_actions, nb_steps_warmup=0, policy=policy)
+            sarsa.compile(Adam(lr=1e-4), metrics=['mae'])
 
             return sarsa
 
@@ -163,18 +165,21 @@ class ComponentTest(unittest.TestCase):
         fit = df.fit_agent(pdu.OpenAiGymModel(agent_provider,
                                               pdu.FeaturesAndLabels(features=['vix_Close'],
                                                                     labels=['label'],
+                                                                    feature_lags=range(5),
                                                                     label_type=float,
                                                                     target_columns=["vix_Close", "spy_Close"],
                                                                     loss_column="spy_Volume"),
                                               [
-                                                  lambda y: 0, # do nothing
+                                                  lambda y: -0.02, # do nothing
                                                   lambda y: y  # get trade reward
                                               ],
                                               [df['label'].min(), df['label'].max()],
-                                              episodes=2),
+                                              episodes=15),
                            test_size=0.4,
                            test_validate_split_seed=42)
 
         print(fit.training_summary.get_data_frame().tail())
         print(fit.test_summary.get_data_frame().tail())
-        self.assertTrue(True)
+
+        self.assertTrue(fit.training_summary.get_data_frame()["action_history"].sum() > 1)
+        self.assertTrue(fit.test_summary.get_data_frame()["action_history"].sum() > 1)
