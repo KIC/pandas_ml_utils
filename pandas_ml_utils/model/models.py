@@ -120,12 +120,14 @@ class OpenAiGymModel(Model):
                  features_and_labels: FeaturesAndLabels,
                  action_reward_functions: List[Callable[[np.ndarray], float]],
                  reward_range: Tuple[int, int],
+                 oservation_range: Tuple[int, int] = None,
                  episodes: int = 1000,
                  **kwargs):
         super().__init__(features_and_labels, **kwargs)
         self.agent_provider = agent_provider
         self.action_reward_functions = action_reward_functions
         self.reward_range = reward_range
+        self.oservation_range = oservation_range
         self.episodes = episodes
         self.agent = agent_provider(features_and_labels.shape()[0], len(action_reward_functions))
 
@@ -135,7 +137,7 @@ class OpenAiGymModel(Model):
         self.history = ()
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
-        mm = (min([x.min(), x_val.min()]), max([x.max(), x_val.max()]))
+        mm = (min([x.min(), x_val.min()]), max([x.max(), x_val.max()])) if self.oservation_range is None else self.oservation_range
         training_gym = RowWiseGym((df_index_train, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
         test_gym = RowWiseGym((df_index_test, x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
 
@@ -146,7 +148,8 @@ class OpenAiGymModel(Model):
         self.history = (training_gym.get_history(), test_gym.get_history())
 
     def back_test(self, index, x, y):
-        gym = RowWiseGym((index, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, (x.min(), x.max()))
+        mm = (x.min(), x.max()) if self.oservation_range is None else self.oservation_range
+        gym = RowWiseGym((index, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
         return self._forward_gym(gym).get_history()
 
     def predict(self, x):
