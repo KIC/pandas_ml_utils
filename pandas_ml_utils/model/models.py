@@ -67,23 +67,32 @@ class SkitModel(Model):
             return self.skit_model.predict(reshape_rnn_as_ar(x))
 
 
-# TODO add Keras Model
 class KerasModel(Model):
+    from typing import TYPE_CHECKING
+    if TYPE_CHECKING:
+        from keras.models import Model as KModel
 
-    def __init__(self, keras_model_provider, features_and_labels: FeaturesAndLabels, **kwargs):
+    def __init__(self,
+                 keras_compiled_model_provider: Callable[[], KModel],
+                 features_and_labels: FeaturesAndLabels,
+                 callbacks: List[Callable],
+                 **kwargs):
         super().__init__(features_and_labels, **kwargs)
-        self.keras_model_provider = keras_model_provider
+        self.keras_model_provider = keras_compiled_model_provider
+        self.keras_model = keras_compiled_model_provider()
+        self.callbacks = callbacks
+        self.history = None
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> None:
-        pass
+        self.history = self.keras_model.fit(x, y, validation_data=(x_val, y_val), callbacks=self.callbacks)
 
     def predict(self, x) -> np.ndarray:
-        # we would need to return a prediction for every and each parameters dict in the parameter space
-        pass
+        self.keras_model.predict(x)
 
     def __call__(self, *args, **kwargs):
         return KerasModel(self.keras_model_provider,
                           self.features_and_labels,
+                          self.callbacks
                           **self.kwargs)
 
 

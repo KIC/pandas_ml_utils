@@ -100,7 +100,7 @@ class ComponentTest(unittest.TestCase):
 
         # backtest
         backtest_regression = df.backtest_regressor(fitted_model)
-        self.assertIsNotNone(backtest_regression) # FIXME better assertion
+        self.assertIsNotNone(backtest_regression)
 
         # regressed
         regressed = df.regress(fitted_model)

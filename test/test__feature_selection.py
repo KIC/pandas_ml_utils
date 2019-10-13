@@ -19,6 +19,5 @@ class TestFeatureSelection(unittest.TestCase):
         df.filtration(["labelA", "labelB"])
 
 
-
 if __name__ == '__main__':
     unittest.main()

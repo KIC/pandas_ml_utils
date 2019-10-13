@@ -59,10 +59,7 @@ class RowWiseGym(gym.Env):
         return obs, reward, done, {}
 
     def render(self, mode='human', close=False):
-        # Render the environment to the screen
-        # TODO print something
-        #print("something")
-        pass
+        print(f"reward: {sum(self.reward_history)}")
 
     def get_history(self):
         return pd.DataFrame({"reward_history": self.reward_history,

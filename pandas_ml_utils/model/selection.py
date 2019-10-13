@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import pandas as pd
 from typing import List
 
@@ -7,7 +8,11 @@ from typing import List
 log = logging.getLogger(__name__)
 
 
-def filtration(df: pd.DataFrame, label_columns: List[str], correlation_threshold: float = 0.5, figsize=(12, 10)):
+def filtration(df: pd.DataFrame,
+               label_columns: List[str],
+               correlation_threshold: float = 0.5,
+               minimum_features: int = 1,
+               figsize=(12, 10)):
     correlation_mx = df.corr()
     log.info(correlation_mx)
 
@@ -31,7 +36,12 @@ def filtration(df: pd.DataFrame, label_columns: List[str], correlation_threshold
         print(features)
 
     # then eliminate features with high correlation
-    df[features.index].corr()
-    # TODO eliminate features with high correlation
+    while len(features) > minimum_features and df[features.index].corr().max().values.max() > correlation_threshold:
+        correlation_mx = df[features.index].corr().values
+        index = np.unravel_index(correlation_mx.argmax(), correlation_mx.shape)
+        features = features.drop(features.index[index[0]])
+
+    print(f"\nfiltered features with correlation > {correlation_threshold} to {label}")
+    print(features)
 
     return fig
