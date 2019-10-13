@@ -2,6 +2,11 @@ import pandas as pd
 import numpy as np
 import unittest
 
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Flatten
+from keras.optimizers import Adam
+from rl.agents import SARSAAgent
+from rl.policy import MaxBoltzmannQPolicy
 from sklearn.model_selection import KFold
 
 import pandas_ml_utils as pdu
@@ -28,7 +33,9 @@ class ComponentTest(unittest.TestCase):
         # fit
         fit = df.fit_classifier(pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001,
                                                             random_state=42),
-                                              pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'], target_columns=["vix_Open"], loss_column="spy_Volume")),
+                                              pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
+                                                                    target_columns=["vix_Open"],
+                                                                    loss_column="spy_Volume")),
                                 test_size=0.4,
                                 test_validate_split_seed=42)
 
@@ -83,8 +90,9 @@ class ComponentTest(unittest.TestCase):
         # fit
         fit = df.fit_regressor(pdu.SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(4, 3, 2, 1, 2, 3, 4),
                                                           random_state=42),
-                                             pdu.FeaturesAndLabels(features=['vix_Open', 'vix_High', 'vix_Low', 'vix_Close'],
-                                                                   labels=['vix_Open', 'vix_High', 'vix_Low', 'vix_Close'])),
+                                             pdu.FeaturesAndLabels(
+                                                 features=['vix_Open', 'vix_High', 'vix_Low', 'vix_Close'],
+                                                 labels=['vix_Open', 'vix_High', 'vix_Low', 'vix_Close'])),
                                test_size=0.4,
                                test_validate_split_seed=42)
 
@@ -92,7 +100,7 @@ class ComponentTest(unittest.TestCase):
 
         # backtest
         backtest_regression = df.backtest_regressor(fitted_model)
-        self.assertIsNotNone(backtest_regression) # FIXME better assertion
+        self.assertIsNotNone(backtest_regression)
 
         # regressed
         regressed = df.regress(fitted_model)
@@ -116,7 +124,8 @@ class ComponentTest(unittest.TestCase):
         # fit
         fit = df.fit_classifier(pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001,
                                                             random_state=42, max_iter=10),
-                                              pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
+                                              pdu.FeaturesAndLabels(features=['vix_Close'],
+                                                                    labels=['label'],
                                                                     target_columns=["vix_Open"],
                                                                     loss_column="spy_Volume")),
                                 test_size=0.4,
@@ -127,3 +136,52 @@ class ComponentTest(unittest.TestCase):
         np.testing.assert_array_equal(fit.test_summary.confusion_count(), np.array([[257, 169],
                                                                                     [1142, 1115]]))
 
+    def test_reinforcement_model(self):
+        df = pd.read_csv(f'{__name__}.csv', index_col='Date')
+        df['vix_Close'] = df['vix_Close'] / 50
+        df['label'] = (df["spy_Close"] - df["spy_Open"]).shift(-1)
+        df = df.drop('2019-09-13').dropna()[-100:]
+
+        # define agent with model:
+        def agent_provider(observation_space_shape, nb_actions):
+            print(f"observation_space_shape: {observation_space_shape}")
+
+            # define model
+            model = Sequential()
+            model.add(Flatten(input_shape=(1,) + observation_space_shape))
+            model.add(Dense(16))
+            model.add(Activation('sigmoid'))
+            model.add(Dense(nb_actions))
+            model.add(Activation('relu'))
+
+            # define agent
+            policy = MaxBoltzmannQPolicy()
+            sarsa = SARSAAgent(model=model, nb_actions=nb_actions, nb_steps_warmup=0, policy=policy)
+            sarsa.compile(Adam(lr=1e-4), metrics=['mae'])
+
+            return sarsa
+
+        # fit
+        fit = df.fit_agent(pdu.OpenAiGymModel(agent_provider,
+                                              pdu.FeaturesAndLabels(features=['vix_Close'],
+                                                                    labels=['label'],
+                                                                    feature_lags=range(5),
+                                                                    label_type=float,
+                                                                    target_columns=["vix_Close", "spy_Close"],
+                                                                    loss_column="spy_Volume"),
+                                              [
+                                                  lambda y: -0.02, # do nothing
+                                                  lambda y: y  # get trade reward
+                                              ],
+                                              [df['label'].min(), df['label'].max()],
+                                              episodes=15),
+                           test_size=0.4,
+                           test_validate_split_seed=42)
+
+        print(fit.training_summary.get_data_frame().tail())
+        print(fit.training_summary.get_data_frame()["reward_history"].sum())
+        print(fit.test_summary.get_data_frame().tail())
+        print(fit.test_summary.get_data_frame()["reward_history"].sum())
+
+        self.assertTrue(fit.training_summary.get_data_frame()["action_history"].sum() > 1)
+        self.assertTrue(fit.test_summary.get_data_frame()["action_history"].sum() > 1)

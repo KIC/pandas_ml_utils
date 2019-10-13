@@ -7,12 +7,26 @@
 
 I was really sick of converting data frames to numpy arrays back and forth just to try out a 
  simple logistic regression. So I have started a pandas ml utilities library where
- everything should be reachable from the data frame itself. Check out the following examples
- to see what I mean by that.
+ everything should be reachable from the data frame itself. Something along the lines
+ `model = df.fit(my_super_model)`
 
-## Fitting
+Provided utils include:
+ * basic feature analysis / selection
+ * fit various kinds of models directly from data frames 
+    * fit binary classifiers 
+    * fit regression models
+    * fit reinforcement agents
+ * develop, save, load and deploy models
+ 
+Check the [component tests](https://github.com/KIC/pandas_ml_utils/blob/master/test/component_test.py) for some more 
+ concrete examples. 
+ 
+## Basic Feature Analysis / Selection
+TODO ... write this stuff 
 
-### Ordinary Binary Classification
+## Fitting Models Directly from DataFrames 
+
+### Binary Classification
 ```python
 import pandas as pd
 import pandas_ml_utils as pmu
@@ -146,6 +160,7 @@ NOTE If you have a target level for your binary classifier like all houses cheap
  through to the classified dataframe as target columns.
  
 ### Fitting other models then classifiers
+#### Regression Models
 For non classification tasks use the regressor functions the same way as the classifier 
  functions.
  
@@ -153,6 +168,17 @@ For non classification tasks use the regressor functions the same way as the cla
 * df.backtest_regressor(...)
 * df.regress(...)
  
+#### Reinforcement Learning
+For reinforcement learning there is a keras-rl backend implemented. The API is the same
+ as for the others like classification or regression.
+ 
+* df.fit_agent(...)
+* df.backtest_agent(...)
+* df.agent_take_action(...)
+
+However the model is a bit more complicated as the regular SkitModel, you might take a look
+ at the [component tests](https://github.com/KIC/pandas_ml_utils/blob/master/test/component_test.py). 
+  
 ### Other utility objects
 #### LazyDataFrame
 Very often I need to do a lot of feature engineering. And very often I do not want to

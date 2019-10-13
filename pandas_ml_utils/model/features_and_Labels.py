@@ -1,6 +1,6 @@
 import inspect
 import logging
-from typing import List, Callable, Iterable, Dict
+from typing import List, Callable, Iterable, Dict, Type
 
 import pandas as pd
 import numpy as np
@@ -13,6 +13,7 @@ class FeaturesAndLabels(object):
     def __init__(self,
                  features: List[str],
                  labels: List[str],
+                 label_type:Type = int,
                  target_columns: List[str] = None,
                  loss_column: str = None,
                  feature_lags: Iterable[int] = None,
@@ -20,6 +21,7 @@ class FeaturesAndLabels(object):
                  **kwargs):
         self.features = features
         self.labels = labels
+        self.label_type = label_type
         self.target_columns = target_columns
         self.loss_column = loss_column
         self.feature_lags = feature_lags
@@ -28,6 +30,9 @@ class FeaturesAndLabels(object):
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
         self.kwargs = kwargs
         log.info(f'number of features, lags and total: {self.len_features()}')
+
+    def shape(self):
+        return self.get_feature_names().shape, (self.len_labels(), )
 
     def len_features(self):
         return len(self.features), self.len_feature_lags, self.expanded_feature_length
@@ -41,7 +46,7 @@ class FeaturesAndLabels(object):
                               for feat in self.features]
                              for lag in self.feature_lags], ndmin=2)
         else:
-            return self.features
+            return np.array(self.features)
 
     def __getitem__(self, item):
         if isinstance(item, tuple) and len(item) == 2:

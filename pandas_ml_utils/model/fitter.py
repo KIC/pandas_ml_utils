@@ -30,8 +30,8 @@ def _fit(df: pd.DataFrame,
         make_training_data(df,
                            features_and_labels,
                            test_size,
-                           int,
-                           test_validate_split_seed,
+                           label_type=features_and_labels.label_type,
+                           seed=test_validate_split_seed,
                            cache=cache_feature_matrix,
                            summary_printer=summary_printer)
 
@@ -45,10 +45,10 @@ def _fit(df: pd.DataFrame,
             # cross validation, make sure we re-shuffle every fold_epoch
             for f, (train_idx, test_idx) in enumerate(cross_validation[1](x_train, y_train)):
                 log.info(f'fit fold {f}')
-                model.fit(x_train[train_idx], y_train[train_idx], x_train[test_idx], y_train[test_idx])
+                model.fit(x_train[train_idx], y_train[train_idx], x_train[test_idx], y_train[test_idx], index_train[train_idx], index_train[test_idx])
     else:
         # fit without cross validation
-        model.fit(x_train, y_train, x_test, y_test)
+        model.fit(x_train, y_train, x_test, y_test, index_train, index_test)
 
     log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
     return model, (x_train, y_train), (x_test, y_test), (index_train, index_test)
@@ -87,7 +87,6 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     if features_and_labels.loss_column is not None:
         dff["loss"] = df[features_and_labels.loss_column]
 
-    # predict on features
     prediction = model.predict(x)
     if len(prediction.shape) > 1 and prediction.shape[1] > 1:
         for i in range(prediction.shape[1]):
