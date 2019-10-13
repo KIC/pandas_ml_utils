@@ -128,6 +128,10 @@ class OpenAiGymModel(Model):
         self.reward_range = reward_range
         self.episodes = episodes
         self.agent = agent_provider(features_and_labels.shape()[0], len(action_reward_functions))
+
+        # some history
+        self.keras_train_history = None
+        self.keras_test_history = None
         self.history = ()
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
@@ -135,15 +139,18 @@ class OpenAiGymModel(Model):
         training_gym = RowWiseGym((df_index_train, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
         test_gym = RowWiseGym((df_index_test, x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
 
-        keras_train_history = self.agent.fit(training_gym, nb_steps=len(x) * self.episodes)
-        keras_test_history = self.agent.test(test_gym, nb_episodes=1)
+        self.keras_train_history = self.agent.fit(training_gym, nb_steps=len(x) * self.episodes)
+        #self.keras_test_history = self.agent.test(test_gym, nb_episodes=1) # clarification needed what test actually does: https://github.com/keras-rl/keras-rl/issues/342
+        test_gym = self._forward_gym(test_gym)
 
         self.history = (training_gym.get_history(), test_gym.get_history())
 
+    def back_test(self, index, x, y):
+        gym = RowWiseGym((index, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, (x.min(), x.max()))
+        return self._forward_gym(gym).get_history()
+
     def predict(self, x):
-        # gym = RowWiseGym(self.features_and_labels, self.action_reward_functions, self.reward_range)
-        # fixme
-        pass
+        return [self.agent.forward(x[r]) for r in range(len(x))]
 
     def __call__(self, *args, **kwargs):
         return OpenAiGymModel(self.agent_provider,
@@ -152,3 +159,11 @@ class OpenAiGymModel(Model):
                               self.reward_range,
                               self.episodes,
                               **self.kwargs)
+
+    def _forward_gym(self, gym):
+        done = False
+        state = gym.reset()
+        while not done:
+            state, reward, done, _ = gym.step(self.agent.forward(state))
+
+        return gym

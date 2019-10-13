@@ -39,6 +39,8 @@ PandasObject.regress = regress
 
 # reinforcement learning
 PandasObject.fit_agent = fit_agent
+PandasObject.backtest_agent = backtest_agent
+PandasObject.agent_take_action = agent_take_action
 
 # data fetcher
 setattr(pd, 'fetch_yahoo', fetch_yahoo)

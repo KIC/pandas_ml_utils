@@ -87,7 +87,6 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     if features_and_labels.loss_column is not None:
         dff["loss"] = df[features_and_labels.loss_column]
 
-    # predict on features
     prediction = model.predict(x)
     if len(prediction.shape) > 1 and prediction.shape[1] > 1:
         for i in range(prediction.shape[1]):

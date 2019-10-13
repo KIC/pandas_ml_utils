@@ -5,8 +5,9 @@ import numpy as np
 import pandas as pd
 
 from ..model.fit import Fit
-from ..model.fitter import _fit
+from ..model.fitter import _fit, _predict
 from ..model.models import Model
+from ..train_test_data import make_training_data
 from .summary import ReinforcementSummary
 
 log = logging.getLogger(__name__)
@@ -35,3 +36,20 @@ def fit_agent(df: pd.DataFrame,
     training_classification = ReinforcementSummary(train_targets, model.history[0])
     test_classification = ReinforcementSummary(test_targets, model.history[1])
     return Fit(model, training_classification, test_classification)
+
+
+def backtest_agent(df: pd.DataFrame, model: Model) -> ReinforcementSummary:
+    features_and_labels = model.features_and_labels
+
+    # make training and test data with no 0 test data fraction
+    x, _, y, _, index, _, _ = make_training_data(df, features_and_labels, 0, int)
+
+    targets = df[model.features_and_labels.target_columns]
+    back_test_history = model.back_test(index, x, y)
+
+    return ReinforcementSummary(targets, back_test_history)
+
+
+def agent_take_action(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
+    dff = _predict(df, model, tail)
+    return dff

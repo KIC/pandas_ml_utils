@@ -179,7 +179,9 @@ class ComponentTest(unittest.TestCase):
                            test_validate_split_seed=42)
 
         print(fit.training_summary.get_data_frame().tail())
+        print(fit.training_summary.get_data_frame()["reward_history"].sum())
         print(fit.test_summary.get_data_frame().tail())
+        print(fit.test_summary.get_data_frame()["reward_history"].sum())
 
         self.assertTrue(fit.training_summary.get_data_frame()["action_history"].sum() > 1)
         self.assertTrue(fit.test_summary.get_data_frame()["action_history"].sum() > 1)
