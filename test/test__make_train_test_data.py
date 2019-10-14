@@ -164,6 +164,40 @@ class TestTrainTestData(unittest.TestCase):
         self.assertEqual(cache_info.misses, 1)  # miss the first call
         self.assertEqual(cache_info.hits, 1)    # fetch the first cached call
 
+    def test_feature_scaling_3d(self):
+        df = pd.DataFrame({"featureA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                           "featureC": [11, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                           "featureB": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+                           "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
+
+        fl = pdu.FeaturesAndLabels(["featureA", "featureB", "featureC"],
+                                   ["labelA"],
+                                   feature_lags=[1, 2],
+                                   feature_rescaling={("featureA", "featureC"): (-1, 1)})
+
+        x_train, x_test, y_train, y_test, _, _, _ = df.make_training_data(fl, test_size=0)
+
+        print(x_train)
+        self.assertEqual(x_train.argmax(), 5)
+        self.assertEqual(x_train[0,1,2], 1)
+        self.assertEqual(x_train[0,1,0], -1)
+        np.testing.assert_array_almost_equal(x_train[0,:,1], df["featureB"][[1,0]])
+
+    def test_feature_scaling_2d(self):
+        df = pd.DataFrame({"featureA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                           "featureC": [11, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                           "featureB": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+                           "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
+
+        fl = pdu.FeaturesAndLabels(["featureA", "featureB", "featureC"],
+                                   ["labelA"],
+                                   feature_rescaling={("featureA", "featureC"): (-1, 1)})
+
+        x_train, x_test, y_train, y_test, _, _, _ = df.make_training_data(fl, test_size=0)
+
+        print(x_train)
+        np.testing.assert_array_almost_equal(x_train[0], np.array([-1, 0.1, 1]))
+
 
 if __name__ == '__main__':
     unittest.main()

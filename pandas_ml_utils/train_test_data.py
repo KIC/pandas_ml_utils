@@ -10,8 +10,7 @@ from sortedcontainers import SortedDict
 from typing import Type, Callable
 
 from pandas_ml_utils.wrappers.hashable_dataframe import HashableDataFrame
-from pandas_ml_utils.utils import log_with_time
-
+from pandas_ml_utils.utils import log_with_time, ReScaler
 
 log = logging.getLogger(__name__)
 
@@ -82,6 +81,7 @@ def _make_features_with_cache(df: HashableDataFrame, features_and_labels: 'Featu
 def _make_features(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
     start_pc = log_with_time(lambda: log.debug(" make features ..."))
     feature_lags = features_and_labels.feature_lags
+    feature_rescaling = features_and_labels.feature_rescaling
     features = features_and_labels.features
     lag_smoothing = features_and_labels.lag_smoothing
 
@@ -116,14 +116,22 @@ def _make_features(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
                         for feat in features]
                        for lag in feature_lags] for row in range(len(df))],
                      ndmin=3)
-
-        names = np.array([[f'{feat}_{lag}'
-                           for feat in features]
-                          for lag in feature_lags], ndmin=2)
     else:
         # return simple 2D arrays
         x = df[features].values
-        names = features
+
+    if feature_rescaling is not None:
+        for tuple, target_range in feature_rescaling.items():
+            for i in range(len(x)):
+                cols = [features.index(j) for j in tuple]
+                if len(x.shape) == 3:
+                    data = x[i, :, cols]
+                    x[i,:,cols] = ReScaler((data.min(), data.max()), target_range)(data)
+                elif len(x.shape) == 2:
+                    data = x[i,cols]
+                    x[i,cols] = ReScaler((data.min(), data.max()), target_range)(data)
+                else:
+                    ValueError("unknown array dimensions")
 
     log.info(f" make features ... done in {pc() - start_pc: .2f} sec!")
     return df, x
