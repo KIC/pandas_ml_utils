@@ -82,6 +82,9 @@ class ClassificationSummary(Summary):
                 else self.loss.loc[self.index] if isinstance(self.loss, pd.Series) \
                     else self.loss[self.loss.columns[0]].loc[self.index]
 
+        # make sure we only plot actual losses
+        y = y.copy().clip(upper=0)
+
         color = pd.Series(0, index=y.index)
         color.loc[self.confusion_matrix[0, 0]] = 1
         color.loc[self.confusion_matrix[1, 0]] = 2
