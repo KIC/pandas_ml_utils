@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from ..model.summary import Summary
+from sklearn.metrics import f1_score
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +28,11 @@ class ClassificationSummary(Summary):
 
         # immediately log some fit quality measures
         ratios = self.get_ratios()
-        log.info(f"FN Ratio = {ratios[0]}, FP Ratio = {ratios[1]}")
+        self.measurements = {"FN Ratio": ratios[0],
+                             "FP Ratio": ratios[1],
+                             "F1 Score": f1_score(y_true, y_prediction > probability_cutoff)}
+
+        log.info(f"statistics: {self.measurements}")
 
     def set_probability_cutoff(self, probability_cutoff: float = 0.5):
         self.probability_cutoff = probability_cutoff
@@ -54,7 +59,7 @@ class ClassificationSummary(Summary):
 
     def get_ratios(self):
         cm = self.confusion_count()
-        return cm[0,0] / (cm[1,0]  + 1), cm[0,0] / (cm[0,1]  + 1)
+        return cm[1,0] / cm[0,0], cm[0,1] / cm[0,0]
 
     def plot_backtest(self,
                       y: pd.Series = None,
@@ -144,14 +149,22 @@ class ClassificationSummary(Summary):
                 ),
                 tbody(
                     tr(
-                        td(self._matrix_table(cmc)),
-                        td(self._matrix_table(cml), style={'float': 'right'})
+                        td(self._matrix_table(cmc)), td(self._matrix_table(cml), style={'float': 'right'})
                     ),
                     tr(
                         td(
                             img(src=f'data:image/png;base64,{image}', style={'width': '100%'}) if image is not None else "",
                             colspan='2'
                         )
+                    ),
+                    tr(
+                        td("FN/TP Ratio (should be < 0.5, ideally 0)"), td(f'{self.measurements["FN Ratio"]: .2f}')
+                    ),
+                    tr(
+                        td("FP/TP Ratio (should be < 0.5, ideally 0)"), td(f'{self.measurements["FP Ratio"]: .2f}')
+                    ),
+                    tr(
+                        td("F1 Score (should be > 0.5, ideally 1)"), td(f'{self.measurements["F1 Score"]: .2f}')
                     )
                 ),
                 style={'width': '100%'}

@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 import pandas as pd
-from typing import List, Iterable
+from typing import List, Iterable, Union
 # from .features_and_Labels import FeaturesAndLabels
 from sklearn.ensemble import ExtraTreesClassifier, ExtraTreesRegressor
 
@@ -10,13 +10,14 @@ log = logging.getLogger(__name__)
 
 def filtration(df: pd.DataFrame,
                label_column: str = None,
+               ignore: Union[List[str], str] = [],
                top_features: int = 5,
                correlation_threshold: float = 0.5,
                minimum_features: int = 1,
                lags: Iterable[int] = range(100),
                show_plots: bool = True,
                figsize=(12, 10)):
-    df = df.dropna()
+    df = df.drop(ignore, axis=1).dropna()
     N = len(df)
     correlation_mx = __sort_correlation(df.corr())
 
