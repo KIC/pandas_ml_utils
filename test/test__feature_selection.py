@@ -16,7 +16,7 @@ class TestFeatureSelection(unittest.TestCase):
                            "labelA": [1, 2, 3, 4, 5],
                            "labelB": [5, 4, 3, 2, 1]})
 
-        df.filtration(["labelA", "labelB"])
+        df.filtration("labelA", lags=[2], show_plots=False)
 
 
 if __name__ == '__main__':

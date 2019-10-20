@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from pandas_ml_utils.utils import unfold_parameter_space, KFoldBoostRareEvents
+from pandas_ml_utils.utils import unfold_parameter_space, KFoldBoostRareEvents, ReScaler
 
 
 class TestUtils(TestCase):
@@ -31,3 +31,17 @@ class TestUtils(TestCase):
         """then"""
         for f, (train_idx, test_idx) in enumerate(folds):
             self.assertEqual(np.isin([9, 12, 13], train_idx).sum(), 3)
+
+
+    def test_rescaling(self):
+        """given"""
+        array = np.array([[1, 2], [3, 4]])
+        rescaler = ReScaler((array.min(), array.max()), (-1, 1))
+
+        """when"""
+        resacled = rescaler(array)
+        print(resacled)
+
+        """then"""
+        self.assertEqual(resacled[0, 0], -1)
+        self.assertEqual(resacled[1, 1], 1)

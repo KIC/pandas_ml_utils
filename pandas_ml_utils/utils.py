@@ -1,5 +1,5 @@
 from time import perf_counter as pc
-from typing import Callable, Dict, Iterable, Any, List
+from typing import Callable, Dict, Iterable, Any, List, Tuple
 
 import numpy as np
 from sklearn.model_selection import KFold
@@ -33,3 +33,24 @@ class KFoldBoostRareEvents(KFold):
 
         for f, (train_idx, test_idx) in enumerate(super().split(X, y, groups)):
             yield np.hstack([train_idx, rare_event_indices]), np.hstack([test_idx, rare_event_indices])
+
+
+class ReScaler(object):
+
+    def __init__(self, domain: Tuple[float], range: Tuple[float]):
+        self.domain = domain
+        self.range = range
+        self.resacle = np.vectorize(self._rescale)
+
+    def _interpolate(self, x: float):
+        return self.range[0] * (1 - x) + self.range[1] * x
+
+    def _uninterpolate(self, x: float):
+        b = (self.domain[1] - self.domain[0]) if (self.domain[1] - self.domain[0]) != 0 else (1 / self.domain[1])
+        return (x - self.domain[0]) / b
+
+    def _rescale(self, x: float):
+        return self._interpolate(self._uninterpolate(x))
+
+    def __call__(self, *args, **kwargs):
+        return self.resacle(args[0])

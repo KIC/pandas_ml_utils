@@ -68,6 +68,9 @@ class SkitModel(Model):
 
 
 class KerasModel(Model):
+    # eventually we need to save and load the weights of the keras model individually by using `__getstate__`
+    #  `__setstate__` like described here: http://zachmoshe.com/2017/04/03/pickling-keras-models.html
+
     from typing import TYPE_CHECKING
     if TYPE_CHECKING:
         from keras.models import Model as KModel
@@ -170,3 +173,7 @@ class OpenAiGymModel(Model):
             state, reward, done, _ = gym.step(self.agent.forward(state))
 
         return gym
+
+class StableBaselineModel(Model):
+    # add stable baseline models https://stable-baselines.readthedocs.io/en/master/guide/algos.html
+    pass

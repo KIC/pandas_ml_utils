@@ -1,6 +1,6 @@
 import inspect
 import logging
-from typing import List, Callable, Iterable, Dict, Type
+from typing import List, Callable, Iterable, Dict, Type, Tuple
 
 import pandas as pd
 import numpy as np
@@ -17,6 +17,7 @@ class FeaturesAndLabels(object):
                  target_columns: List[str] = None,
                  loss_column: str = None,
                  feature_lags: Iterable[int] = None,
+                 feature_rescaling: Dict[Tuple[str], Tuple[int]] = None,
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
                  **kwargs):
         self.features = features
@@ -25,6 +26,7 @@ class FeaturesAndLabels(object):
         self.target_columns = target_columns
         self.loss_column = loss_column
         self.feature_lags = feature_lags
+        self.feature_rescaling = feature_rescaling
         self.lag_smoothing = lag_smoothing
         self.len_feature_lags = sum(1 for _ in feature_lags) if feature_lags is not None else 1
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
@@ -56,7 +58,8 @@ class FeaturesAndLabels(object):
 
     def __repr__(self):
         return f'FeaturesAndLabels({self.features},{self.labels},{self.target_columns},{self.loss_column},' \
-               f'{self.feature_lags},{self.lag_smoothing},{self.probability_cutoff}) #{len(self.features)} ' \
+               f'{self.feature_lags},{self.feature_rescaling}{self.lag_smoothing},{self.probability_cutoff}) ' \
+               f'#{len(self.features)} ' \
                f'features expand to {self.expanded_feature_length}'
 
     def __hash__(self):
