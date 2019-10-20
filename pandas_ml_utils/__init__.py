@@ -2,6 +2,7 @@
 __version__ = '0.0.10'
 
 from .pandas_utils_extension import *
+from .analysis.correlation_analysis import *
 from .wrappers.lazy_dataframe import *
 from .datafetching.fetch_yahoo import *
 from .model.models import *
@@ -25,6 +26,7 @@ PandasObject.extend_forecast = extend_forecast
 PandasObject.make_training_data = make_training_data
 
 # feature selection
+PandasObject.plot_correlation_matrix = plot_correlation_matrix
 PandasObject.filtration = filtration
 
 # classification functions
