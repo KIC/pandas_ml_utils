@@ -14,7 +14,7 @@ import pandas_ml_utils as pdu
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 
 import logging
-
+from pandas_ml_utils.analysis.correlation_analysis import _sort_correlation
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -25,6 +25,12 @@ class ComponentTest(unittest.TestCase):
     def test_fetch_yahoo(self):
         df = pd.fetch_yahoo(spy="SPY").tail()
         self.assertTrue(df["spy_Close"].sum() > 0)
+
+    def test_correlation_matrix(self):
+        df = pd.read_csv(f'{__name__}.csv', index_col='Date')[["spy_Open", "spy_High", "spy_Low", "spy_Close"]]
+        corr = _sort_correlation(df.corr(), recursive=True)
+
+        self.assertListEqual(corr.columns.tolist(), ["spy_Open", "spy_High", "spy_Close", "spy_Low"])
 
     def test_fit_classifier_full(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')

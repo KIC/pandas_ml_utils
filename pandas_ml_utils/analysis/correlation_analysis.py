@@ -3,19 +3,27 @@ import pandas as pd
 
 def plot_correlation_matrix(df: pd.DataFrame, figsize=(12, 10)):
     correlation_matrix = df.corr()
-    sorted_correlation_matrix = __sort_correlation(correlation_matrix)
-    __plot_heatmap(sorted_correlation_matrix, figsize)
+    sorted_correlation_matrix = _sort_correlation(correlation_matrix)
+    _plot_heatmap(sorted_correlation_matrix, figsize)
 
 
-def __sort_correlation(correlation_matrix):
+def _sort_correlation(correlation_matrix, recursive=False, recursion_start=1):
     cor = correlation_matrix.abs()
-    top_col = cor[cor.columns[0]][1:]
+    top_col = cor[cor.columns[recursion_start - 1]][recursion_start:]
     top_col = top_col.sort_values(ascending=False)
-    ordered_columns = [cor.columns[0]] + top_col.index.tolist()
-    return correlation_matrix[ordered_columns].reindex(ordered_columns)
+    ordered_columns = cor.columns[0:recursion_start].tolist() + top_col.index.tolist()
+
+    # now reorder columns and reindex rows
+    cor = correlation_matrix[ordered_columns].reindex(ordered_columns)
+
+    # this whole procedure has to be done recursively
+    if recursive and recursion_start < len(cor):
+        return _sort_correlation(cor, True, recursion_start + 1)
+    else:
+        return cor
 
 
-def __plot_heatmap(correlation_mx, figsize):
+def _plot_heatmap(correlation_mx, figsize):
     try:
         # only import if needed and only plot if libraries found
         import matplotlib.pyplot as plt
