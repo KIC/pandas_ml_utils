@@ -49,7 +49,7 @@ class ClassificationSummary(Summary):
                                   [index[(truth == True) & (pred <= co)], index[(truth == False) & (pred <= co)]]])
 
             if len(confusion[0, 0]) <= 0:
-                log.warning("Very bad fit with 0 TP, which leads to problems in the plot")
+                log.warning("Very bad fit with 0 TP")
 
             return confusion
         except:
@@ -89,16 +89,19 @@ class ClassificationSummary(Summary):
         color.loc[self.confusion_matrix[0, 0]] = 1
         color.loc[self.confusion_matrix[1, 0]] = 2
 
+        colors = {0: sns.xkcd_rgb['white'], 1: sns.xkcd_rgb['pale green'], 2: sns.xkcd_rgb['cerise']}
+        palette = [colors[color_index] for color_index in np.sort(color.unique())]
+
         # get colors from: https://xkcd.com/color/rgb/
         fig, ax = plt.subplots(figsize=figsize)
         ax.set_ylim([y.min() * 1.1, 1])
 
-        scatt =  sns.scatterplot(x=y.index,
-                                 y=y,
-                                 ax=ax,
-                                 size=size if size is not None else y * -1,
-                                 hue=color,
-                                 palette=[sns.xkcd_rgb['white'], sns.xkcd_rgb['pale green'], sns.xkcd_rgb['cerise']])
+        scatt = sns.scatterplot(x=y.index,
+                                y=y,
+                                ax=ax,
+                                size=size if size is not None else y * -1,
+                                hue=color,
+                                palette=palette)
 
         bar = sns.lineplot(x=y.index, y=self.y_prediction, ax=ax)
         plt.hlines(self.probability_cutoff, y.index.min(), y.index.max(), color=sns.xkcd_rgb['silver'])
@@ -127,9 +130,6 @@ class ClassificationSummary(Summary):
         import matplotlib.pyplot as plt
         import base64
         import io
-
-        if self.confusion_count()[0, 0] <= 0:
-            return p('very bad fit with 0 TP!')
 
         image = None
         if self.loss is not None:

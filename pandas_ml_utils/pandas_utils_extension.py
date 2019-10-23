@@ -1,7 +1,8 @@
 import logging
 import re
-from typing import Union, Callable
+from typing import Union, Callable, List
 
+import numpy as np
 import pandas as pd
 
 log = logging.getLogger(__name__)
@@ -29,6 +30,17 @@ def drop_re(df, *args: str):
         drop_list.extend(list(filter(re.compile(regex).match, df.columns)))
 
     return df.drop(drop_list, axis=1)
+
+
+def drop_zero_or_nan(df, columns: List[str] = None, epsilon=1e-10):
+    df = df.copy()
+
+    # replace all zeros by nan
+    for col in columns if columns is not None else df.columns:
+        df[df[col].abs() < epsilon] = np.NaN
+
+    # then drop all nan
+    return df.dropna()
 
 
 def extend_forecast(df, periods: int):

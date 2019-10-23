@@ -70,8 +70,12 @@ class FeaturesAndLabels(object):
 
     def __id__(self):
         import dill  # only import if really needed
-        smoothers = {feature: inspect.getsource(smoother) for feature, smoother in self.lag_smoothing.items()}
-        return f'{self.features},{self.labels},{dill.dumps(self.feature_lags)},{smoothers}'
+        smoothers = ""
+
+        if self.lag_smoothing is not None:
+            smoothers = {feature: inspect.getsource(smoother) for feature, smoother in self.lag_smoothing.items()}
+
+        return f'{self.features},{self.labels},{self.label_type},{dill.dumps(self.feature_lags)},{self.feature_rescaling},{smoothers}'
 
     def __str__(self):
         return self.__repr__()

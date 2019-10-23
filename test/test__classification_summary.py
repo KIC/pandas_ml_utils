@@ -1,8 +1,14 @@
 import numpy as np
+import pandas as pd
+import logging
 
 from unittest import TestCase
 from sklearn.metrics import confusion_matrix
 from pandas_ml_utils.classification.summary import ClassificationSummary
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 class TestClassificationSummary(TestCase):
@@ -30,3 +36,33 @@ class TestClassificationSummary(TestCase):
         self.assertEqual(len(cm[1,1]), cm_skit[0,0])
 
         print(cs)
+
+    def test_plot_backtest_no_fit(self):
+        index = np.array([0, 1, 2, 3, 4])
+        pred = np.array([1.0, 0.0, 1.0, 1.0, 0.0])
+        truth = np.array([False, True, False, False, True])
+        loss = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
+
+        cs = ClassificationSummary(truth, pred, index, pd.Series(loss))
+        plot = cs.plot_backtest()
+        self.assertIsNotNone(plot)
+
+    def test_plot_backtest_a_fit(self):
+        index = np.array([0, 1, 2, 3, 4])
+        pred = np.array([1.0, 0.0, 1.0, 1.0, 0.0])
+        truth = np.array([True, True, True, False, False])
+        loss = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
+
+        cs = ClassificationSummary(truth, pred, index, pd.Series(loss))
+        plot = cs.plot_backtest()
+        self.assertIsNotNone(plot)
+
+    def test_plot_backtest_perfect_fit(self):
+        index = np.array([0, 1, 2, 3, 4])
+        pred = np.array([1.0, 0.0, 1.0, 1.0, 0.0])
+        truth = np.array([True, False, True, False, False])
+        loss = np.array([1.0, 1.0, 1.0, 1.0, 1.0]) * -1
+
+        cs = ClassificationSummary(truth, pred, index, pd.Series(loss))
+        plot = cs.plot_backtest()
+        self.assertIsNotNone(plot)

@@ -2,6 +2,7 @@
 __version__ = '0.0.10'
 
 from .pandas_utils_extension import *
+from .analysis.correlation_analysis import *
 from .wrappers.lazy_dataframe import *
 from .datafetching.fetch_yahoo import *
 from .model.models import *
@@ -19,12 +20,14 @@ from pandas.core.base import PandasObject
 # general utility functions
 PandasObject.inner_join = inner_join
 PandasObject.drop_re = drop_re
+PandasObject.drop_zero_or_nan = drop_zero_or_nan
 PandasObject.add_apply = add_apply
 PandasObject.shift_inplace = shift_inplace
 PandasObject.extend_forecast = extend_forecast
 PandasObject.make_training_data = make_training_data
 
 # feature selection
+PandasObject.plot_correlation_matrix = plot_correlation_matrix
 PandasObject.filtration = filtration
 
 # classification functions

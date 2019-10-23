@@ -4,7 +4,7 @@ import pandas as pd
 from typing import List, Iterable, Union
 # from .features_and_Labels import FeaturesAndLabels
 from sklearn.ensemble import ExtraTreesClassifier, ExtraTreesRegressor
-
+from ..analysis.correlation_analysis import plot_correlation_matrix, _sort_correlation, _plot_heatmap
 log = logging.getLogger(__name__)
 
 
@@ -19,10 +19,10 @@ def filtration(df: pd.DataFrame,
                figsize=(12, 10)):
     df = df.drop(ignore, axis=1).dropna()
     N = len(df)
-    correlation_mx = __sort_correlation(df.corr())
+    correlation_mx = _sort_correlation(df.corr())
 
     if show_plots:
-        __plot_heatmap(correlation_mx, figsize)
+        plot_correlation_matrix(df)
 
     print(correlation_mx[:1])
     features = correlation_mx
@@ -47,7 +47,7 @@ def filtration(df: pd.DataFrame,
         print(features[:1])
 
     # then eliminate features with high correlation to each other
-    features = __sort_correlation(features)
+    features = _sort_correlation(features)
     while len(features) > minimum_features and __max_correlation(features) > correlation_threshold:
         index = np.unravel_index(__argmax_correlation(features), features.values.shape)
         features = features.drop(features.index[index[1]], axis=0)
@@ -57,7 +57,7 @@ def filtration(df: pd.DataFrame,
     print(correlation_mx[features.columns][:1])
 
     if show_plots:
-        __plot_heatmap(features, figsize)
+        _plot_heatmap(features, figsize)
 
     # make AR analysis of remaining features
     coefficients = []
@@ -80,28 +80,6 @@ def filtration(df: pd.DataFrame,
     best_lags_i = (-best_lags).argsort()
     best_lags = [(i, f'{-best_lags[i] / cl:.2f}') for i in best_lags_i if abs(best_lags[i]) > (1.96 / np.sqrt(N - i) / cl)]
     print(f"best lags are\n{best_lags[1:]}")
-
-
-def __sort_correlation(correlation_matrix):
-    cor = correlation_matrix.abs()
-    top_col = cor[cor.columns[0]][1:]
-    top_col = top_col.sort_values(ascending=False)
-    ordered_columns = [cor.columns[0]] + top_col.index.tolist()
-    return correlation_matrix[ordered_columns].reindex(ordered_columns)
-
-
-def __plot_heatmap(correlation_mx, figsize):
-    try:
-        # only import if needed and only plot if libraries found
-        import matplotlib.pyplot as plt
-        import seaborn as sns
-
-        fig = plt.figure(figsize=figsize)
-
-        sns.heatmap(correlation_mx, annot=True, cmap=plt.cm.Reds)
-        plt.show()
-    except:
-        return None
 
 
 def __feature_importance(x, y, names, n_estimators=250):
@@ -129,7 +107,7 @@ def __plot_feature_importance(nr_of_features, estimators, importances, indices, 
         plt.figure(figsize=figsize)
         plt.title("Feature importances")
         plt.bar(range(nr_of_features), importances[indices], color="r", yerr=std[indices], align="center")
-        plt.xticks(range(nr_of_features), names)
+        plt.xticks(range(nr_of_features), names, rotation='vertical')
         plt.xlim([-1, nr_of_features])
         plt.show()
     except:
@@ -151,8 +129,8 @@ def __plot_acf(series, lags, figsize):
 
 
 def __max_correlation(df):
-    return (df.corr().values - np.identity(len(df.columns))).max()
+    return (df.abs().values - np.identity(len(df.columns))).max()
 
 
 def __argmax_correlation(df):
-    return (df.corr().values - np.identity(len(df.columns))).argmax()
+    return (df.abs().values - np.identity(len(df.columns))).argmax()
