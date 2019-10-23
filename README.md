@@ -213,10 +213,24 @@ to set the cache size (default is 1) set the following environment variable befo
 #### MultiModel
 TODO describe multi models ... 
 
+## Change Log
+### 0.0.10
+* Added support for rescaling features within the auto regressive lags. The following example
+re-scales the domain of min/max(featureA and featureB) to the range of -1 and 1. 
+```python
+FeaturesAndLabels(["featureA", "featureB", "featureC"],
+                  ["labelA"],
+                  feature_rescaling={("featureA", "featureC"): (-1, 1)})
+```
+* added a feature selection functionality. When starting from scratch this just helps
+to analyze the data to find feature importance and feature (auto) correlation.
+I.e. `df.filtration(label_column='delta')` takes all columns as features exept for the
+delta column (which is the label) and reduces the feature space by some heuristics.
+
 ## TODO
 * replace hard coded summary objects by a summary provider function 
 * multi model is just another implementation of model
-* add keras model
+* add documentation ([read the docs](https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html))
 * add more tests
 
 ## Wanna help?
