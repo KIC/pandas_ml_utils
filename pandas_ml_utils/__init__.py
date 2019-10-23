@@ -20,6 +20,7 @@ from pandas.core.base import PandasObject
 # general utility functions
 PandasObject.inner_join = inner_join
 PandasObject.drop_re = drop_re
+PandasObject.drop_zero_or_nan = drop_zero_or_nan
 PandasObject.add_apply = add_apply
 PandasObject.shift_inplace = shift_inplace
 PandasObject.extend_forecast = extend_forecast
