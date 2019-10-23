@@ -58,7 +58,8 @@ class SkitModel(Model):
         self.skit_model = skit_model
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
-        self.skit_model.fit(reshape_rnn_as_ar(x), y),
+        # remember fitted model
+        self.skit_model = self.skit_model.fit(reshape_rnn_as_ar(x), y)
 
     def predict(self, x):
         if callable(getattr(self.skit_model, 'predict_proba', None)):
