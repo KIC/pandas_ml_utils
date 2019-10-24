@@ -144,7 +144,6 @@ class ComponentTest(unittest.TestCase):
 
     def test_hyper_parameter(self):
         from hyperopt import hp
-        from pandas_ml_utils.extern.loss_functions import binary_crossentropy
 
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')
         df['label'] = df["spy_Close"] > df["spy_Open"]

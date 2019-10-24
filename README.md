@@ -230,6 +230,28 @@ TODO describe multi models ...
 * add feature importance 
 
 ## Change Log
+### 0.0.11
+* Added Hyper parameter tuning 
+```python
+from hyperopt import hp
+
+fit = df.fit_classifier(
+            pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
+                          pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
+                                                target_columns=["vix_Open"],
+                                                loss_column="spy_Volume")),
+            test_size=0.4,
+            test_validate_split_seed=42,
+            hyper_parameter_space={'alpha': hp.choice('alpha', [0.001, 0.1]), 'early_stopping': True, 'max_iter': 50,
+                                   '__max_evals': 4, '__rstate': np.random.RandomState(42)})
+```
+NOTE there is currently a bug in hyperot [module bson has no attribute BSON](https://github.com/hyperopt/hyperopt/issues/547)
+! However there is a workaround:
+```bash
+sudo pip uninstall bson
+pip install pymongo
+``` 
+
 ### 0.0.10
 * Added support for rescaling features within the auto regressive lags. The following example
 re-scales the domain of min/max(featureA and featureB) to the range of -1 and 1. 
