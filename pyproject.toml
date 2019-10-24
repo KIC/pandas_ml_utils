@@ -17,6 +17,7 @@ requires = [
     "sortedcontainers",
     "scikit-learn",
     "statsmodels",
+    "hyperopt",
     "dill"
 ]
 

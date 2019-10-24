@@ -26,8 +26,7 @@ def make_training_data(df: pd.DataFrame,
                        test_size: float = 0.4,
                        label_type: Type = int,
                        seed: int = 42,
-                       cache: bool = False,
-                       summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None):
+                       cache: bool = False):
     # only import if this method is needed
     from sklearn.model_selection import train_test_split
 
@@ -58,10 +57,6 @@ def make_training_data(df: pd.DataFrame,
         y_test = y_test.ravel().astype(label_type) if y_test is not None else None
 
     log.info(f"make training / test data split ... done in {pc() - start_pc: .2f} sec!")
-
-    # print some statistics if needed
-    if summary_printer is not None:
-        summary_printer(y, y_train, y_test)
 
     # return the split
     #log.debug(f"${len(x_train)}, {len(x_test)}, {len(y_train)}, {len(y_test)}, {len(index_train)}, {len(index_test)}, {min_required_data}")

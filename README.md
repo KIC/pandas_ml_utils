@@ -218,6 +218,7 @@ TODO describe multi models ...
 * multi model is just another implementation of model
 * add documentation ([read the docs](https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html))
 * add more tests
+* add Proximity https://stats.stackexchange.com/questions/270201/pooling-levels-of-categorical-variables-for-regression-trees/275867#275867
 
 ## Wanna help?
 * currently I only need binary classification

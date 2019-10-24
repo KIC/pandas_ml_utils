@@ -1,6 +1,7 @@
 import logging
 from time import perf_counter
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Dict
+from hyperopt import fmin, tpe, Trials
 
 import numpy as np
 import pandas as pd
@@ -19,9 +20,10 @@ def _fit(df: pd.DataFrame,
         cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None,
         cache_feature_matrix: bool = False,
         test_validate_split_seed = 42,
-        summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None # TODO lets provide a summary provider for the result like lambda model, df, fal, x, y, y_hat: ClassificationSummary(...)
+        hyper_parameter_space: Dict = None,
         ) -> Tuple[Model, Tuple, Tuple, Tuple]:
     # get a new model
+    trails = None
     model = model_provider()
     features_and_labels = model.features_and_labels
 
@@ -32,26 +34,79 @@ def _fit(df: pd.DataFrame,
                            test_size,
                            label_type=features_and_labels.label_type,
                            seed=test_validate_split_seed,
-                           cache=cache_feature_matrix,
-                           summary_printer=summary_printer)
+                           cache=cache_feature_matrix)
 
     log.info(f"create model (min required data = {min_required_data}")
     model.min_required_data = min_required_data
 
     # fit the model
     start_performance_count = log_with_time(lambda: log.info("fit model"))
+    if hyper_parameter_space is not None:
+        # next isolate hyperopt parameters and constants only used for hyper parameter tuning like early stopping
+        constants = {}
+        hyperopt_params = {}
+        for k, v in list(hyper_parameter_space.items()):
+            if k.startswith("__"):
+                hyperopt_params[k[2:]] = hyper_parameter_space.pop(k)
+            elif type(v) in [int, float, bool]:
+                constants[k] = hyper_parameter_space.pop(k)
+
+        # optimize hyper parameters
+        model, trails = __hyper_opt(hyper_parameter_space,
+                                    hyperopt_params,
+                                    constants,
+                                    model_provider,
+                                    cross_validation,
+                                    x_train, y_train, index_train,
+                                    x_test, y_test, index_test)
+
+    # finally train the model with eventually tuned hyper parameters
+    __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
+
+    log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
+    return model, (x_train, y_train), (x_test, y_test), (index_train, index_test)
+
+
+def __train_loop(model, cross_validation, x_train, y_train, index_train,  x_test, y_test, index_test):
     if cross_validation is not None and isinstance(cross_validation, Tuple) and callable(cross_validation[1]):
+        losses = []
         for fold_epoch in range(cross_validation[0]):
             # cross validation, make sure we re-shuffle every fold_epoch
             for f, (train_idx, test_idx) in enumerate(cross_validation[1](x_train, y_train)):
                 log.info(f'fit fold {f}')
-                model.fit(x_train[train_idx], y_train[train_idx], x_train[test_idx], y_train[test_idx], index_train[train_idx], index_train[test_idx])
+                loss = model.fit(x_train[train_idx], y_train[train_idx], x_train[test_idx], y_train[test_idx],
+                                 index_train[train_idx], index_train[test_idx])
+
+                losses.append(loss)
+
+        return np.array(losses).mean()
     else:
         # fit without cross validation
-        model.fit(x_train, y_train, x_test, y_test, index_train, index_test)
+        return model.fit(x_train, y_train, x_test, y_test, index_train, index_test)
 
-    log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
-    return model, (x_train, y_train), (x_test, y_test), (index_train, index_test)
+
+def __hyper_opt(hyper_parameter_space,
+                hyperopt_params,
+                constants,
+                model_provider,
+                cross_validation,
+                x_train, y_train, index_train,
+                x_test, y_test, index_test):
+    keys = list(hyper_parameter_space.keys())
+
+    def f(args):
+        sampled_parameters = {k: args[i] for i, k in enumerate(keys)}
+        model = model_provider(**sampled_parameters, **constants)
+        loss = __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test) # TODO haw can we control early stopping?
+        return {'status': 'ok', 'loss': loss, 'parameter': sampled_parameters}
+
+    trails = Trials()
+    fmin(f, list(hyper_parameter_space.values()), algo=tpe.suggest, trials=trails, **hyperopt_params)
+
+    # find the best parameters amd make sure to NOT pass the constants as they are only used for hyperopt
+    best_parameters = trails.best_trial['result']['parameter']
+    best_model = model_provider(**best_parameters)
+    return best_model, trails
 
 
 def _backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:

@@ -5,6 +5,7 @@ statsmodels
 matplotlib
 cachetools
 yfinance
+hyperopt
 keras-rl
 seaborn
 pandas

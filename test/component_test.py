@@ -142,6 +142,29 @@ class ComponentTest(unittest.TestCase):
         np.testing.assert_array_equal(fit.test_summary.confusion_count(), np.array([[257, 169],
                                                                                     [1142, 1115]]))
 
+    def test_hyper_parameter(self):
+        from hyperopt import hp
+        from pandas_ml_utils.extern.loss_functions import binary_crossentropy
+
+        df = pd.read_csv(f'{__name__}.csv', index_col='Date')
+        df['label'] = df["spy_Close"] > df["spy_Open"]
+
+        # fit with find hyper parameter
+        fit = df.fit_classifier(
+            pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
+                          pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
+                                                target_columns=["vix_Open"],
+                                                loss_column="spy_Volume")),
+            test_size=0.4,
+            test_validate_split_seed=42,
+            hyper_parameter_space={'alpha': hp.choice('alpha', [0.001, 0.1]), 'early_stopping': True, 'max_iter': 50,
+                                   '__max_evals': 4, '__rstate': np.random.RandomState(42)}
+        )
+
+        # early_stopping
+        # max_iter
+        self.assertEqual(fit.model.skit_model.get_params()['alpha'], 0.001)
+
     def test_reinforcement_model(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')
         df['vix_Close'] = df['vix_Close'] / 50

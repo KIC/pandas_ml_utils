@@ -19,7 +19,7 @@ def fit_agent(df: pd.DataFrame,
               cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None,
               cache_feature_matrix: bool = False,
               test_validate_split_seed = 42,
-              summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None
+              summary_printer: Callable[[np.ndarray, np.ndarray, np.ndarray], None] = None # FIXME use hyper_parameter_space
               ) -> Fit:
 
     model, train, test, index = _fit(df,
@@ -27,8 +27,7 @@ def fit_agent(df: pd.DataFrame,
                                      test_size = test_size,
                                      cross_validation = cross_validation,
                                      cache_feature_matrix = cache_feature_matrix,
-                                     test_validate_split_seed = test_validate_split_seed,
-                                     summary_printer = summary_printer)
+                                     test_validate_split_seed = test_validate_split_seed)
 
     train_targets = df[model.features_and_labels.target_columns].loc[index[0]]
     test_targets = df[model.features_and_labels.target_columns].loc[index[1]]

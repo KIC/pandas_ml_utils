@@ -8,6 +8,8 @@ from __future__ import print_function
 import numpy as np
 import scipy as sp
 
+def mse(y, y_hat):
+    return np.square(np.subtract(y, y_hat)).mean()
 
 def relu(x, alpha=0., max_value=None, threshold=0.):
     if max_value is None:
