@@ -1,6 +1,10 @@
+import io
 import logging
 from time import perf_counter
 from typing import Callable, Tuple, Dict, Any
+from sklearn.utils.testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+
 
 import numpy as np
 import pandas as pd
@@ -84,6 +88,7 @@ def __train_loop(model, cross_validation, x_train, y_train, index_train,  x_test
         return model.fit(x_train, y_train, x_test, y_test, index_train, index_test)
 
 
+@ignore_warnings(category=ConvergenceWarning)
 def __hyper_opt(hyper_parameter_space,
                 hyperopt_params,
                 constants,
@@ -102,7 +107,7 @@ def __hyper_opt(hyper_parameter_space,
         return {'status': 'ok', 'loss': loss, 'parameter': sampled_parameters}
 
     trails = Trials()
-    fmin(f, list(hyper_parameter_space.values()), algo=tpe.suggest, trials=trails, **hyperopt_params)
+    fmin(f, list(hyper_parameter_space.values()), algo=tpe.suggest, trials=trails, show_progressbar=False, **hyperopt_params)
 
     # find the best parameters amd make sure to NOT pass the constants as they are only used for hyperopt
     best_parameters = trails.best_trial['result']['parameter']

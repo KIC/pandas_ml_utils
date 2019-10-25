@@ -1,3 +1,4 @@
+import pandas as pd
 from typing import Any
 
 from .models import Model
@@ -14,10 +15,18 @@ class Fit(object):
         self.model = model
         self.training_summary = training_summary
         self.test_summary = test_summary
-        self.trails = trails
+        self._trails = trails
 
     def values(self):
         return self.model, self.training_summary, self.test_summary
+
+    def trails(self):
+        if self._trails is not None:
+            return pd.DataFrame(self._trails.results)\
+                     .drop("parameter", axis=1)\
+                     .join(pd.DataFrame([r['parameter'] for r in self._trails.results]))
+        else:
+            return None
 
     def _repr_html_(self):
         return self._html_()._repr_html_()
