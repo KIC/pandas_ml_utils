@@ -72,6 +72,9 @@ class SkitModel(Model):
         else:
             return self.skit_model.predict(reshape_rnn_as_ar(x))
 
+    def __str__(self):
+        return f'{__name__}({repr(self.skit_model)}, {self.features_and_labels})'
+
     def __call__(self, *args, **kwargs):
         if not kwargs:
             return deepcopy(self)

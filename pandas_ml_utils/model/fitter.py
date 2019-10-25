@@ -1,7 +1,6 @@
 import logging
 from time import perf_counter
-from typing import Callable, Tuple, Dict
-from hyperopt import fmin, tpe, Trials
+from typing import Callable, Tuple, Dict, Any
 
 import numpy as np
 import pandas as pd
@@ -21,7 +20,7 @@ def _fit(df: pd.DataFrame,
         cache_feature_matrix: bool = False,
         test_validate_split_seed = 42,
         hyper_parameter_space: Dict = None,
-        ) -> Tuple[Model, Tuple, Tuple, Tuple]:
+        ) -> Tuple[Model, Tuple, Tuple, Tuple, Any]:
     # get a new model
     trails = None
     model = model_provider()
@@ -64,7 +63,7 @@ def _fit(df: pd.DataFrame,
     __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
 
     log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
-    return model, (x_train, y_train), (x_test, y_test), (index_train, index_test)
+    return model, (x_train, y_train), (x_test, y_test), (index_train, index_test), trails
 
 
 def __train_loop(model, cross_validation, x_train, y_train, index_train,  x_test, y_test, index_test):
@@ -92,12 +91,14 @@ def __hyper_opt(hyper_parameter_space,
                 cross_validation,
                 x_train, y_train, index_train,
                 x_test, y_test, index_test):
+    from hyperopt import fmin, tpe, Trials
+
     keys = list(hyper_parameter_space.keys())
 
     def f(args):
         sampled_parameters = {k: args[i] for i, k in enumerate(keys)}
         model = model_provider(**sampled_parameters, **constants)
-        loss = __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test) # TODO haw can we control early stopping?
+        loss = __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
         return {'status': 'ok', 'loss': loss, 'parameter': sampled_parameters}
 
     trails = Trials()
@@ -106,6 +107,8 @@ def __hyper_opt(hyper_parameter_space,
     # find the best parameters amd make sure to NOT pass the constants as they are only used for hyperopt
     best_parameters = trails.best_trial['result']['parameter']
     best_model = model_provider(**best_parameters)
+
+    print(f'best parameters: {repr(best_parameters)}')
     return best_model, trails
 
 

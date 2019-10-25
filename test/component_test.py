@@ -156,14 +156,15 @@ class ComponentTest(unittest.TestCase):
                                                 loss_column="spy_Volume")),
             test_size=0.4,
             test_validate_split_seed=42,
-            hyper_parameter_space={'alpha': hp.choice('alpha', [0.001, 0.1]), 'early_stopping': True, 'max_iter': 50,
+            hyper_parameter_space={'alpha': hp.choice('alpha', [0.0001, 10]), 'early_stopping': True, 'max_iter': 50,
                                    '__max_evals': 4, '__rstate': np.random.RandomState(42)}
         )
 
         # early_stopping
         # max_iter
-        self.assertEqual(fit.model.skit_model.get_params()['alpha'], 0.001)
+        self.assertEqual(fit.model.skit_model.get_params()['alpha'], 0.0001)
 
+    @unittest.skip("we need a better model for reinforcement learning")
     def test_reinforcement_model(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')
         df['vix_Close'] = df['vix_Close'] / 50

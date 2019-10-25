@@ -1,3 +1,5 @@
+from typing import Any
+
 from .models import Model
 from .summary import Summary
 
@@ -7,10 +9,12 @@ class Fit(object):
     def __init__(self,
                  model: Model,
                  training_summary: Summary,
-                 test_summary: Summary):
+                 test_summary: Summary,
+                 trails: Any):
         self.model = model
         self.training_summary = training_summary
         self.test_summary = test_summary
+        self.trails = trails
 
     def values(self):
         return self.model, self.training_summary, self.test_summary
