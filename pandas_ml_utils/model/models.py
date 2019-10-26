@@ -110,11 +110,15 @@ class KerasModel(Model):
         self.keras_model.predict(x)
 
     def __call__(self, *args, **kwargs):
-        # FIXME add hyperopt
-        return KerasModel(self.keras_model_provider,
-                          self.features_and_labels,
-                          self.callbacks
-                          **self.kwargs)
+        new_model = KerasModel(self.keras_model_provider,
+                               self.features_and_labels,
+                               deepcopy(self.callbacks),
+                               **deepcopy(self.kwargs))
+
+        if kwargs:
+            new_model.keras_model = new_model.keras_model_provider(**kwargs)
+
+        return new_model
 
 
 # class MultiModel(Model):
