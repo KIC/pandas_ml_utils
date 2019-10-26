@@ -22,13 +22,13 @@ def fit_agent(df: pd.DataFrame,
               hyper_parameter_space: Dict = None,
               ) -> Fit:
 
-    model, train, test, index, trails = _fit(df,
-                                             model_provider,
-                                             test_size = test_size,
-                                             cross_validation = cross_validation,
-                                             cache_feature_matrix = cache_feature_matrix,
-                                             test_validate_split_seed = test_validate_split_seed,
-                                             hyper_parameter_space=hyper_parameter_space)
+    model, train, test, index, prediction, trails = _fit(df,
+                                                         model_provider,
+                                                         test_size = test_size,
+                                                         cross_validation = cross_validation,
+                                                         cache_feature_matrix = cache_feature_matrix,
+                                                         test_validate_split_seed = test_validate_split_seed,
+                                                         hyper_parameter_space=hyper_parameter_space)
 
     target_columns = [target for target, _ in model.features_and_labels.get_goals().items()]
     train_targets = df[target_columns].loc[index[0]]

@@ -22,21 +22,21 @@ def fit_regressor(df: pd.DataFrame,
                   hyper_parameter_space: Dict = None,
                   ) -> Fit:
 
-    model, train, test, index, trails = _fit(df,
-                                             model_provider,
-                                             test_size = test_size,
-                                             cross_validation = cross_validation,
-                                             cache_feature_matrix = cache_feature_matrix,
-                                             test_validate_split_seed = test_validate_split_seed,
-                                             hyper_parameter_space=hyper_parameter_space)
+    model, train, test, index, prediction, trails = _fit(df,
+                                                         model_provider,
+                                                         test_size = test_size,
+                                                         cross_validation = cross_validation,
+                                                         cache_feature_matrix = cache_feature_matrix,
+                                                         test_validate_split_seed = test_validate_split_seed,
+                                                         hyper_parameter_space=hyper_parameter_space)
 
     # assemble the result objects
     features_and_labels = model.features_and_labels
     goals = features_and_labels.get_goals()
     loss = None
 
-    training_summary = RegressionSummary(train[1], model.predict(train[0]), index[0], loss)
-    test_summary = RegressionSummary(test[1], model.predict(test[0]), index[1], loss)
+    training_summary = RegressionSummary(train[1], prediction[0], index[0], loss)
+    test_summary = RegressionSummary(test[1], prediction[1], index[1], loss)
     return Fit(model, training_summary, test_summary, trails)
 
 

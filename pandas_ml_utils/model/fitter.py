@@ -24,7 +24,7 @@ def _fit(df: pd.DataFrame,
         cache_feature_matrix: bool = False,
         test_validate_split_seed = 42,
         hyper_parameter_space: Dict = None,
-        ) -> Tuple[Model, Tuple, Tuple, Tuple, Any]:
+        ) -> Tuple[Model, Tuple, Tuple, Tuple, Tuple[np.ndarray], Any]: # TODO later np.ndarray actually is Dict[str,np.ndarray]
     # get a new model
     trails = None
     model = model_provider()
@@ -67,7 +67,7 @@ def _fit(df: pd.DataFrame,
     __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
 
     log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
-    return model, (x_train, y_train), (x_test, y_test), (index_train, index_test), trails
+    return model, (x_train, y_train), (x_test, y_test), (index_train, index_test), (model.predict(x_train), model.predict(x_test)), trails
 
 
 def __train_loop(model, cross_validation, x_train, y_train, index_train,  x_test, y_test, index_test):
@@ -104,6 +104,9 @@ def __hyper_opt(hyper_parameter_space,
         sampled_parameters = {k: args[i] for i, k in enumerate(keys)}
         model = model_provider(**sampled_parameters, **constants)
         loss = __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
+        if loss is None:
+            raise ValueError("Can not hyper tune if model loss is None")
+
         return {'status': 'ok', 'loss': loss, 'parameter': sampled_parameters}
 
     trails = Trials()

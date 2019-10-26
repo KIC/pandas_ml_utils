@@ -75,7 +75,7 @@ class SkitModel(Model):
                 return log_loss(self.predict(x) > 0.5, y)
             else:
                 log.warning(f"no *loss* defined for {type(self.skit_model)}")
-                return 0
+                return None
 
     def predict(self, x):
         if callable(getattr(self.skit_model, 'predict_proba', None)):
@@ -135,28 +135,34 @@ class KerasModel(Model):
 
 class MultiModel(Model):
 
-    def __init__(self, model_provider: Model):
+    def __init__(self, model_provider: Model, alpha: float = 0.5):
         super().__init__(model_provider.features_and_labels)
         self.model_provider = model_provider
         self.models = {target: model_provider() for target in self.features_and_labels.get_goals()}
+        self.alpha = alpha
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
         goals = self.features_and_labels.get_goals()
         losses = []
         for target, (_, labels) in goals.items():
-            # for each target we train a model
-            # we also might pick different labels for each target
-            pass
+            y = y # FIXME we also might pick different labels for each target
+            y_val = y_val # FIXME we also might pick different labels for each target
+            losses.append(self.models[target].fit(x, y, x_val, y_val, df_index_train, df_index_test))
 
-        # we need to return the worst loss, or should we use the average?
         losses = np.array(losses)
-        return np.min(losses) if len(losses) > 0 else 0
+        a = self.alpha
+
+        # return weighted loss between mean and max loss
+        return (losses.mean() * (1 - a) + a * losses.max()) if len(losses) > 0 else None
 
     def predict(self, x) -> np.ndarray:
-        # we would need to return a prediction for every and each parameters dict in the parameter space
+        predictions = {target: self.models[target].predict(x) for target, _ in self.models.items()}
+        # TODO think about how to return a multi model prediction ...
         pass
 
-    # TODO implement rest of the fucntions
+    def __call__(self, *args, **kwargs):
+        super().__call__()
+
 
 class OpenAiGymModel(Model):
     from typing import TYPE_CHECKING
