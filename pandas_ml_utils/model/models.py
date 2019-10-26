@@ -6,6 +6,8 @@ import dill as pickle
 import numpy as np
 from typing import List, Callable, Tuple
 
+from sklearn.linear_model import LogisticRegression
+
 from .features_and_Labels import FeaturesAndLabels
 from ..train_test_data import reshape_rnn_as_ar
 from ..reinforcement.gym import RowWiseGym
@@ -64,7 +66,16 @@ class SkitModel(Model):
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
         # remember fitted model
         self.skit_model = self.skit_model.fit(reshape_rnn_as_ar(x), y)
-        return self.skit_model.loss_
+
+        if getattr(self.skit_model, 'loss_', None):
+            return self.skit_model.loss_
+        else:
+            if type(self.skit_model) == LogisticRegression or str(type(self.skit_model)).endswith("Classifier"):
+                from sklearn.metrics import log_loss
+                return log_loss(self.predict(x) > 0.5, y)
+            else:
+                log.warning(f"no *loss* defined for {type(self.skit_model)}")
+                return 0
 
     def predict(self, x):
         if callable(getattr(self.skit_model, 'predict_proba', None)):
@@ -127,12 +138,19 @@ class MultiModel(Model):
     def __init__(self, model_provider: Model):
         super().__init__(model_provider.features_and_labels)
         self.model_provider = model_provider
-        self.models = []
+        self.models = {target: model_provider() for target in self.features_and_labels.get_goals()}
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
-        # the idea is to have mote then one label and use the last dimension to provide a label per model
-        # then fit all the models, store all the models and return the worst loss (max)
-        pass
+        goals = self.features_and_labels.get_goals()
+        losses = []
+        for target, (_, labels) in goals.items():
+            # for each target we train a model
+            # we also might pick different labels for each target
+            pass
+
+        # we need to return the worst loss, or should we use the average?
+        losses = np.array(losses)
+        return np.min(losses) if len(losses) > 0 else 0
 
     def predict(self, x) -> np.ndarray:
         # we would need to return a prediction for every and each parameters dict in the parameter space

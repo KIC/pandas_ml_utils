@@ -214,8 +214,9 @@ to set the cache size (default is 1) set the following environment variable befo
 TODO describe multi models ... 
 
 ## TODO
-* replace hard coded summary objects by a summary provider function 
 * multi model is just another implementation of model
+* `_make_features` needs to be tuned for lagged features it is just too slow
+* replace hard coded summary objects by a summary provider function 
 * add documentation ([read the docs](https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html))
 * add more tests
 * add Proximity https://stats.stackexchange.com/questions/270201/pooling-levels-of-categorical-variables-for-regression-trees/275867#275867
