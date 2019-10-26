@@ -230,6 +230,8 @@ TODO describe multi models ...
 * add feature importance 
 
 ## Change Log
+### 0.0.12
+
 ### 0.0.11
 * Added Hyper parameter tuning 
 ```python

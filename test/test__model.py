@@ -16,13 +16,17 @@ class TestModel(TestCase):
 
     def test_skit_model(self):
         """given"""
-        model_provider = SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60,50), alpha=0.001, random_state=42), features_and_labels, foo='bar')
+        model_provider = SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1,1), alpha=0.001, random_state=42), features_and_labels, foo='bar')
 
         """when"""
         model1 = model_provider()
         model2 = model_provider(activation='logistic')
 
+        loss = model2.fit(np.array([[0.1], [0.01]]), np.array([True, False]), np.array([[0.1], [0.01]]), np.array([True, False]),
+                          [0, 1], [2, 3])
+
         """then"""
+        self.assertIsNotNone(loss)
         self.assertEqual(model1.kwargs, model2.kwargs)
         self.assertFalse(model1.kwargs is model2.kwargs)
         self.assertEqual(model1.skit_model.activation, 'tanh')
@@ -32,8 +36,8 @@ class TestModel(TestCase):
         """given"""
         def keras_model_provider(optimizer='adam'):
             model = Sequential()
-            model.add(Dense(10))
-            model.compile(optimizer)
+            model.add(Dense(1, input_dim=1))
+            model.compile(optimizer, loss='mse')
             return model
 
         """when"""
@@ -41,7 +45,11 @@ class TestModel(TestCase):
         model1 = model_provider()
         model2 = model_provider(optimizer='rmsprop')
 
+        loss = model2.fit(np.array([0.1, 0.01]), np.array([0.1, 0.01]), np.array([0.1, 0.01]), np.array([0.1, 0.01]),
+                          [0,1], [2,3])
+
         """then"""
+        self.assertIsNotNone(loss)
         self.assertEqual(model1.kwargs, model2.kwargs)
         self.assertFalse(model1.kwargs is model2.kwargs)
         self.assertEqual(len(model1.callbacks), len(model2.callbacks))

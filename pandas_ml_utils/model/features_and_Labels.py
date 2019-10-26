@@ -50,6 +50,13 @@ class FeaturesAndLabels(object):
         else:
             return np.array(self.features)
 
+    def get_goals(self) -> Dict[str, Tuple[str, List[str]]]:
+        # if we can return a dictionary of target -> (loss, labels) where loss will be a column or constant 1
+        if self.target_columns is not None:
+            return {target: (self.loss_column, self.labels) for target in self.target_columns}
+        else:
+            return {None: (self.loss_column, self.labels)}
+
     def __getitem__(self, item):
         if isinstance(item, tuple) and len(item) == 2:
             return self.kwargs[item[0]] if item[0] in self.kwargs else item[1]

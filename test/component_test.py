@@ -160,9 +160,25 @@ class ComponentTest(unittest.TestCase):
                                    '__max_evals': 4, '__rstate': np.random.RandomState(42)}
         )
 
-        # early_stopping
-        # max_iter
+        # test best parameter
         self.assertEqual(fit.model.skit_model.get_params()['alpha'], 0.0001)
+
+    def test_multi_model(self):
+        df = pd.read_csv(f'{__name__}.csv', index_col='Date')
+        df['label1'] = df["spy_Close"] > df["spy_Open"]
+        df['label2'] = df["spy_Close"] > df["spy_Open"]
+
+        # define the model
+        model = pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
+                              pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label1', 'label2'],
+                                                    target_columns=["vix_Open"],
+                                                    loss_column="spy_Volume"))
+        # fit
+        fit = df.fit_classifier(pdu.MultiModel(model),
+                                test_size=0.4,
+                                test_validate_split_seed=42)
+
+        self.assertTrue(True)
 
     @unittest.skip("we need a better model for reinforcement learning")
     def test_reinforcement_model(self):

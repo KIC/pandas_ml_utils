@@ -42,7 +42,7 @@ def _fit(df: pd.DataFrame,
     log.info(f"create model (min required data = {min_required_data}")
     model.min_required_data = min_required_data
 
-    # fit the model
+    # eventually perform a hyper parameter optimization first
     start_performance_count = log_with_time(lambda: log.info("fit model"))
     if hyper_parameter_space is not None:
         # next isolate hyperopt parameters and constants only used for hyper parameter tuning like early stopping
