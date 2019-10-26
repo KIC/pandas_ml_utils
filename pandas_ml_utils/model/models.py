@@ -181,13 +181,15 @@ class OpenAiGymModel(Model):
         return [self.agent.forward(x[r]) for r in range(len(x))]
 
     def __call__(self, *args, **kwargs):
-        # FIXME add hyperopt
+        if kwargs:
+            raise ValueError("hyper parameter tunig currently not supported for RL")
+
         return OpenAiGymModel(self.agent_provider,
                               self.features_and_labels,
                               self.action_reward_functions,
                               self.reward_range,
                               self.episodes,
-                              **self.kwargs)
+                              **deepcopy(self.kwargs))
 
     def _forward_gym(self, gym):
         done = False
