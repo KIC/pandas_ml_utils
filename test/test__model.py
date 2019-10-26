@@ -4,7 +4,11 @@ from keras.optimizers import Adam, RMSprop
 
 from pandas_ml_utils.model.features_and_Labels import FeaturesAndLabels
 from pandas_ml_utils.model.models import *
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
+from sklearn.svm import LinearSVC
+
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.callbacks import BaseLogger
@@ -13,6 +17,23 @@ features_and_labels = FeaturesAndLabels([], [])
 
 
 class TestModel(TestCase):
+
+    def test_different_skit_models(self):
+        """given"""
+        providers = [SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1,1), alpha=0.001, random_state=42), features_and_labels, foo='bar'),
+                     SkitModel(LogisticRegression(), features_and_labels),
+                     SkitModel(LinearSVC(), features_and_labels),
+                     SkitModel(RandomForestClassifier(), features_and_labels)
+        ]
+
+        """when"""
+        losses = [model.fit(np.array([[0.1], [0.01]]), np.array([True, False]), np.array([[0.1], [0.01]]),
+                            np.array([True, False]),
+                            [0, 1], [2, 3]) for model in providers]
+
+        """then"""
+        for loss in losses:
+            self.assertIsNotNone(loss)
 
     def test_skit_model(self):
         """given"""

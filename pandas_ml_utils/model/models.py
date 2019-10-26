@@ -70,12 +70,14 @@ class SkitModel(Model):
         if getattr(self.skit_model, 'loss_', None):
             return self.skit_model.loss_
         else:
-            if type(self.skit_model) == LogisticRegression or str(type(self.skit_model)).endswith("Classifier"):
+            if type(self.skit_model) == LogisticRegression\
+            or type(self.skit_model).__name__.endswith("Classifier")\
+            or type(self.skit_model).__name__.endswith("SVC"):
                 from sklearn.metrics import log_loss
                 return log_loss(self.predict(x) > 0.5, y)
             else:
-                log.warning(f"no *loss* defined for {type(self.skit_model)}")
-                return None
+                from sklearn.metrics import mean_squared_error
+                return mean_squared_error(self.predict(x), y)
 
     def predict(self, x):
         if callable(getattr(self.skit_model, 'predict_proba', None)):
