@@ -23,8 +23,8 @@ class FeaturesAndLabels(object):
         self.features = features
         self.labels = labels
         self.label_type = label_type
-        self.target_columns = target_columns
-        self.loss_column = loss_column
+        self._target_columns = target_columns
+        self._loss_column = loss_column
         self.feature_lags = feature_lags
         self.feature_rescaling = feature_rescaling
         self.lag_smoothing = lag_smoothing
@@ -52,10 +52,10 @@ class FeaturesAndLabels(object):
 
     def get_goals(self) -> Dict[str, Tuple[str, List[str]]]:
         # if we can return a dictionary of target -> (loss, labels) where loss will be a column or constant 1
-        if self.target_columns is not None:
-            return {target: (self.loss_column, self.labels) for target in self.target_columns}
+        if self._target_columns is not None:
+            return {target: (self._loss_column, self.labels) for target in self._target_columns}
         else:
-            return {None: (self.loss_column, self.labels)}
+            return {None: (self._loss_column, self.labels)}
 
     def __getitem__(self, item):
         if isinstance(item, tuple) and len(item) == 2:
@@ -64,7 +64,7 @@ class FeaturesAndLabels(object):
             return self.kwargs[item] if item in self.kwargs else None
 
     def __repr__(self):
-        return f'FeaturesAndLabels({self.features},{self.labels},{self.target_columns},{self.loss_column},' \
+        return f'FeaturesAndLabels({self.features},{self.labels},{self._target_columns},{self._loss_column},' \
                f'{self.feature_lags},{self.feature_rescaling}{self.lag_smoothing},{self.probability_cutoff}) ' \
                f'#{len(self.features)} ' \
                f'features expand to {self.expanded_feature_length}'

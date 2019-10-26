@@ -33,7 +33,7 @@ def fit_classifier(df: pd.DataFrame,
     features_and_labels = model.features_and_labels
     cutoff = model[("probability_cutoff", 0.5)]
 
-    loss = df[features_and_labels.loss_column] if features_and_labels.loss_column is not None else None
+    loss = __get_loss(df, features_and_labels)
     training_classification = ClassificationSummary(train[1], model.predict(train[0]), index[0], loss, cutoff)
     test_classification = ClassificationSummary(test[1], model.predict(test[0]), index[1], loss, cutoff)
     return Fit(model, training_classification, test_classification, trails)
@@ -43,8 +43,19 @@ def backtest_classifier(df: pd.DataFrame, model: Model) -> ClassificationSummary
     x, y, y_hat, index = _backtest(df, model)
 
     features_and_labels = model.features_and_labels
-    loss = df[features_and_labels.loss_column if features_and_labels.loss_column is not None else []]
+    loss = __get_loss(df, features_and_labels)
     return ClassificationSummary(y, y_hat, index, loss, model[("probability_cutoff", 0.5)])
+
+
+def __get_loss(df, features_and_labels):
+    goals = features_and_labels.get_goals()
+    if len(goals) > 1:
+        # FIXME we actually want to have the possibility of multiple losses ... also to plot
+        log.warning("currently we only support one *loss* column, we just pick the first one")
+
+    loss, _ = next(iter(goals.values()))
+    return \
+        df[loss] if loss is not None and loss in df.columns else pd.Series(-1 if loss is None else loss, index=df.index)
 
 
 def classify(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:

@@ -32,7 +32,8 @@ def fit_regressor(df: pd.DataFrame,
 
     # assemble the result objects
     features_and_labels = model.features_and_labels
-    loss = df[features_and_labels.loss_column] if features_and_labels.loss_column is not None else None
+    goals = features_and_labels.get_goals()
+    loss = None
 
     training_summary = RegressionSummary(train[1], model.predict(train[0]), index[0], loss)
     test_summary = RegressionSummary(test[1], model.predict(test[0]), index[1], loss)
@@ -43,7 +44,7 @@ def backtest_regressor(df: pd.DataFrame, model: Model) -> None:
     x, y, y_hat, index = _backtest(df, model)
 
     features_and_labels = model.features_and_labels
-    loss = df[features_and_labels.loss_column if features_and_labels.loss_column is not None else []]
+    loss = None
 
     return RegressionSummary(y, y_hat, index, loss)
 

@@ -22,4 +22,4 @@ class RegressionSummary(Summary):
         self.index = index
         self.loss = loss
 
-    # TODO add some statistics
+    # TODO add some statistics and fix loss is always None at the moment

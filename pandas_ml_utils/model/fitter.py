@@ -144,11 +144,17 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     dff, x = make_forecast_data(df, features_and_labels)
 
     # first save target columns and loss column
-    if features_and_labels.target_columns is not None:
-        dff = dff.join(df[features_and_labels.target_columns].add_prefix("traget_"))
+    for target, (loss, _) in features_and_labels.get_goals().items():
+        if target is not None:
+            dff[f'target_{target}'] = df[target]
+        else:
+            dff["target"] = ""
 
-    if features_and_labels.loss_column is not None:
-        dff["loss"] = df[features_and_labels.loss_column]
+        if loss is not None:
+            if loss in df.columns:
+                dff[f"loss_{loss}"] = df[loss]
+            else:
+                dff["loss"] = loss if loss is not None else -1.0
 
     prediction = model.predict(x)
     if len(prediction.shape) > 1 and prediction.shape[1] > 1:
