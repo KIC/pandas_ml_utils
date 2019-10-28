@@ -140,16 +140,18 @@ class MultiModel(Model):
     def __init__(self, model_provider: Model, alpha: float = 0.5):
         super().__init__(model_provider.features_and_labels)
         self.model_provider = model_provider
-        self.models = {target: model_provider() for target in self.features_and_labels.get_goals()}
+        self.models = {target: model_provider() for target in self.features_and_labels.get_goals().keys()}
         self.alpha = alpha
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
         goals = self.features_and_labels.get_goals()
         losses = []
         for target, (_, labels) in goals.items():
-            y = y # FIXME we also might pick different labels for each target
-            y_val = y_val # FIXME we also might pick different labels for each target
-            losses.append(self.models[target].fit(x, y, x_val, y_val, df_index_train, df_index_test))
+            index = [self.features_and_labels.labels.index(label) for label in labels]
+            target_y = y[:,index]
+            target_y_val = y_val[:,index]
+            log.info(f"fit model for target {target}")
+            losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, df_index_train, df_index_test))
 
         losses = np.array(losses)
         a = self.alpha
@@ -163,7 +165,11 @@ class MultiModel(Model):
         pass
 
     def __call__(self, *args, **kwargs):
-        super().__call__()
+        new_multi_model = MultiModel(self.model_provider, self.alpha)
+        if kwargs:
+            new_multi_model.models = {target: self.model_provider(**kwargs) for target in self.features_and_labels.get_goals().keys()}
+
+        return new_multi_model
 
 
 class OpenAiGymModel(Model):

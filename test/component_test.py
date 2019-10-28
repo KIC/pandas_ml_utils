@@ -40,8 +40,7 @@ class ComponentTest(unittest.TestCase):
         fit = df.fit_classifier(pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001,
                                                             random_state=42),
                                               pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
-                                                                    target_columns=["vix_Open"],
-                                                                    loss_column="spy_Volume")),
+                                                                    targets=("vix_Open", "spy_Volume"))),
                                 test_size=0.4,
                                 test_validate_split_seed=42)
 
@@ -132,8 +131,7 @@ class ComponentTest(unittest.TestCase):
                                                             random_state=42, max_iter=10),
                                               pdu.FeaturesAndLabels(features=['vix_Close'],
                                                                     labels=['label'],
-                                                                    target_columns=["vix_Open"],
-                                                                    loss_column="spy_Volume")),
+                                                                    targets=("vix_Open", "spy_Volume"))),
                                 test_size=0.4,
                                 cross_validation = (2, cv.split),
                                 test_validate_split_seed=42)
@@ -169,14 +167,14 @@ class ComponentTest(unittest.TestCase):
         df['label2'] = df["spy_Close"] > df["spy_Open"]
 
         # define the model
-        model = pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
-                              pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label1', 'label2'],
-                                                    target_columns=["vix_Open"],
-                                                    loss_column="spy_Volume"))
+        model = pdu.SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
+                              pdu.FeaturesAndLabels(features=['vix_Close'], labels=['vix_High', 'vix_Low'],
+                                                    targets={"vix_High": ("spy_Volume", "vix_High"),
+                                                             "vix_Low": ("spy_Volume", "vix_Low")}))
         # fit
-        fit = df.fit_classifier(pdu.MultiModel(model),
-                                test_size=0.4,
-                                test_validate_split_seed=42)
+        fit = df.fit_regressor(pdu.MultiModel(model),
+                               test_size=0.4,
+                               test_validate_split_seed=42)
 
         self.assertTrue(True)
 
