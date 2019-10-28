@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import dill as pickle
 import numpy as np
-from typing import List, Callable, Tuple
+from typing import List, Callable, Tuple, TYPE_CHECKING
 
 from sklearn.linear_model import LogisticRegression
 
@@ -100,8 +100,6 @@ class SkitModel(Model):
 class KerasModel(Model):
     # eventually we need to save and load the weights of the keras model individually by using `__getstate__`
     #  `__setstate__` like described here: http://zachmoshe.com/2017/04/03/pickling-keras-models.html
-
-    from typing import TYPE_CHECKING
     if TYPE_CHECKING:
         from keras.models import Model as KModel
 

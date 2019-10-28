@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import io
 import logging
 from time import perf_counter
-from typing import Callable, Tuple, Dict, Any
+from typing import Callable, Tuple, Dict, Any, TYPE_CHECKING
 from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
-
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,10 @@ from ..classification.summary import ClassificationSummary
 log = logging.getLogger(__name__)
 
 
+if TYPE_CHECKING:
+    from hyperopt import Trials
+
+
 def _fit(df: pd.DataFrame,
         model_provider: Callable[[int], Model],
         test_size: float = 0.4,
@@ -24,7 +29,7 @@ def _fit(df: pd.DataFrame,
         cache_feature_matrix: bool = False,
         test_validate_split_seed = 42,
         hyper_parameter_space: Dict = None,
-        ) -> Tuple[Model, Tuple, Tuple, Tuple, Tuple[np.ndarray], Any]: # TODO later np.ndarray actually is Dict[str,np.ndarray]
+        ) -> Tuple[Model, Tuple, Tuple, Tuple, Tuple[np.ndarray], Trials]: # TODO later np.ndarray actually is Dict[str,np.ndarray]
     # get a new model
     trails = None
     model = model_provider()
