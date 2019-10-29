@@ -59,13 +59,13 @@ class ComponentTest(unittest.TestCase):
         classified_df = df.classify(fitted_model)
         print(classified_df.tail())
 
-        self.assertEqual(len(classified_df[classified_df["prediction"] == False]), 3437)
+        self.assertEqual(len(classified_df[classified_df["prediction_vix_Open"] == False]), 3437)
         self.assertTrue(classified_df["loss_spy_Volume"].sum() > 0)
-        self.assertTrue(classified_df["prediction_proba"].sum() > 0)
-        self.assertTrue(classified_df["prediction_proba"].min() > 0)
-        self.assertTrue(classified_df["prediction_proba"].max() < 1)
+        self.assertTrue(classified_df["prediction_vix_Open_proba"].sum() > 0)
+        self.assertTrue(classified_df["prediction_vix_Open_proba"].min() > 0)
+        self.assertTrue(classified_df["prediction_vix_Open_proba"].max() < 1)
         self.assertListEqual(classified_df.columns.tolist(),
-                             ["vix_Close", "target_vix_Open", "loss_spy_Volume", "prediction", "prediction_proba"])
+                             ["vix_Close", "target_vix_Open", "loss_spy_Volume", "prediction_vix_Open", "prediction_vix_Open_proba"])
 
         # classify tail
         fitted_model = fit.model

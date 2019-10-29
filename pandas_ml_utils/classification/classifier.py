@@ -62,6 +62,9 @@ def classify(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     dff = _predict(df, model, tail)
 
     # return result
-    dff["prediction_proba"] = dff["prediction"]
-    dff["prediction"] = dff["prediction_proba"] > model[("probability_cutoff", 0.5)]
+    for column in dff.columns:
+        if column.startswith("prediction"):
+            dff[f"{column}_proba"] = dff[column]
+            dff[column] = dff[f"{column}_proba"] > model[("probability_cutoff", 0.5)]
+
     return dff

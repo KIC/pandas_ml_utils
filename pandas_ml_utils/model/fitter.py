@@ -73,7 +73,7 @@ def _fit(df: pd.DataFrame,
 
     log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
     prediction_train = model.predict(x_train)
-    prediction_test = model.predict(x_test) if x_test else None
+    prediction_test = model.predict(x_test) if x_test is not None else None
     return model, (x_train, y_train), (x_test, y_test), (index_train, index_test), (prediction_train, prediction_test), trails
 
 
@@ -154,17 +154,19 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     dff, x = make_forecast_data(df, features_and_labels)
 
     # first save target columns and loss column
-    for target, (loss, _) in features_and_labels.get_goals().items():
+    goals = features_and_labels.get_goals()
+    for target, (loss, _) in goals.items():
         if target is not None:
             dff[f'target_{target}'] = df[target]
         else:
             dff["target"] = ""
 
         if loss is not None:
+            postfix = f"_{target}" if len(goals) > 1 else ""
             if loss in df.columns:
-                dff[f"loss_{loss}"] = df[loss]
+                dff[f"loss{postfix}_{loss}"] = df[loss]
             else:
-                dff["loss"] = loss if loss is not None else -1.0
+                dff[f"loss{postfix}"] = loss if loss is not None else -1.0
 
     predictions = model.predict(x)
     for target, prediction in predictions.items():

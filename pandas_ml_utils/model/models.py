@@ -45,7 +45,12 @@ class Model(object):
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
         pass
 
-    def predict(self, x) -> Dict[str, np.ndarray]:
+    def predict(self, x: np.ndarray) -> Dict[str, np.ndarray]:
+        #for target, (loss, labels) in self.features_and_labels.get_goals().items():
+        #    pass
+        return {target: self._predict(x, target) for target in self.features_and_labels.get_goals().keys()}
+
+    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
         pass
 
     # this lets the model itself act as a provider. However we want to use the same Model configuration
@@ -80,13 +85,11 @@ class SkitModel(Model):
                 from sklearn.metrics import mean_squared_error
                 return np.mean([mean_squared_error(p, y) for p in predictions])
 
-    def predict(self, x):
-        targets = self.features_and_labels.get_goals().keys()
-
+    def _predict(self, x, target) -> np.ndarray:
         if callable(getattr(self.skit_model, 'predict_proba', None)):
-            return {target: self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1] for target in targets}
+            return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
         else:
-            return {target: self.skit_model.predict(reshape_rnn_as_ar(x)) for target in targets}
+            return self.skit_model.predict(reshape_rnn_as_ar(x))
 
     def __str__(self):
         return f'{__name__}({repr(self.skit_model)}, {self.features_and_labels})'
@@ -121,9 +124,8 @@ class KerasModel(Model):
         self.history = self.keras_model.fit(x, y, validation_data=(x_val, y_val), callbacks=self.callbacks)
         return min(self.history.history['loss'])
 
-    def predict(self, x):
-        targets = self.features_and_labels.get_goals().keys()
-        return {target: self.keras_model.predict(x) for target in targets}
+    def _predict(self, x, target):
+        return self.keras_model.predict(x)
 
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,
@@ -161,8 +163,8 @@ class MultiModel(Model):
         # return weighted loss between mean and max loss
         return (losses.mean() * (1 - a) + a * losses.max()) if len(losses) > 0 else None
 
-    def predict(self, x):
-        return {target: self.models[target].predict(x)[target] for target, _ in self.models.items()}
+    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
+        return self.models[target]._predict(x, target)
 
     def __call__(self, *args, **kwargs):
         new_multi_model = MultiModel(self.model_provider, self.alpha)
@@ -214,9 +216,8 @@ class OpenAiGymModel(Model):
         gym = RowWiseGym((index, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
         return self._forward_gym(gym).get_history()
 
-    def predict(self, x):
-        targets = self.features_and_labels.get_goals().keys()
-        return {target: [self.agent.forward(x[r]) for r in range(len(x))] for target in targets}
+    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
+        return [self.agent.forward(x[r]) for r in range(len(x))]
 
     def __call__(self, *args, **kwargs):
         if kwargs:
