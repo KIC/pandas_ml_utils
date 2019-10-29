@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import dill as pickle
 import numpy as np
-from typing import List, Callable, Tuple, TYPE_CHECKING
+from typing import List, Callable, Tuple, TYPE_CHECKING, Dict
 
 from sklearn.linear_model import LogisticRegression
 
@@ -45,7 +45,7 @@ class Model(object):
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
         pass
 
-    def predict(self, x) -> np.ndarray:
+    def predict(self, x) -> Dict[str, np.ndarray]:
         pass
 
     # this lets the model itself act as a provider. However we want to use the same Model configuration
@@ -70,20 +70,23 @@ class SkitModel(Model):
         if getattr(self.skit_model, 'loss_', None):
             return self.skit_model.loss_
         else:
+            predictions = [self.predict(x)[p] for p in self.features_and_labels.get_goals().keys()]
             if type(self.skit_model) == LogisticRegression\
             or type(self.skit_model).__name__.endswith("Classifier")\
             or type(self.skit_model).__name__.endswith("SVC"):
                 from sklearn.metrics import log_loss
-                return log_loss(self.predict(x) > 0.5, y)
+                return np.mean([log_loss((p) > 0.5, y) for p in predictions])
             else:
                 from sklearn.metrics import mean_squared_error
-                return mean_squared_error(self.predict(x), y)
+                return np.mean([mean_squared_error(p, y) for p in predictions])
 
     def predict(self, x):
+        targets = self.features_and_labels.get_goals().keys()
+
         if callable(getattr(self.skit_model, 'predict_proba', None)):
-            return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
+            return {target: self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1] for target in targets}
         else:
-            return self.skit_model.predict(reshape_rnn_as_ar(x))
+            return {target: self.skit_model.predict(reshape_rnn_as_ar(x)) for target in targets}
 
     def __str__(self):
         return f'{__name__}({repr(self.skit_model)}, {self.features_and_labels})'
@@ -118,8 +121,9 @@ class KerasModel(Model):
         self.history = self.keras_model.fit(x, y, validation_data=(x_val, y_val), callbacks=self.callbacks)
         return min(self.history.history['loss'])
 
-    def predict(self, x) -> np.ndarray:
-        self.keras_model.predict(x)
+    def predict(self, x):
+        targets = self.features_and_labels.get_goals().keys()
+        return {target: self.keras_model.predict(x) for target in targets}
 
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,
@@ -157,10 +161,8 @@ class MultiModel(Model):
         # return weighted loss between mean and max loss
         return (losses.mean() * (1 - a) + a * losses.max()) if len(losses) > 0 else None
 
-    def predict(self, x) -> np.ndarray:
-        predictions = {target: self.models[target].predict(x) for target, _ in self.models.items()}
-        # TODO think about how to return a multi model prediction ...
-        pass
+    def predict(self, x):
+        return {target: self.models[target].predict(x)[target] for target, _ in self.models.items()}
 
     def __call__(self, *args, **kwargs):
         new_multi_model = MultiModel(self.model_provider, self.alpha)
@@ -213,7 +215,8 @@ class OpenAiGymModel(Model):
         return self._forward_gym(gym).get_history()
 
     def predict(self, x):
-        return [self.agent.forward(x[r]) for r in range(len(x))]
+        targets = self.features_and_labels.get_goals().keys()
+        return {target: [self.agent.forward(x[r]) for r in range(len(x))] for target in targets}
 
     def __call__(self, *args, **kwargs):
         if kwargs:

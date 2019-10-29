@@ -23,13 +23,13 @@ if TYPE_CHECKING:
 
 
 def _fit(df: pd.DataFrame,
-        model_provider: Callable[[int], Model],
-        test_size: float = 0.4,
-        cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None,
-        cache_feature_matrix: bool = False,
-        test_validate_split_seed = 42,
-        hyper_parameter_space: Dict = None,
-        ) -> Tuple[Model, Tuple, Tuple, Tuple, Tuple[np.ndarray], Trials]: # TODO later np.ndarray actually is Dict[str,np.ndarray]
+         model_provider: Callable[[int], Model],
+         test_size: float = 0.4,
+         cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None,
+         cache_feature_matrix: bool = False,
+         test_validate_split_seed = 42,
+         hyper_parameter_space: Dict = None,
+         ) -> Tuple[Model, Tuple, Tuple, Tuple, Tuple[Dict[str, np.ndarray]], Trials]:
     # get a new model
     trails = None
     model = model_provider()
@@ -72,7 +72,9 @@ def _fit(df: pd.DataFrame,
     __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
 
     log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
-    return model, (x_train, y_train), (x_test, y_test), (index_train, index_test), (model.predict(x_train), model.predict(x_test)), trails
+    prediction_train = model.predict(x_train)
+    prediction_test = model.predict(x_test) if x_test else None
+    return model, (x_train, y_train), (x_test, y_test), (index_train, index_test), (prediction_train, prediction_test), trails
 
 
 def __train_loop(model, cross_validation, x_train, y_train, index_train,  x_test, y_test, index_test):
@@ -125,7 +127,7 @@ def __hyper_opt(hyper_parameter_space,
     return best_model, trails
 
 
-def _backtest(df: pd.DataFrame, model: Model) -> ClassificationSummary:
+def _backtest(df: pd.DataFrame, model: Model) -> Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray], pd.Index]:
     features_and_labels = model.features_and_labels
 
     # make training and test data with no 0 test data fraction
@@ -164,11 +166,13 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
             else:
                 dff["loss"] = loss if loss is not None else -1.0
 
-    prediction = model.predict(x)
-    if len(prediction.shape) > 1 and prediction.shape[1] > 1:
-        for i in range(prediction.shape[1]):
-            dff[f"prediction_{model.features_and_labels.labels[i]}"] = prediction[:,i]
-    else:
-        dff["prediction"] = prediction
+    predictions = model.predict(x)
+    for target, prediction in predictions.items():
+        postfix = "" if target is None else f'_{target}'
+        if len(prediction.shape) > 1 and prediction.shape[1] > 1:
+            for i in range(prediction.shape[1]):
+                dff[f"prediction{postfix}_{model.features_and_labels.labels[i]}"] = prediction[:,i]
+        else:
+            dff[f"prediction{postfix}"] = prediction
 
     return dff

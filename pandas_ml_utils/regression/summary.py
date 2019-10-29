@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 
 import numpy as np
 import pandas as pd
@@ -14,11 +14,11 @@ class RegressionSummary(Summary):
 
     def __init__(self,
                  y_true: np.ndarray,
-                 y_prediction: np.ndarray,
+                 y_predictions: Dict[str, np.ndarray],
                  index: np.ndarray,
                  loss: pd.Series = None):
         self.y_true = y_true
-        self.y_prediction = y_prediction.ravel() if len(y_prediction.shape) > 1 else y_prediction
+        self.y_prediction = {target: (y.ravel() if len(y.shape) > 1 else y) for target, y in y_predictions.items()}
         self.index = index
         self.loss = loss
 

@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 
 import numpy as np
 import pandas as pd
@@ -15,10 +15,11 @@ class ClassificationSummary(Summary):
 
     def __init__(self,
                  y_true: np.ndarray,
-                 y_prediction: np.ndarray,
+                 y_predictions: Dict[str, np.ndarray],
                  index: np.ndarray,
                  loss: pd.Series = None,
                  probability_cutoff: float = 0.5):
+        y_prediction = next(iter(y_predictions.values())) # FIXME this is just a quick fix
         self.y_true = y_true
         self.y_prediction = y_prediction.ravel() if len(y_prediction.shape) > 1 else y_prediction
         self.index = index
