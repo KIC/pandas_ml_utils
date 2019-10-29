@@ -17,6 +17,9 @@ from ..classification.summary import ClassificationSummary
 
 log = logging.getLogger(__name__)
 
+PREDICTION_COLUMN_NAME = "prediction"
+TARGET_COLUMN_NAME = "target"
+LOSS_COLUMN_NAME = "loss"
 
 if TYPE_CHECKING:
     from hyperopt import Trials
@@ -72,6 +75,8 @@ def _fit(df: pd.DataFrame,
     __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
 
     log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
+    foo_train = __predict(df.loc[index_train], pd.DataFrame({}, index=index_train), model, x_train)  #FIXME use __predict
+    foo_test = __predict(df.loc[index_test], pd.DataFrame({}, index=index_test), model, x_test) if x_test is not None else None
     prediction_train = model.predict(x_train)
     prediction_test = model.predict(x_test) if x_test is not None else None
     return model, (x_train, y_train), (x_test, y_test), (index_train, index_test), (prediction_train, prediction_test), trails
@@ -135,6 +140,8 @@ def _backtest(df: pd.DataFrame, model: Model) -> Tuple[np.ndarray, np.ndarray, D
 
     # predict probabilities
     y_hat = model.predict(x)
+    foo_hat = __predict(df.loc[index], pd.DataFrame({}, index=index), model, x) # FIXME use __predict
+    #FIXME add truth foo_hat["truth"] = y for each target label
     return x, y, y_hat, index
 
 
@@ -152,29 +159,32 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
 
     # then re assign data frame with features only
     dff, x = make_forecast_data(df, features_and_labels)
+    return __predict(df, dff, model, x)
 
+
+def __predict(df, df_pred, model, x):
     # first save target columns and loss column
-    goals = features_and_labels.get_goals()
+    goals = model.features_and_labels.get_goals()
     for target, (loss, _) in goals.items():
         if target is not None:
-            dff[f'target_{target}'] = df[target]
+            df_pred[f'{TARGET_COLUMN_NAME}_{target}'] = df[target]
         else:
-            dff["target"] = ""
+            df_pred[f"{TARGET_COLUMN_NAME}"] = ""
 
         if loss is not None:
             postfix = f"_{target}" if len(goals) > 1 else ""
             if loss in df.columns:
-                dff[f"loss{postfix}_{loss}"] = df[loss]
+                df_pred[f"{LOSS_COLUMN_NAME}{postfix}_{loss}"] = df[loss]
             else:
-                dff[f"loss{postfix}"] = loss if loss is not None else -1.0
+                df_pred[f"{LOSS_COLUMN_NAME}{postfix}"] = loss if loss is not None else -1.0
 
     predictions = model.predict(x)
     for target, prediction in predictions.items():
         postfix = "" if target is None else f'_{target}'
         if len(prediction.shape) > 1 and prediction.shape[1] > 1:
             for i in range(prediction.shape[1]):
-                dff[f"prediction{postfix}_{model.features_and_labels.labels[i]}"] = prediction[:,i]
+                df_pred[f"{PREDICTION_COLUMN_NAME}{postfix}_{model.features_and_labels.labels[i]}"] = prediction[:, i]
         else:
-            dff[f"prediction{postfix}"] = prediction
+            df_pred[f"{PREDICTION_COLUMN_NAME}{postfix}"] = prediction
 
-    return dff
+    return df_pred

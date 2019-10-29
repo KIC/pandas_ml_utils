@@ -39,6 +39,7 @@ class TestFitter(TestCase):
         print(fitts) # FIXME test something
 
     def test__backtest(self):
+        # FIXME use test
         pass
 
     def test__predict(self):

@@ -6,7 +6,7 @@ import pandas as pd
 
 from ..classification.summary import ClassificationSummary
 from ..model.fit import Fit
-from ..model.fitter import _fit, _backtest, _predict
+from ..model.fitter import _fit, _backtest, _predict, PREDICTION_COLUMN_NAME
 from ..model.models import Model
 
 log = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ def classify(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
 
     # return result
     for column in dff.columns:
-        if column.startswith("prediction"):
+        if column.startswith(PREDICTION_COLUMN_NAME):
             dff[f"{column}_proba"] = dff[column]
             dff[column] = dff[f"{column}_proba"] > model[("probability_cutoff", 0.5)]
 
