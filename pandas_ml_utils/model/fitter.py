@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import io
 import logging
 from time import perf_counter
-from typing import Callable, Tuple, Dict, Any, TYPE_CHECKING
+from typing import Callable, Tuple, Dict, TYPE_CHECKING
 from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 
@@ -13,12 +12,13 @@ import pandas as pd
 from ..train_test_data import make_training_data, make_forecast_data
 from ..utils import log_with_time
 from ..model.models import Model
-from ..classification.summary import ClassificationSummary
 
 log = logging.getLogger(__name__)
 
 PREDICTION_COLUMN_NAME = "prediction"
+FEATURE_COLUMN_NAME = "feature"
 TARGET_COLUMN_NAME = "target"
+LABEL_COLUMN_NAME = "label"
 LOSS_COLUMN_NAME = "loss"
 
 if TYPE_CHECKING:
@@ -77,8 +77,11 @@ def _fit(df: pd.DataFrame,
     log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
     foo_train = __predict(df.loc[index_train], pd.DataFrame({}, index=index_train), model, x_train)  #FIXME use __predict
     foo_test = __predict(df.loc[index_test], pd.DataFrame({}, index=index_test), model, x_test) if x_test is not None else None
+    # FIXME add truth foo_*["truth"] = y for each target label
     prediction_train = model.predict(x_train)
     prediction_test = model.predict(x_test) if x_test is not None else None
+    # TODO nice one! once we use the dataframe we can simplify the return signature quite a lot to:
+    #  model, (prediction_train, prediction_test), trails
     return model, (x_train, y_train), (x_test, y_test), (index_train, index_test), (prediction_train, prediction_test), trails
 
 
@@ -132,17 +135,17 @@ def __hyper_opt(hyper_parameter_space,
     return best_model, trails
 
 
-def _backtest(df: pd.DataFrame, model: Model) -> Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray], pd.Index]:
+def _backtest(df: pd.DataFrame, model: Model) -> pd.DataFrame:
     features_and_labels = model.features_and_labels
 
     # make training and test data with no 0 test data fraction
     x, _, y, _, index, _, _ = make_training_data(df, features_and_labels, 0, int)
 
     # predict probabilities
-    y_hat = model.predict(x)
-    foo_hat = __predict(df.loc[index], pd.DataFrame({}, index=index), model, x) # FIXME use __predict
-    #FIXME add truth foo_hat["truth"] = y for each target label
-    return x, y, y_hat, index
+    df_source = df.loc[index]
+    return __predict(df_source, pd.DataFrame({}, index=index), model, x)\
+        .join(__truth(df_source, model))\
+        .join(df_source[model.features_and_labels.features].add_prefix(f"{FEATURE_COLUMN_NAME}_"))
 
 
 def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
@@ -188,3 +191,16 @@ def __predict(df, df_pred, model, x):
             df_pred[f"{PREDICTION_COLUMN_NAME}{postfix}"] = prediction
 
     return df_pred
+
+
+def __truth(df, model):
+    df_truth = pd.DataFrame({}, index=df.index)
+    goals = model.features_and_labels.get_goals()
+
+    for target, (_, labels) in goals.items():
+        postfix = "" if target is None else f'_{target}'
+        for label in labels:
+            postfix2 = "" if len(labels) <= 1 else f"_{label}"
+            df_truth[f"{LABEL_COLUMN_NAME}{postfix}{postfix2}"] = df[label]
+
+    return df_truth
