@@ -32,11 +32,12 @@ def _fit(df: pd.DataFrame,
          cache_feature_matrix: bool = False,
          test_validate_split_seed = 42,
          hyper_parameter_space: Dict = None,
-         ) -> Tuple[Model, Tuple, Tuple, Tuple, Tuple[Dict[str, np.ndarray]], Trials]:
+         ) -> Tuple[Model, Tuple[pd.DataFrame, pd.DataFrame], Trials]:
     # get a new model
     trails = None
     model = model_provider()
     features_and_labels = model.features_and_labels
+    goals = features_and_labels.get_goals()
 
     # make training and test data sets
     x_train, x_test, y_train, y_test, index_train, index_test, min_required_data = \
@@ -75,10 +76,13 @@ def _fit(df: pd.DataFrame,
     __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
 
     log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
+    header = __stack_header_prediction(goals) + __stack_header_label(goals) + __stack_header_loss(goals)
+
     df_train = df.loc[index_train]
     df_prediction_train = __predict(df_train, pd.DataFrame({}, index=index_train), model, x_train) \
         .join(__truth(df_train, model)) \
         .join(__loss(df_train, model))
+    df_prediction_train.columns = header
 
     df_prediction_test = None
     if x_test is not None:
@@ -86,14 +90,9 @@ def _fit(df: pd.DataFrame,
         df_prediction_test = __predict(df_test, pd.DataFrame({}, index=index_test), model, x_test) \
             .join(__truth(df_train, model)) \
             .join(__loss(df_train, model))
+        df_prediction_test.columns = header
 
-    # obsolete # FIXME use __predict
-    prediction_train = model.predict(x_train)
-    prediction_test = model.predict(x_test) if x_test is not None else None
-
-    # TODO nice one! once we use the dataframe we can simplify the return signature quite a lot to:
-    # return model, (df_prediction_train, df_prediction_test), trails
-    return model, (x_train, y_train), (x_test, y_test), (index_train, index_test), (prediction_train, prediction_test), trails
+    return model, (df_prediction_train, df_prediction_test), trails
 
 
 def __train_loop(model, cross_validation, x_train, y_train, index_train,  x_test, y_test, index_test):
@@ -148,20 +147,28 @@ def __hyper_opt(hyper_parameter_space,
 
 def _backtest(df: pd.DataFrame, model: Model) -> pd.DataFrame:
     features_and_labels = model.features_and_labels
+    goals = features_and_labels.get_goals()
 
     # make training and test data with no 0 test data fraction
     x, _, y, _, index, _, _ = make_training_data(df, features_and_labels, 0, int)
 
     # predict probabilities
     df_source = df.loc[index]
-    return __predict(df_source, pd.DataFrame({}, index=index), model, x) \
+    df_features = df_source[model.features_and_labels.features]
+    df_backtest = __predict(df_source, pd.DataFrame({}, index=index), model, x) \
         .join(__truth(df_source, model)) \
         .join(__loss(df_source, model)) \
-        .join(df_source[model.features_and_labels.features].add_prefix(f"{FEATURE_COLUMN_NAME}_"))
+        .join(df_features.add_prefix(f"{FEATURE_COLUMN_NAME}_"))
+
+    df_backtest.columns = \
+        __stack_header_prediction(goals) + __stack_header_label(goals) + __stack_header_loss(goals) + __stack_header_feature(features_and_labels.features)
+
+    return df_backtest
 
 
 def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     features_and_labels = model.features_and_labels
+    goals = features_and_labels.get_goals()
 
     if tail is not None:
         if tail <= 0:
@@ -172,26 +179,30 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
         else:
             log.warning("could not determine the minimum required data from the model")
 
-    # then re assign data frame with features only
+    # predict and return data frame
     dff, x = make_forecast_data(df, features_and_labels)
-    return __predict(df, dff, model, x)
+    df_prediction = __predict(df, dff, model, x)
+    df_prediction.columns = __stack_header_feature(features_and_labels.features) + __stack_header_prediction(goals)
+    return df_prediction
 
 
 def __predict(df, df_pred, model, x):
     # first save target columns and loss column
     goals = model.features_and_labels.get_goals()
-    for target, (loss, _) in goals.items():
+    predictions = model.predict(x)
+
+    for target, (_, labels) in goals.items():
+        prediction = predictions[target]
+        postfix = "" if target is None else f'_{target}'
+
         if target is not None:
             df_pred[f'{TARGET_COLUMN_NAME}_{target}'] = df[target]
         else:
             df_pred[f"{TARGET_COLUMN_NAME}"] = ""
 
-    predictions = model.predict(x)
-    for target, prediction in predictions.items():
-        postfix = "" if target is None else f'_{target}'
-        if len(prediction.shape) > 1 and prediction.shape[1] > 1:
-            for i in range(prediction.shape[1]):
-                df_pred[f"{PREDICTION_COLUMN_NAME}{postfix}_{model.features_and_labels.labels[i]}"] = prediction[:, i]
+        if len(labels) > 1:
+            for i, label in enumerate(labels):
+                df_pred[f"{PREDICTION_COLUMN_NAME}{postfix}_{label}"] = prediction[:, i]
         else:
             df_pred[f"{PREDICTION_COLUMN_NAME}{postfix}"] = prediction
 
@@ -202,8 +213,6 @@ def __loss(df, model):
     df_loss = pd.DataFrame({}, index=df.index)
     goals = model.features_and_labels.get_goals()
     for target, (loss, _) in goals.items():
-
-        # TODO move loss to a seperate function
         postfix = f"_{target}" if len(goals) > 1 else ""
         if loss in df.columns:
             df_loss[f"{LOSS_COLUMN_NAME}{postfix}_{loss}"] = df[loss]
@@ -226,12 +235,24 @@ def __truth(df, model):
     return df_truth
 
 
-def __stack_header(goals):
-    headers = []
+def __stack_header_prediction(goals):
+    prediction_headers = []
+    # prediction
     for target, (loss, labels) in goals.items():
-        headers.append((target, 'target', target))
-        headers.append((target, 'loss', loss))
+        prediction_headers.append((target or "target", 'target', "value"))
         for l in labels:
-            headers.append((target, 'label', l))
+            prediction_headers.append((target or "target", 'prediction', l if len(labels) > 1 else "value"))
 
-    return headers
+    return prediction_headers
+
+
+def __stack_header_label(goals):
+    return [(target or "target", 'label', l if len(labels) > 1 else "value") for target, (_, labels) in goals.items() for l in labels ]
+
+
+def __stack_header_loss(goals):
+    return [(target or "target", 'loss', "value") for target, (loss, _) in goals.items()]
+
+
+def __stack_header_feature(columns):
+    return [("feature", "feature", col) for col in columns]
