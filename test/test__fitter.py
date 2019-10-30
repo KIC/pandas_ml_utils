@@ -46,10 +46,10 @@ class TestFitter(TestCase):
 
         """then"""
         print(backtest_columns)
-        self.assertEqual(backtest_columns[0], ['target', 'prediction', 'label', 'feature_a'])
-        self.assertEqual(backtest_columns[1], ['target_b', 'prediction_b', 'label_b', 'feature_a'])
-        self.assertEqual(backtest_columns[2], ['target_b', 'loss', 'prediction_b_a', 'prediction_b_b', 'label_b_b', 'feature_a'])
-        self.assertEqual(backtest_columns[3], ['target_b', 'loss_b', 'target_a', 'loss_a', 'prediction_b_a', 'prediction_b_b', 'prediction_a_a', 'prediction_a_b', 'label_b_b', 'label_a_b', 'feature_a'])
+        self.assertEqual(backtest_columns[0], ['target', 'prediction', 'label', 'loss', 'feature_a'])
+        self.assertEqual(backtest_columns[1], ['target_b', 'prediction_b', 'label_b', 'loss', 'feature_a'])
+        self.assertEqual(backtest_columns[2], ['target_b', 'prediction_b_a', 'prediction_b_b', 'label_b_b', 'loss', 'feature_a'])
+        self.assertEqual(backtest_columns[3], ['target_b', 'target_a', 'prediction_b_a', 'prediction_b_b', 'prediction_a_a', 'prediction_a_b', 'label_b_b', 'label_a_b', 'loss_b', 'loss_a', 'feature_a'])
 
     def test__predict(self):
         """given"""
@@ -70,7 +70,7 @@ class TestFitter(TestCase):
         print(predictions[-1].columns.tolist())
         self.assertEqual(predictions[0].columns.tolist(), ["a", "target", "prediction"])
         self.assertEqual(predictions[1].columns.tolist(), ["a", "target_b", "prediction_b"])
-        self.assertEqual(predictions[2].columns.tolist(), ["a", "target_b", "loss", "prediction_b_a", "prediction_b_b"])
+        self.assertEqual(predictions[2].columns.tolist(), ["a", "target_b", "prediction_b_a", "prediction_b_b"])
 
 
 

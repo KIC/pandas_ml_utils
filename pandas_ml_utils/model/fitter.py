@@ -75,13 +75,24 @@ def _fit(df: pd.DataFrame,
     __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
 
     log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
-    foo_train = __predict(df.loc[index_train], pd.DataFrame({}, index=index_train), model, x_train)  #FIXME use __predict
-    foo_test = __predict(df.loc[index_test], pd.DataFrame({}, index=index_test), model, x_test) if x_test is not None else None
-    # FIXME add truth foo_*["truth"] = y for each target label
+    df_train = df.loc[index_train]
+    df_prediction_train = __predict(df_train, pd.DataFrame({}, index=index_train), model, x_train) \
+        .join(__truth(df_train, model)) \
+        .join(__loss(df_train, model))
+
+    df_prediction_test = None
+    if x_test is not None:
+        df_test = df.loc[index_test]
+        df_prediction_test = __predict(df_test, pd.DataFrame({}, index=index_test), model, x_test) \
+            .join(__truth(df_train, model)) \
+            .join(__loss(df_train, model))
+
+    # obsolete # FIXME use __predict
     prediction_train = model.predict(x_train)
     prediction_test = model.predict(x_test) if x_test is not None else None
+
     # TODO nice one! once we use the dataframe we can simplify the return signature quite a lot to:
-    #  model, (prediction_train, prediction_test), trails
+    # return model, (df_prediction_train, df_prediction_test), trails
     return model, (x_train, y_train), (x_test, y_test), (index_train, index_test), (prediction_train, prediction_test), trails
 
 
@@ -143,8 +154,9 @@ def _backtest(df: pd.DataFrame, model: Model) -> pd.DataFrame:
 
     # predict probabilities
     df_source = df.loc[index]
-    return __predict(df_source, pd.DataFrame({}, index=index), model, x)\
-        .join(__truth(df_source, model))\
+    return __predict(df_source, pd.DataFrame({}, index=index), model, x) \
+        .join(__truth(df_source, model)) \
+        .join(__loss(df_source, model)) \
         .join(df_source[model.features_and_labels.features].add_prefix(f"{FEATURE_COLUMN_NAME}_"))
 
 
@@ -174,13 +186,6 @@ def __predict(df, df_pred, model, x):
         else:
             df_pred[f"{TARGET_COLUMN_NAME}"] = ""
 
-        if loss is not None:
-            postfix = f"_{target}" if len(goals) > 1 else ""
-            if loss in df.columns:
-                df_pred[f"{LOSS_COLUMN_NAME}{postfix}_{loss}"] = df[loss]
-            else:
-                df_pred[f"{LOSS_COLUMN_NAME}{postfix}"] = loss if loss is not None else -1.0
-
     predictions = model.predict(x)
     for target, prediction in predictions.items():
         postfix = "" if target is None else f'_{target}'
@@ -191,6 +196,21 @@ def __predict(df, df_pred, model, x):
             df_pred[f"{PREDICTION_COLUMN_NAME}{postfix}"] = prediction
 
     return df_pred
+
+
+def __loss(df, model):
+    df_loss = pd.DataFrame({}, index=df.index)
+    goals = model.features_and_labels.get_goals()
+    for target, (loss, _) in goals.items():
+
+        # TODO move loss to a seperate function
+        postfix = f"_{target}" if len(goals) > 1 else ""
+        if loss in df.columns:
+            df_loss[f"{LOSS_COLUMN_NAME}{postfix}_{loss}"] = df[loss]
+        else:
+            df_loss[f"{LOSS_COLUMN_NAME}{postfix}"] = loss if loss is not None else -1.0
+
+    return df_loss
 
 
 def __truth(df, model):
@@ -204,3 +224,14 @@ def __truth(df, model):
             df_truth[f"{LABEL_COLUMN_NAME}{postfix}{postfix2}"] = df[label]
 
     return df_truth
+
+
+def __stack_header(goals):
+    headers = []
+    for target, (loss, labels) in goals.items():
+        headers.append((target, 'target', target))
+        headers.append((target, 'loss', loss))
+        for l in labels:
+            headers.append((target, 'label', l))
+
+    return headers
