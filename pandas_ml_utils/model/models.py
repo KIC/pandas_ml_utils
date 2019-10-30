@@ -80,7 +80,13 @@ class SkitModel(Model):
             or type(self.skit_model).__name__.endswith("Classifier")\
             or type(self.skit_model).__name__.endswith("SVC"):
                 from sklearn.metrics import log_loss
-                return np.mean([log_loss((p) > 0.5, y) for p in predictions])
+                try:
+                    return np.mean([log_loss((p) > 0.5, y) for p in predictions])
+                except ValueError as e:
+                    if "contains only one label" in str(e):
+                        return -100
+                    else:
+                        raise e
             else:
                 from sklearn.metrics import mean_squared_error
                 return np.mean([mean_squared_error(p, y) for p in predictions])
