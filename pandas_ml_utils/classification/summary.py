@@ -18,7 +18,7 @@ class ClassificationSummary(Summary):
         super().__init__()
         self.df = df
         self.probability_cutoff = probability_cutoff
-        self.confusions = {target: _calculate_confusions(df[target]) for target in df.columns.levels[0]}
+        self.confusions = {target: _calculate_confusions(df[target]) for target in {*df.columns.get_level_values(0)}}
 
     @lru_cache(maxsize=None)
     def get_confusion_matrix(self):
@@ -97,117 +97,7 @@ def _calculate_confusions(df):
             [fn, tn]]
 
 
-class ClassificationSummaryOld(Summary):
-
-    def __init__(self,
-                 y_true: np.ndarray,
-                 y_predictions: Dict[str, np.ndarray],
-                 index: np.ndarray,
-                 loss: pd.Series = None,
-                 probability_cutoff: float = 0.5):
-        y_prediction = next(iter(y_predictions.values())) # FIXME this is just a quick fix
-        self.y_true = y_true
-        self.y_prediction = y_prediction.ravel() if len(y_prediction.shape) > 1 else y_prediction
-        self.index = index
-        self.loss = loss
-        self.probability_cutoff = probability_cutoff
-        self.confusion_matrix = self._confusion_matrix_indices()
-
-        # immediately log some fit quality measures
-        ratios = self.get_ratios()
-        self.measurements = {"FN Ratio": ratios[0],
-                             "FP Ratio": ratios[1],
-                             "F1 Score": f1_score(y_true, y_prediction > probability_cutoff)}
-
-        log.info(f"statistics: {self.measurements}")
-
-    def set_probability_cutoff(self, probability_cutoff: float = 0.5):
-        self.probability_cutoff = probability_cutoff
-        self.confusion_matrix = self._confusion_matrix_indices()
-
-    def _confusion_matrix_indices(self):
-        index = self.index
-        truth = self.y_true
-        pred = self.y_prediction
-        co = self.probability_cutoff
-
-        try:
-            confusion = np.array([[index[(truth == True) & (pred > co)], index[(truth == False) & (pred > co)]],
-                                  [index[(truth == True) & (pred <= co)], index[(truth == False) & (pred <= co)]]])
-
-            if len(confusion[0, 0]) <= 0:
-                log.warning("Very bad fit with 0 TP")
-
-            return confusion
-        except:
-            print(f"shapes: y_true: {self.y_true.shape}, y_pred: {self.y_prediction.shape}, index: {self.index.shape}")
-            print("Unexpected error:", sys.exc_info()[0])
-            return None
-
-    def get_ratios(self):
-        cm = self.confusion_count()
-        return cm[1,0] / cm[0,0], cm[0,1] / cm[0,0]
-
-    def plot_backtest(self,
-                      y: pd.Series = None,
-                      size: Union[int, pd.Series] = None,
-                      figsize: Tuple[int, int] = (16, 6)):
-        # only import if required
-        import seaborn as sns
-        import matplotlib.pyplot as plt
-        from pandas.plotting import register_matplotlib_converters
-
-        # get rid of deprecation warning
-        register_matplotlib_converters()
-
-        # check value for back test
-        if self.loss is None and y is None:
-            raise ValueError("No loss column defined, whether in FeaturesAndLabels nor in plot_backtest")
-
-        # scatter plot where confusion squares are the colors, the loss is the size
-        y = y if y is not None \
-                else self.loss.loc[self.index] if isinstance(self.loss, pd.Series) \
-                    else self.loss[self.loss.columns[0]].loc[self.index]
-
-        # make sure we only plot actual losses
-        y = y.copy().clip(upper=0)
-
-        color = pd.Series(0, index=y.index)
-        color.loc[self.confusion_matrix[0, 0]] = 1
-        color.loc[self.confusion_matrix[1, 0]] = 2
-
-        colors = {0: sns.xkcd_rgb['white'], 1: sns.xkcd_rgb['pale green'], 2: sns.xkcd_rgb['cerise']}
-        palette = [colors[color_index] for color_index in np.sort(color.unique())]
-
-        # get colors from: https://xkcd.com/color/rgb/
-        fig, ax = plt.subplots(figsize=figsize)
-        ax.set_ylim([y.min() * 1.1, 1])
-
-        scatt = sns.scatterplot(x=y.index,
-                                y=y,
-                                ax=ax,
-                                size=size if size is not None else y * -1,
-                                hue=color,
-                                palette=palette)
-
-        bar = sns.lineplot(x=y.index, y=self.y_prediction, ax=ax)
-        plt.hlines(self.probability_cutoff, y.index.min(), y.index.max(), color=sns.xkcd_rgb['silver'])
-
-        plt.close()
-        return fig
-
-    def confusion_loss(self):
-        cm = self.confusion_matrix
-        df = self.loss
-        return np.array([[df.loc[cm[0, 0]].sum(), df.loc[cm[0, 1]].sum()],
-                         [df.loc[cm[1, 0]].sum(), df.loc[cm[1, 1]].sum()]])
-
-    def confusion_count(self):
-        return np.array([
-            [len(self.confusion_matrix[0, 0]), len(self.confusion_matrix[0, 1])],
-            [len(self.confusion_matrix[1, 0]), len(self.confusion_matrix[1, 1])],
-        ])
-
+class StilNeedsToBeDone():
     def _repr_html_(self):
         return self._html_()._repr_html_()
 

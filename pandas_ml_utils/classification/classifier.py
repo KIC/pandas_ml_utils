@@ -32,47 +32,26 @@ def fit_classifier(df: pd.DataFrame,
                                               hyper_parameter_space = hyper_parameter_space)
 
     # assemble the result objects
-    features_and_labels = model.features_and_labels
     cutoff = model[("probability_cutoff", 0.5)]
 
     # convert probabilities into classes
     df_train = _convert_probabilities(df_train, cutoff)
     df_test = _convert_probabilities(df_test, cutoff)
 
-    loss = __get_loss(df, features_and_labels)
-    training_classification = ClassificationSummary(train[1], prediction[0], index[0], loss, cutoff)
-    test_classification = ClassificationSummary(test[1], prediction[1], index[1], loss, cutoff)
+    training_classification = ClassificationSummary(df_train, cutoff)
+    test_classification = ClassificationSummary(df_test, cutoff)
     return Fit(model, training_classification, test_classification, trails)
 
 
 def backtest_classifier(df: pd.DataFrame, model: Model) -> ClassificationSummary:
     df = _backtest(df, model)
-
-    return None #FIXME ClassificationSummary(y, y_hat, index, loss, model[("probability_cutoff", 0.5)])
-
-
-# FIXME onsolete
-def __get_loss(df, features_and_labels):
-    goals = features_and_labels.get_goals()
-    if len(goals) > 1:
-        # FIXME we actually want to have the possibility of multiple losses ... also to plot
-        log.warning("currently we only support one *loss* column, we just pick the first one")
-
-    loss, _ = next(iter(goals.values()))
-    return \
-        df[loss] if loss is not None and loss in df.columns else pd.Series(-1 if loss is None else loss, index=df.index)
+    df_sumary = _convert_probabilities(df.drop(FEATURE_COLUMN_NAME, axis=1))
+    return ClassificationSummary(df_sumary, model[("probability_cutoff", 0.5)])
 
 
 def classify(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     dff = _predict(df, model, tail)
-
-    # return result
-    for column in dff.columns:
-        if column.startswith(PREDICTION_COLUMN_NAME):
-            dff[f"{column}_proba"] = dff[column]
-            dff[column] = dff[f"{column}_proba"] > model[("probability_cutoff", 0.5)]
-
-    return dff
+    return _convert_probabilities(dff, model[("probability_cutoff", 0.5)])
 
 
 def _convert_probabilities(df: pd.DataFrame, cut_off: float = 0.5) -> pd.DataFrame:

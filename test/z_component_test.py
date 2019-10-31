@@ -45,27 +45,25 @@ class ComponentTest(unittest.TestCase):
                                 test_validate_split_seed=42)
 
         self.assertEqual(fit.model.min_required_data, 1)
-        np.testing.assert_array_equal(fit.test_summary.confusion_count(), np.array([[744, 586],
-                                                                                    [655, 698]]))
+        np.testing.assert_array_equal(fit.training_summary.get_confusion_matrix()['vix_Open'], np.array([[1067,  872], [1002, 1082]]))
+        np.testing.assert_array_equal(fit.test_summary.get_confusion_matrix()['vix_Open'], np.array([[744, 586], [655, 698]]))
 
         # backtest
         fitted_model = fit.model
         backtest_classification = df.backtest_classifier(fitted_model)
-        np.testing.assert_array_equal(backtest_classification.confusion_count(), np.array([[1811, 1458],
-                                                                                           [1657, 1780]]))
+        np.testing.assert_array_equal(backtest_classification.get_confusion_matrix()['vix_Open'], np.array([[1811, 1458], [1657, 1780]]))
 
         # classify
         fitted_model = fit.model
         classified_df = df.classify(fitted_model)
         print(classified_df.tail())
 
-        self.assertEqual(len(classified_df[classified_df["prediction_vix_Open"] == False]), 3437)
-        self.assertTrue(classified_df["loss_spy_Volume"].sum() > 0)
-        self.assertTrue(classified_df["prediction_vix_Open_proba"].sum() > 0)
-        self.assertTrue(classified_df["prediction_vix_Open_proba"].min() > 0)
-        self.assertTrue(classified_df["prediction_vix_Open_proba"].max() < 1)
+        self.assertEqual(len(classified_df[classified_df["vix_Open", "prediction", "value"] == False]), 3437)
+        self.assertTrue(classified_df["vix_Open", "prediction", "value_proba"].sum() > 0)
+        self.assertTrue(classified_df["vix_Open", "prediction", "value_proba"].min() > 0)
+        self.assertTrue(classified_df["vix_Open", "prediction", "value_proba"].max() < 1)
         self.assertListEqual(classified_df.columns.tolist(),
-                             ["vix_Close", "target_vix_Open", "loss_spy_Volume", "prediction_vix_Open", "prediction_vix_Open_proba"])
+                             [('feature', 'feature', 'vix_Close'), ('vix_Open', 'prediction', 'value'), ('vix_Open', 'prediction', 'value_proba'), ('vix_Open', 'target', 'value')])
 
         # classify tail
         fitted_model = fit.model

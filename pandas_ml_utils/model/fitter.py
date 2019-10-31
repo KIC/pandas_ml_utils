@@ -77,15 +77,15 @@ def _fit(df: pd.DataFrame,
     df_prediction_train = __predict(df_train, pd.DataFrame({}, index=index_train), model, x_train) \
         .join(__truth(df_train, model)) \
         .join(__loss(df_train, model))
-    df_prediction_train.columns = header
+    df_prediction_train.columns = pd.MultiIndex.from_tuples(header)
 
     df_prediction_test = None
     if x_test is not None:
         df_test = df.loc[index_test]
         df_prediction_test = __predict(df_test, pd.DataFrame({}, index=index_test), model, x_test) \
-            .join(__truth(df_train, model)) \
-            .join(__loss(df_train, model))
-        df_prediction_test.columns = header
+            .join(__truth(df_test, model)) \
+            .join(__loss(df_test, model))
+        df_prediction_test.columns = pd.MultiIndex.from_tuples(header)
 
     return model, (df_prediction_train, df_prediction_test), trails
 
@@ -155,8 +155,8 @@ def _backtest(df: pd.DataFrame, model: Model) -> pd.DataFrame:
         .join(__loss(df_source, model)) \
         .join(df_features.add_prefix(f"{FEATURE_COLUMN_NAME}_"))
 
-    df_backtest.columns = \
-        __stack_header_prediction(goals) + __stack_header_label(goals) + __stack_header_loss(goals) + __stack_header_feature(features_and_labels.features)
+    header = __stack_header_prediction(goals) + __stack_header_label(goals) + __stack_header_loss(goals) + __stack_header_feature(features_and_labels.features)
+    df_backtest.columns = pd.MultiIndex.from_tuples(header)
 
     return df_backtest
 
@@ -177,7 +177,10 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     # predict and return data frame
     dff, x = make_forecast_data(df, features_and_labels)
     df_prediction = __predict(df, dff, model, x)
-    df_prediction.columns = __stack_header_feature(features_and_labels.features) + __stack_header_prediction(goals)
+
+    header = __stack_header_feature(features_and_labels.features) + __stack_header_prediction(goals)
+    df_prediction.columns = pd.MultiIndex.from_tuples(header)
+
     return df_prediction
 
 
