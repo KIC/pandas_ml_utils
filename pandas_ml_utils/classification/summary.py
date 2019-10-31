@@ -5,6 +5,7 @@ from typing import Tuple, Union, Dict
 import numpy as np
 import pandas as pd
 
+from ..constants import *
 from ..model.summary import Summary
 from sklearn.metrics import f1_score
 
@@ -12,11 +13,34 @@ log = logging.getLogger(__name__)
 
 
 class ClassificationSummary(Summary):
-    def __init__(self,
-                 df: pd.DataFrame,
-                 probability_cutoff: float = 0.5):
+    def __init__(self, df: pd.DataFrame):
         self.df = df
-        self.probability_cutoff = probability_cutoff
+        self.confusions = {target: _calculate_confusions(df[target]) for target in df.columns.levels[0]}
+
+    def get_confusion_matrix(self):
+        return {target: np.array([[len(c) for c in r] for r in cm]) for target, cm in self.confusions.items()}
+
+    def get_confusion_loss(self):
+        return {target: np.array([[c[LOSS_COLUMN_NAME, "value"].sum() for c in r] for r in cm]) for target, cm in self.confusions.items()}
+
+    def get_metrics(self):
+        # "FN Ratio"
+        # "FP Ratio"
+        # "F1 Score"
+        pass
+
+    def plot_classification(self):
+        pass
+
+
+def _calculate_confusions(df):
+    tp = df[df[PREDICTION_COLUMN_NAME, "value"] & df[LABEL_COLUMN_NAME, "value"]]
+    fp = df[df[PREDICTION_COLUMN_NAME, "value"] & (df[LABEL_COLUMN_NAME, "value"] == False)]
+    tn = df[(df[PREDICTION_COLUMN_NAME, "value"] == False) & (df[LABEL_COLUMN_NAME, "value"] == False)]
+    fn = df[(df[PREDICTION_COLUMN_NAME, "value"] == False) & (df[LABEL_COLUMN_NAME, "value"])]
+
+    return [[tp, fp],
+            [fn, tn]]
 
 
 class ClassificationSummaryOld(Summary):

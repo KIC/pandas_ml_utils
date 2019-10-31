@@ -22,6 +22,7 @@ def fit_classifier(df: pd.DataFrame,
                    hyper_parameter_space: Dict = None,
                    ) -> Fit:
 
+    # maybe later we can check if only the cut off changed and then skip the fitting step
     model, (df_train, df_test), trails = _fit(df,
                                               model_provider,
                                               test_size = test_size,
@@ -33,6 +34,10 @@ def fit_classifier(df: pd.DataFrame,
     # assemble the result objects
     features_and_labels = model.features_and_labels
     cutoff = model[("probability_cutoff", 0.5)]
+
+    # convert probabilities into classes
+    df_train = _convert_probabilities(df_train, cutoff)
+    df_test = _convert_probabilities(df_test, cutoff)
 
     loss = __get_loss(df, features_and_labels)
     training_classification = ClassificationSummary(train[1], prediction[0], index[0], loss, cutoff)
