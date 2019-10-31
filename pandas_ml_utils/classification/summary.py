@@ -24,10 +24,14 @@ class ClassificationSummary(Summary):
         return {target: np.array([[c[LOSS_COLUMN_NAME, "value"].sum() for c in r] for r in cm]) for target, cm in self.confusions.items()}
 
     def get_metrics(self):
-        # "FN Ratio"
-        # "FP Ratio"
-        # "F1 Score"
-        pass
+        return {target: {"FP Ratio": fp_ratio,
+                         "FN Ratio": fn_ratio,
+                         "F1 Score": f1_score(self.df[target, LABEL_COLUMN_NAME, "value"],
+                                              self.df[target, PREDICTION_COLUMN_NAME, "value"])}
+                for target, (fp_ratio, fn_ratio) in self.get_ratios().items()}
+
+    def get_ratios(self):
+        return {target: (cm[0,1] / cm[0,0], cm[1,0] / cm[0,0]) for target, cm in self.get_confusion_matrix().items()}
 
     def plot_classification(self):
         pass

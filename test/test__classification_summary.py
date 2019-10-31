@@ -38,6 +38,7 @@ class TestClassificationSummary(TestCase):
         """when"""
         cm = cs.get_confusion_matrix()
         cl = cs.get_confusion_loss()
+        ms = cs.get_metrics()
 
         """then"""
         np.testing.assert_array_equal(cm["no fit"], np.array([[0, 3], [2 ,0]]))
@@ -48,6 +49,7 @@ class TestClassificationSummary(TestCase):
         np.testing.assert_array_equal(cl["regular fit"], np.array([[-5, -6.], [-2., -8.]]))
         np.testing.assert_array_equal(cl["perfect fit"], np.array([[-5., -6.], [0., -10]]))
 
+        np.testing.assert_array_almost_equal(np.array(list(ms["regular fit"].values())), np.array([0.5, 0.5, 0.66]), 2)
 
     def test_plot_backtest_no_fit(self):
         index = np.array([0, 1, 2, 3, 4])
