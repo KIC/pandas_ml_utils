@@ -12,14 +12,9 @@ import pandas as pd
 from ..train_test_data import make_training_data, make_forecast_data
 from ..utils import log_with_time
 from ..model.models import Model
+from ..constants import *
 
 log = logging.getLogger(__name__)
-
-PREDICTION_COLUMN_NAME = "prediction"
-FEATURE_COLUMN_NAME = "feature"
-TARGET_COLUMN_NAME = "target"
-LABEL_COLUMN_NAME = "label"
-LOSS_COLUMN_NAME = "loss"
 
 if TYPE_CHECKING:
     from hyperopt import Trials
@@ -239,20 +234,20 @@ def __stack_header_prediction(goals):
     prediction_headers = []
     # prediction
     for target, (loss, labels) in goals.items():
-        prediction_headers.append((target or "target", 'target', "value"))
+        prediction_headers.append((target or TARGET_COLUMN_NAME, TARGET_COLUMN_NAME, "value"))
         for l in labels:
-            prediction_headers.append((target or "target", 'prediction', l if len(labels) > 1 else "value"))
+            prediction_headers.append((target or TARGET_COLUMN_NAME, PREDICTION_COLUMN_NAME, l if len(labels) > 1 else "value"))
 
     return prediction_headers
 
 
 def __stack_header_label(goals):
-    return [(target or "target", 'label', l if len(labels) > 1 else "value") for target, (_, labels) in goals.items() for l in labels ]
+    return [(target or TARGET_COLUMN_NAME, LABEL_COLUMN_NAME, l if len(labels) > 1 else "value") for target, (_, labels) in goals.items() for l in labels ]
 
 
 def __stack_header_loss(goals):
-    return [(target or "target", 'loss', "value") for target, (loss, _) in goals.items()]
+    return [(target or TARGET_COLUMN_NAME, LOSS_COLUMN_NAME, "value") for target, (loss, _) in goals.items()]
 
 
 def __stack_header_feature(columns):
-    return [("feature", "feature", col) for col in columns]
+    return [(FEATURE_COLUMN_NAME, FEATURE_COLUMN_NAME, col) for col in columns]

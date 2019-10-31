@@ -4,11 +4,29 @@ import logging
 
 from unittest import TestCase
 from sklearn.metrics import confusion_matrix
-from pandas_ml_utils.classification.summary import ClassificationSummary
+from pandas_ml_utils.classification.summary import ClassificationSummary,
 
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
+target = [0.0, 0.0, 0.0, 0.0]
+loss = np.array([1.0, 1.0, 1.0, 1.0, 1.0]) * -1
+
+result = pd.DataFrame({
+    ("no fit", "target", "value"):          target,
+    ("no fit", "prediction", "value"):      [1.0, 0.0, 1.0, 1.0, 0.0],
+    ("no fit", "label", "value"):           [False, True, False, False, True],
+    ("no fit", "loss", "value"):            loss,
+    ("regular fit", "target", "value"):     target,
+    ("regular fit", "prediction", "value"): [1.0, 0.0, 1.0, 1.0, 0.0],
+    ("regular fit", "label", "value"):      [True, True, True, False, False],
+    ("regular fit", "loss", "value"):       loss,
+    ("perfect fit", "target", "value"):     target,
+    ("perfect fit", "prediction", "value"): [1.0, 0.0, 1.0, 1.0, 0.0],
+    ("perfect fit", "label", "value"):      [True, False, True, False, False],
+    ("perfect fit", "loss", "value"):       loss,
+})
 
 
 class TestClassificationSummary(TestCase):

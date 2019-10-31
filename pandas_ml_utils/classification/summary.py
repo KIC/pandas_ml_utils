@@ -12,6 +12,14 @@ log = logging.getLogger(__name__)
 
 
 class ClassificationSummary(Summary):
+    def __init__(self,
+                 df: pd.DataFrame,
+                 probability_cutoff: float = 0.5):
+        self.df = df
+        self.probability_cutoff = probability_cutoff
+
+
+class ClassificationSummaryOld(Summary):
 
     def __init__(self,
                  y_true: np.ndarray,

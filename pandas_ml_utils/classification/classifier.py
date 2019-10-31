@@ -6,8 +6,9 @@ import pandas as pd
 
 from ..classification.summary import ClassificationSummary
 from ..model.fit import Fit
-from ..model.fitter import _fit, _backtest, _predict, PREDICTION_COLUMN_NAME
+from ..model.fitter import _fit, _backtest, _predict
 from ..model.models import Model
+from ..constants import *
 
 log = logging.getLogger(__name__)
 
@@ -21,13 +22,13 @@ def fit_classifier(df: pd.DataFrame,
                    hyper_parameter_space: Dict = None,
                    ) -> Fit:
 
-    model, train, test, index, prediction, trails = _fit(df,
-                                                         model_provider,
-                                                         test_size = test_size,
-                                                         cross_validation = cross_validation,
-                                                         cache_feature_matrix = cache_feature_matrix,
-                                                         test_validate_split_seed = test_validate_split_seed,
-                                                         hyper_parameter_space = hyper_parameter_space)
+    model, (df_train, df_test), trails = _fit(df,
+                                              model_provider,
+                                              test_size = test_size,
+                                              cross_validation = cross_validation,
+                                              cache_feature_matrix = cache_feature_matrix,
+                                              test_validate_split_seed = test_validate_split_seed,
+                                              hyper_parameter_space = hyper_parameter_space)
 
     # assemble the result objects
     features_and_labels = model.features_and_labels
@@ -40,13 +41,12 @@ def fit_classifier(df: pd.DataFrame,
 
 
 def backtest_classifier(df: pd.DataFrame, model: Model) -> ClassificationSummary:
-    _, y, y_hat, index = _backtest(df, model)
+    df = _backtest(df, model)
 
-    features_and_labels = model.features_and_labels
-    loss = __get_loss(df, features_and_labels)
-    return ClassificationSummary(y, y_hat, index, loss, model[("probability_cutoff", 0.5)])
+    return None #FIXME ClassificationSummary(y, y_hat, index, loss, model[("probability_cutoff", 0.5)])
 
 
+# FIXME onsolete
 def __get_loss(df, features_and_labels):
     goals = features_and_labels.get_goals()
     if len(goals) > 1:
@@ -68,3 +68,15 @@ def classify(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
             dff[column] = dff[f"{column}_proba"] > model[("probability_cutoff", 0.5)]
 
     return dff
+
+
+def _convert_probabilities(df: pd.DataFrame, cut_off: float = 0.5) -> pd.DataFrame:
+
+    # return result
+    for column in df.columns:
+        if column[1] == PREDICTION_COLUMN_NAME:
+            probability_column = (column[0], column[1], f"{column[2]}{PROBABILITY_POSTFIX}")
+            df[probability_column] = df[column]
+            df[column] = df[probability_column] > cut_off
+
+    return df.sort_index(axis=1)
