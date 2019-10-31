@@ -3,6 +3,8 @@ import pandas as pd
 import logging
 
 from unittest import TestCase
+
+from matplotlib.figure import Figure
 from sklearn.metrics import confusion_matrix
 from pandas_ml_utils.classification.summary import ClassificationSummary
 from pandas_ml_utils.classification.classifier import _convert_probabilities
@@ -51,32 +53,14 @@ class TestClassificationSummary(TestCase):
 
         np.testing.assert_array_almost_equal(np.array(list(ms["regular fit"].values())), np.array([0.5, 0.5, 0.66]), 2)
 
-    def test_plot_backtest_no_fit(self):
-        index = np.array([0, 1, 2, 3, 4])
-        pred = {"foo_target": np.array([1.0, 0.0, 1.0, 1.0, 0.0])}
-        truth = np.array([False, True, False, False, True])
-        loss = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
+    def test_plots(self):
+        """given"""
+        cs = ClassificationSummary(df)
 
-        cs = ClassificationSummary(truth, pred, index, pd.Series(loss))
-        plot = cs.plot_backtest()
-        self.assertIsNotNone(plot)
+        """when"""
+        plots = cs.plot_classification()
 
-    def test_plot_backtest_a_fit(self):
-        index = np.array([0, 1, 2, 3, 4])
-        pred = {"foo_target": np.array([1.0, 0.0, 1.0, 1.0, 0.0])}
-        truth = np.array([True, True, True, False, False])
-        loss = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
-
-        cs = ClassificationSummary(truth, pred, index, pd.Series(loss))
-        plot = cs.plot_backtest()
-        self.assertIsNotNone(plot)
-
-    def test_plot_backtest_perfect_fit(self):
-        index = np.array([0, 1, 2, 3, 4])
-        pred = {"foo_target": np.array([1.0, 0.0, 1.0, 1.0, 0.0])}
-        truth = np.array([True, False, True, False, False])
-        loss = np.array([1.0, 1.0, 1.0, 1.0, 1.0]) * -1
-
-        cs = ClassificationSummary(truth, pred, index, pd.Series(loss))
-        plot = cs.plot_backtest()
-        self.assertIsNotNone(plot)
+        """then"""
+        self.assertListEqual(list(plots.keys()), ['no fit', 'perfect fit', 'regular fit'])
+        self.assertNotIn(None, plots.values())
+        self.assertListEqual([type(p) for p in plots.values()], [Figure, Figure, Figure])

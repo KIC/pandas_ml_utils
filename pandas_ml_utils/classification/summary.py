@@ -41,7 +41,7 @@ class ClassificationSummary(Summary):
         return {target: (cm[0,1] / cm[0,0], cm[1,0] / cm[0,0]) for target, cm in self.get_confusion_matrix().items()}
 
     @lru_cache(maxsize=None)
-    def plot_classification(self, figsize=(16, 9)):
+    def plot_classification(self, figsize=(16, 9)) -> Dict:
         import seaborn as sns
         import matplotlib.pyplot as plt
         from matplotlib import gridspec
