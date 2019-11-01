@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from functools import lru_cache
 from typing import Tuple, Union, Dict
@@ -95,6 +96,13 @@ class ClassificationSummary(Summary):
 
         return [[tp, fp],
                 [fn, tn]]
+
+    @lru_cache(maxsize=None)
+    def _repr_html_(self):
+        from mako.template import Template
+
+        template = Template(filename=os.path.join(os.path.dirname(__file__), "mako_template", "classification_summary.html"))
+        return template.render(classification_summary=self)
 
 
 class StilNeedsToBeDone():

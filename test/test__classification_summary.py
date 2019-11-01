@@ -64,3 +64,13 @@ class TestClassificationSummary(TestCase):
         self.assertListEqual(list(plots.keys()), ['no fit', 'perfect fit', 'regular fit'])
         self.assertNotIn(None, plots.values())
         self.assertListEqual([type(p) for p in plots.values()], [Figure, Figure, Figure])
+
+    def test_html(self):
+        """given"""
+        cs = ClassificationSummary(df)
+
+        """when"""
+        html = cs._repr_html_()
+
+        """then"""
+        print(html)

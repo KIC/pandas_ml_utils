@@ -1,0 +1,56 @@
+<%
+    from pandas_ml_utils.utils import fig_to_png_base64
+%>
+
+<div>
+    <%def name="pretty_confusion_matrix(mx, fmt)">
+        <table>
+            <thead>
+                <tr>
+                    <th>Prediction/Truth</th>
+                    <th>True</th>
+                    <th>False</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>True</td>
+                    <th>${fmt.format(mx[0,0])}</th>
+                    <th>${fmt.format(mx[0,1])}</th>
+                </tr>
+                <tr>
+                    <td>False</td>
+                    <th>${fmt.format(mx[1,0])}</th>
+                    <th>${fmt.format(mx[1,1])}</th>
+                </tr>
+            </tbody>
+        </table>
+    </%def>
+
+    % for target in classification_summary.confusions.keys():
+        <p>${target}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Confusion Matrix</th>
+                    <th>Confusion Loss</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>${pretty_confusion_matrix(classification_summary.get_confusion_matrix()[target], "{:.0f}")}</td>
+                    <td>${pretty_confusion_matrix(classification_summary.get_confusion_loss()[target], "{:.4f}")}</td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <img src='data:image/png;base64,${fig_to_png_base64(classification_summary.plot_classification()[target])}' />
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>RATIOS</td>
+                </tr>
+            </tbody>
+        </table>
+    % endfor
+</div>
