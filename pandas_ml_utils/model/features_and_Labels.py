@@ -14,7 +14,7 @@ class FeaturesAndLabels(object):
                  features: List[str],
                  labels: List[str],
                  label_type:Type = int,
-                 targets: Union[List[str], Tuple[str, str], Dict[str, str], Dict[str, Tuple[str, List[str]]]] = None,
+                 targets: Union[List[str], Tuple[str, str], Dict[str, str], Dict[str, Tuple[str, List[str]]], Dict[str, Tuple[str, str]]] = None,
                  feature_lags: Iterable[int] = None,
                  feature_rescaling: Dict[Tuple[str], Tuple[int]] = None,
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,

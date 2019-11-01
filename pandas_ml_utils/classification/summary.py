@@ -18,7 +18,7 @@ class ClassificationSummary(Summary):
         super().__init__()
         self.df = df
         self.probability_cutoff = probability_cutoff
-        self.confusions = {target: _calculate_confusions(df[target]) for target in {*df.columns.get_level_values(0)}}
+        self.confusions = {target: ClassificationSummary._calculate_confusions(df[target]) for target in {*df.columns.get_level_values(0)}}
 
     @lru_cache(maxsize=None)
     def get_confusion_matrix(self):
@@ -86,15 +86,15 @@ class ClassificationSummary(Summary):
 
         return plots
 
+    @staticmethod
+    def _calculate_confusions(df):
+        tp = df[df[PREDICTION_COLUMN_NAME, "value"] & df[LABEL_COLUMN_NAME, "value"]]
+        fp = df[df[PREDICTION_COLUMN_NAME, "value"] & (df[LABEL_COLUMN_NAME, "value"] == False)]
+        tn = df[(df[PREDICTION_COLUMN_NAME, "value"] == False) & (df[LABEL_COLUMN_NAME, "value"] == False)]
+        fn = df[(df[PREDICTION_COLUMN_NAME, "value"] == False) & (df[LABEL_COLUMN_NAME, "value"])]
 
-def _calculate_confusions(df):
-    tp = df[df[PREDICTION_COLUMN_NAME, "value"] & df[LABEL_COLUMN_NAME, "value"]]
-    fp = df[df[PREDICTION_COLUMN_NAME, "value"] & (df[LABEL_COLUMN_NAME, "value"] == False)]
-    tn = df[(df[PREDICTION_COLUMN_NAME, "value"] == False) & (df[LABEL_COLUMN_NAME, "value"] == False)]
-    fn = df[(df[PREDICTION_COLUMN_NAME, "value"] == False) & (df[LABEL_COLUMN_NAME, "value"])]
-
-    return [[tp, fp],
-            [fn, tn]]
+        return [[tp, fp],
+                [fn, tn]]
 
 
 class StilNeedsToBeDone():

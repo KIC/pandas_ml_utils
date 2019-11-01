@@ -85,7 +85,7 @@ class ComponentTest(unittest.TestCase):
         classified_df = df.classify(fitted_model)
 
         self.assertListEqual(classified_df.columns.tolist(),
-                             ["vix_Close", "target", "prediction", "prediction_proba"])
+                             [('feature', 'feature', 'vix_Close'), ('target', 'prediction', 'value'), ('target', 'prediction', 'value_proba'), ('target', 'target', 'value')])
 
     def test_fit_regressor(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date') / 50.
@@ -109,13 +109,17 @@ class ComponentTest(unittest.TestCase):
         regressed = df.regress(fitted_model)
         print(regressed.tail())
         self.assertListEqual(regressed.columns.tolist(),
-                             ['vix_Open', 'vix_High', 'vix_Low', 'vix_Close', "target",
-                              'prediction_vix_Open', 'prediction_vix_High', 'prediction_vix_Low', 'prediction_vix_Close',
-                              'error'])
+                             [('feature', 'feature', 'vix_Open'),
+                              ('feature', 'feature', 'vix_High'),
+                              ('feature', 'feature', 'vix_Low'),
+                              ('feature', 'feature', 'vix_Close'),
+                              ('target', 'target', 'value'),
+                              ('target', 'prediction', 'vix_Open'),
+                              ('target', 'prediction', 'vix_High'),
+                              ('target', 'prediction', 'vix_Low'),
+                              ('target', 'prediction', 'vix_Close')])
 
-        self.assertTrue(regressed["error"].sum() > 0)
-        self.assertTrue(regressed["error"].sum() > 0)
-        self.assertTrue(regressed["error"].min() > 0)
+        self.assertEqual(len(regressed), 6706)
 
     def test_cross_validation(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')
@@ -135,8 +139,8 @@ class ComponentTest(unittest.TestCase):
                                 test_validate_split_seed=42)
 
         self.assertEqual(fit.model.min_required_data, 1)
-        np.testing.assert_array_equal(fit.test_summary.confusion_count(), np.array([[257, 169],
-                                                                                    [1142, 1115]]))
+        np.testing.assert_array_equal(fit.test_summary.get_confusion_matrix()["vix_Open"],
+                                      np.array([[257, 169], [1142, 1115]]))
 
     def test_hyper_parameter(self):
         from hyperopt import hp
@@ -174,7 +178,15 @@ class ComponentTest(unittest.TestCase):
                                test_size=0.4,
                                test_validate_split_seed=42)
 
-        self.assertTrue(True)
+        self.assertListEqual(fit.training_summary.df.columns.tolist(), fit.test_summary.df.columns.tolist())
+        self.assertListEqual(fit.training_summary.df.columns.tolist(), [('vix_High', 'target', 'value'),
+                                                                        ('vix_High', 'prediction', 'value'),
+                                                                        ('vix_Low', 'target', 'value'),
+                                                                        ('vix_Low', 'prediction', 'value'),
+                                                                        ('vix_High', 'label', 'value'),
+                                                                        ('vix_Low', 'label', 'value'),
+                                                                        ('vix_High', 'loss', 'value'),
+                                                                        ('vix_Low', 'loss', 'value')])
 
     @unittest.skip("we need a better model for reinforcement learning")
     def test_reinforcement_model(self):

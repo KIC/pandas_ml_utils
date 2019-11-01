@@ -16,3 +16,4 @@ class RegressionSummary(Summary):
         self.df = df
 
     # TODO add some statistics and fix loss is always None at the moment
+    #  mse, r2, ... pvalue?
