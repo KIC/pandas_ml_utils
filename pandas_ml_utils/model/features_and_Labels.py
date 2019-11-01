@@ -83,7 +83,7 @@ class FeaturesAndLabels(object):
 
     def __repr__(self):
         return f'FeaturesAndLabels({self.features},{self.labels},{self.targets},' \
-               f'{self.feature_lags},{self.feature_rescaling}{self.lag_smoothing},{self.probability_cutoff}) ' \
+               f'{self.feature_lags},{self.feature_rescaling}{self.lag_smoothing}) ' \
                f'#{len(self.features)} ' \
                f'features expand to {self.expanded_feature_length}'
 

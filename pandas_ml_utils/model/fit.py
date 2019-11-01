@@ -1,5 +1,6 @@
-import pandas as pd
 from typing import Any
+
+import pandas as pd
 
 from .models import Model
 from .summary import Summary
@@ -29,37 +30,8 @@ class Fit(object):
             return None
 
     def _repr_html_(self):
-        return self._html_()._repr_html_()
+        from mako.template import Template
+        from mako.lookup import TemplateLookup
 
-    def _html_(self):
-        # only import it needed
-        from vdom.helpers import div, table, tr, td, tbody, thead, th
-
-        model = self.model.__repr__()
-        if model is None:
-            model = str(self.model)
-
-        return div(
-            table(
-                thead(
-                    tr(
-                        th("Training Data", style={'text-align': 'left'}),
-                        th("Test Data", style={'text-align': 'right'})
-                    )
-                ),
-                tbody(
-                    tr(
-                        td(self.training_summary._html_()),
-                        td(self.test_summary._html_())
-                    ),
-                    tr(
-                        td(
-                            model,
-                            colspan="2"
-                        )
-                    )
-                ),
-                style={'width': '100%'}
-            ),
-            style={'width': '100%', 'float': 'left'}
-        )
+        template = Template(filename=f"{__file__}.html", lookup=TemplateLookup(directories=['/']))
+        return template.render(fit=self)

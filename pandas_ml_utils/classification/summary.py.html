@@ -2,9 +2,11 @@
     from pandas_ml_utils.utils import fig_to_png_base64
 %>
 
-<div>
+<%include file="../style.html"/>
+
+<div class="full-width">
     <%def name="pretty_confusion_matrix(mx, fmt)">
-        <table>
+        <table class="right">
             <thead>
                 <tr>
                     <th>Prediction/Truth</th>
@@ -28,27 +30,36 @@
     </%def>
 
     % for target in classification_summary.confusions.keys():
-        <p>${target}</p>
+        <h3><p>${target}</p></h3>
         <table>
             <thead>
                 <tr>
-                    <th>Confusion Matrix</th>
-                    <th>Confusion Loss</th>
+                    <th><p class="left">Confusion Matrix</p></th>
+                    <th><p class="right">Confusion Loss</p></th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>${pretty_confusion_matrix(classification_summary.get_confusion_matrix()[target], "{:.0f}")}</td>
-                    <td>${pretty_confusion_matrix(classification_summary.get_confusion_loss()[target], "{:.4f}")}</td>
+                    <td><div class="left">${pretty_confusion_matrix(classification_summary.get_confusion_matrix()[target], "{:.0f}")}</div>div></td>
+                    <td><div class="right">${pretty_confusion_matrix(classification_summary.get_confusion_loss()[target], "{:.4f}")}</div></td>
                 </tr>
                 <tr>
                     <td colspan="2">
-                        <img src='data:image/png;base64,${fig_to_png_base64(classification_summary.plot_classification()[target])}' />
+                        <img src='data:image/png;base64,${fig_to_png_base64(classification_summary.plot_classification()[target])}' class="full-width"/>
                     </td>
                 </tr>
                 <tr>
                     <td></td>
-                    <td>RATIOS</td>
+                    <td class="right">
+                        <table>
+                            % for name, value in classification_summary.get_metrics()[target].items():
+                                <tr>
+                                    <td>${name}</td>
+                                    <td>${f"{value:.2f}"}</td>
+                                </tr>
+                            % endfor
+                        </table>
+                    </td>
                 </tr>
             </tbody>
         </table>
