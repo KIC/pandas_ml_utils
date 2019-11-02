@@ -75,7 +75,7 @@ def _make_features_with_cache(df: HashableDataFrame, features_and_labels: 'Featu
 
 def _make_features(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
     start_pc = log_with_time(lambda: log.debug(" make features ..."))
-    feature_lags = features_and_labels.feature_lags
+    feature_lags = [lag for lag in features_and_labels.feature_lags] if features_and_labels.feature_lags is not None else None
     feature_rescaling = features_and_labels.feature_rescaling
     features = features_and_labels.features
     lag_smoothing = features_and_labels.lag_smoothing
@@ -107,10 +107,8 @@ def _make_features(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
         df = df.dropna()
 
         # RNN shape need to be [row, time_step, feature]
-        x = np.array([[[df.iloc[row][f'{feat}_{lag}']
-                        for feat in features]
-                       for lag in feature_lags] for row in range(len(df))],
-                     ndmin=3)
+        columns = [[f'{feat}_{lag}' for feat in features] for lag in feature_lags]
+        x = np.array([df[cols].values for cols in columns], ndmin=3).swapaxes(0,1)
     else:
         # return simple 2D arrays
         x = df[features].values

@@ -36,7 +36,8 @@ class FeaturesAndLabels(object):
                         It is possible to train a model for multiple targets and therefore it is also possible to
                         provide a subset of the labels for each target. With this use case one could use multiple binary
                         classifiers to cover more then one target
-        :param feature_lags: an iterable of integers specifying the lags of an AR model
+        :param feature_lags: an iterable of integers specifying the lags of an AR model i.e. [1] for AR(1)
+                             if the un-lagged feature is needed as well provide also lag of 0 like range(1)
         :param feature_rescaling: this allows to rescale features.
                                   in a dict we can define a tuple of column names and a target range
         :param lag_smoothing: very long lags in an AR model can be a bit fuzzy, it is possible to smooth lags i.e. by
