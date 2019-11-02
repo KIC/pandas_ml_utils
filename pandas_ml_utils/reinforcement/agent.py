@@ -22,16 +22,17 @@ def fit_agent(df: pd.DataFrame,
               hyper_parameter_space: Dict = None,
               ) -> Fit:
 
-    model, train, test, index, trails = _fit(df,
-                                             model_provider,
-                                             test_size = test_size,
-                                             cross_validation = cross_validation,
-                                             cache_feature_matrix = cache_feature_matrix,
-                                             test_validate_split_seed = test_validate_split_seed,
-                                             hyper_parameter_space=hyper_parameter_space)
+    model, train, test, index, prediction, trails = _fit(df,
+                                                         model_provider,
+                                                         test_size = test_size,
+                                                         cross_validation = cross_validation,
+                                                         cache_feature_matrix = cache_feature_matrix,
+                                                         test_validate_split_seed = test_validate_split_seed,
+                                                         hyper_parameter_space=hyper_parameter_space)
 
-    train_targets = df[model.features_and_labels.target_columns].loc[index[0]]
-    test_targets = df[model.features_and_labels.target_columns].loc[index[1]]
+    target_columns = [target for target, _ in model.features_and_labels.get_goals().items()]
+    train_targets = df[target_columns].loc[index[0]]
+    test_targets = df[target_columns].loc[index[1]]
 
     training_classification = ReinforcementSummary(train_targets, model.history[0])
     test_classification = ReinforcementSummary(test_targets, model.history[1])
@@ -44,7 +45,8 @@ def backtest_agent(df: pd.DataFrame, model: Model) -> ReinforcementSummary:
     # make training and test data with no 0 test data fraction
     x, _, y, _, index, _, _ = make_training_data(df, features_and_labels, 0, int)
 
-    targets = df[model.features_and_labels.target_columns]
+    target_columns = [target for target, _ in model.features_and_labels.get_goals().items()]
+    targets = df[target_columns]
     back_test_history = model.back_test(index, x, y)
 
     return ReinforcementSummary(targets, back_test_history)

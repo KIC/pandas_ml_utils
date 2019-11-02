@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 
 import numpy as np
 import pandas as pd
@@ -12,14 +12,8 @@ log = logging.getLogger(__name__)
 
 class RegressionSummary(Summary):
 
-    def __init__(self,
-                 y_true: np.ndarray,
-                 y_prediction: np.ndarray,
-                 index: np.ndarray,
-                 loss: pd.Series = None):
-        self.y_true = y_true
-        self.y_prediction = y_prediction.ravel() if len(y_prediction.shape) > 1 else y_prediction
-        self.index = index
-        self.loss = loss
+    def __init__(self, df: pd.DataFrame):
+        self.df = df
 
-    # TODO add some statistics
+    # TODO add some statistics and fix loss is always None at the moment
+    #  mse, r2, ... pvalue?

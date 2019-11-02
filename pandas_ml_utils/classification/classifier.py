@@ -8,6 +8,7 @@ from ..classification.summary import ClassificationSummary
 from ..model.fit import Fit
 from ..model.fitter import _fit, _backtest, _predict
 from ..model.models import Model
+from ..constants import *
 
 log = logging.getLogger(__name__)
 
@@ -21,36 +22,45 @@ def fit_classifier(df: pd.DataFrame,
                    hyper_parameter_space: Dict = None,
                    ) -> Fit:
 
-    model, train, test, index, trails = _fit(df,
-                                             model_provider,
-                                             test_size = test_size,
-                                             cross_validation = cross_validation,
-                                             cache_feature_matrix = cache_feature_matrix,
-                                             test_validate_split_seed = test_validate_split_seed,
-                                             hyper_parameter_space = hyper_parameter_space)
+    # maybe later we can check if only the cut off changed and then skip the fitting step
+    model, (df_train, df_test), trails = _fit(df,
+                                              model_provider,
+                                              test_size = test_size,
+                                              cross_validation = cross_validation,
+                                              cache_feature_matrix = cache_feature_matrix,
+                                              test_validate_split_seed = test_validate_split_seed,
+                                              hyper_parameter_space = hyper_parameter_space)
 
     # assemble the result objects
-    features_and_labels = model.features_and_labels
     cutoff = model[("probability_cutoff", 0.5)]
 
-    loss = df[features_and_labels.loss_column] if features_and_labels.loss_column is not None else None
-    training_classification = ClassificationSummary(train[1], model.predict(train[0]), index[0], loss, cutoff)
-    test_classification = ClassificationSummary(test[1], model.predict(test[0]), index[1], loss, cutoff)
+    # convert probabilities into classes
+    df_train = _convert_probabilities(df_train, cutoff)
+    df_test = _convert_probabilities(df_test, cutoff)
+
+    training_classification = ClassificationSummary(df_train, cutoff)
+    test_classification = ClassificationSummary(df_test, cutoff)
     return Fit(model, training_classification, test_classification, trails)
 
 
 def backtest_classifier(df: pd.DataFrame, model: Model) -> ClassificationSummary:
-    x, y, y_hat, index = _backtest(df, model)
-
-    features_and_labels = model.features_and_labels
-    loss = df[features_and_labels.loss_column if features_and_labels.loss_column is not None else []]
-    return ClassificationSummary(y, y_hat, index, loss, model[("probability_cutoff", 0.5)])
+    df = _backtest(df, model)
+    df_sumary = _convert_probabilities(df.drop(FEATURE_COLUMN_NAME, axis=1))
+    return ClassificationSummary(df_sumary, model[("probability_cutoff", 0.5)])
 
 
 def classify(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     dff = _predict(df, model, tail)
+    return _convert_probabilities(dff, model[("probability_cutoff", 0.5)])
+
+
+def _convert_probabilities(df: pd.DataFrame, cut_off: float = 0.5) -> pd.DataFrame:
 
     # return result
-    dff["prediction_proba"] = dff["prediction"]
-    dff["prediction"] = dff["prediction_proba"] > model[("probability_cutoff", 0.5)]
-    return dff
+    for column in df.columns:
+        if column[1] == PREDICTION_COLUMN_NAME:
+            probability_column = (column[0], column[1], f"{column[2]}{PROBABILITY_POSTFIX}")
+            df[probability_column] = df[column]
+            df[column] = df[probability_column] > cut_off
+
+    return df.sort_index(axis=1)

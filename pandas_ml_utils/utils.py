@@ -1,3 +1,5 @@
+import io
+import base64
 from time import perf_counter as pc
 from typing import Callable, Dict, Iterable, Any, List, Tuple
 
@@ -19,6 +21,15 @@ def unfold_parameter_space(parameter_space: Dict[str, Iterable], parameters: Dic
                               argument in space]).flat)
     else:
         return parameters
+
+
+def fig_to_png_base64(fig):
+    import matplotlib.pyplot as plt
+    with io.BytesIO() as f:
+        fig.savefig(f, format="png", bbox_inches='tight')
+        image = base64.encodebytes(f.getvalue()).decode("utf-8")
+        plt.close(fig)
+        return image
 
 
 class KFoldBoostRareEvents(KFold):

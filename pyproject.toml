@@ -27,6 +27,7 @@ stock_prices = [
 ]
 jupyther = [
     "vdom",
+    "mako",
     "matplotlib",
     "seaborn"
 ]

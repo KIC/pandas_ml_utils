@@ -4,7 +4,9 @@ from copy import deepcopy
 
 import dill as pickle
 import numpy as np
-from typing import List, Callable, Tuple
+from typing import List, Callable, Tuple, TYPE_CHECKING, Dict
+
+from sklearn.linear_model import LogisticRegression
 
 from .features_and_Labels import FeaturesAndLabels
 from ..train_test_data import reshape_rnn_as_ar
@@ -43,7 +45,12 @@ class Model(object):
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
         pass
 
-    def predict(self, x) -> np.ndarray:
+    def predict(self, x: np.ndarray) -> Dict[str, np.ndarray]:
+        #for target, (loss, labels) in self.features_and_labels.get_goals().items():
+        #    pass
+        return {target: self._predict(x, target) for target in self.features_and_labels.get_goals().keys()}
+
+    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
         pass
 
     # this lets the model itself act as a provider. However we want to use the same Model configuration
@@ -64,9 +71,27 @@ class SkitModel(Model):
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
         # remember fitted model
         self.skit_model = self.skit_model.fit(reshape_rnn_as_ar(x), y)
-        return self.skit_model.loss_
 
-    def predict(self, x):
+        if getattr(self.skit_model, 'loss_', None):
+            return self.skit_model.loss_
+        else:
+            predictions = [self.predict(x)[p] for p in self.features_and_labels.get_goals().keys()]
+            if type(self.skit_model) == LogisticRegression\
+            or type(self.skit_model).__name__.endswith("Classifier")\
+            or type(self.skit_model).__name__.endswith("SVC"):
+                from sklearn.metrics import log_loss
+                try:
+                    return np.mean([log_loss((p) > 0.5, y) for p in predictions])
+                except ValueError as e:
+                    if "contains only one label" in str(e):
+                        return -100
+                    else:
+                        raise e
+            else:
+                from sklearn.metrics import mean_squared_error
+                return np.mean([mean_squared_error(p, y) for p in predictions])
+
+    def _predict(self, x, target) -> np.ndarray:
         if callable(getattr(self.skit_model, 'predict_proba', None)):
             return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
         else:
@@ -87,8 +112,6 @@ class SkitModel(Model):
 class KerasModel(Model):
     # eventually we need to save and load the weights of the keras model individually by using `__getstate__`
     #  `__setstate__` like described here: http://zachmoshe.com/2017/04/03/pickling-keras-models.html
-
-    from typing import TYPE_CHECKING
     if TYPE_CHECKING:
         from keras.models import Model as KModel
 
@@ -103,11 +126,12 @@ class KerasModel(Model):
         self.callbacks = callbacks
         self.history = None
 
-    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> None:
+    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
         self.history = self.keras_model.fit(x, y, validation_data=(x_val, y_val), callbacks=self.callbacks)
+        return min(self.history.history['loss'])
 
-    def predict(self, x) -> np.ndarray:
-        self.keras_model.predict(x)
+    def _predict(self, x, target):
+        return self.keras_model.predict(x)
 
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,
@@ -121,18 +145,39 @@ class KerasModel(Model):
         return new_model
 
 
-# class MultiModel(Model):
-#
-#     def __init__(self, model_provider: Callable[[], Model], features_and_labels: FeaturesAndLabels):
-#         super().__init__(features_and_labels)
-#         self.model_provider = model_provider
-#
-#     def fit(self, x, y, x_val, y_val) -> None:
-#         pass
-#
-#     def predict(self, x) -> np.ndarray:
-#         # we would need to return a prediction for every and each parameters dict in the parameter space
-#         pass
+class MultiModel(Model):
+
+    def __init__(self, model_provider: Model, alpha: float = 0.5):
+        super().__init__(model_provider.features_and_labels)
+        self.model_provider = model_provider
+        self.models = {target: model_provider() for target in self.features_and_labels.get_goals().keys()}
+        self.alpha = alpha
+
+    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
+        goals = self.features_and_labels.get_goals()
+        losses = []
+        for target, (_, labels) in goals.items():
+            index = [self.features_and_labels.labels.index(label) for label in labels]
+            target_y = y[:,index]
+            target_y_val = y_val[:,index]
+            log.info(f"fit model for target {target}")
+            losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, df_index_train, df_index_test))
+
+        losses = np.array(losses)
+        a = self.alpha
+
+        # return weighted loss between mean and max loss
+        return (losses.mean() * (1 - a) + a * losses.max()) if len(losses) > 0 else None
+
+    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
+        return self.models[target]._predict(x, target)
+
+    def __call__(self, *args, **kwargs):
+        new_multi_model = MultiModel(self.model_provider, self.alpha)
+        if kwargs:
+            new_multi_model.models = {target: self.model_provider(**kwargs) for target in self.features_and_labels.get_goals().keys()}
+
+        return new_multi_model
 
 
 class OpenAiGymModel(Model):
@@ -177,7 +222,7 @@ class OpenAiGymModel(Model):
         gym = RowWiseGym((index, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
         return self._forward_gym(gym).get_history()
 
-    def predict(self, x):
+    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
         return [self.agent.forward(x[r]) for r in range(len(x))]
 
     def __call__(self, *args, **kwargs):
