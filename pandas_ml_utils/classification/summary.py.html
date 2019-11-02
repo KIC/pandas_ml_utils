@@ -1,5 +1,16 @@
 <%
     from pandas_ml_utils.utils import fig_to_png_base64
+
+    interpretation = {
+        "FP Ratio": "FN/TP Ratio (should be < 0.5, ideally 0)",
+        "FN Ratio": "FP/TP Ratio (should be < 0.5, ideally 0)",
+        "F1 Score": "F1 Score (should be > 0.5, ideally 1)"
+    }
+    color = {
+        "FP Ratio": ["green", "orange", "red"],
+        "FN Ratio": ["green", "orange", "red"],
+        "F1 Score": ["red","orange", "green"]
+    }
 %>
 
 <%include file="../style.html"/>
@@ -17,13 +28,13 @@
             <tbody>
                 <tr>
                     <td>True</td>
-                    <th>${fmt.format(mx[0,0])}</th>
-                    <th>${fmt.format(mx[0,1])}</th>
+                    <td style="color: green;">${fmt.format(mx[0,0])}</td>
+                    <td style="color: orange;">${fmt.format(mx[0,1])}</td>
                 </tr>
                 <tr>
                     <td>False</td>
-                    <th>${fmt.format(mx[1,0])}</th>
-                    <th>${fmt.format(mx[1,1])}</th>
+                    <td style="color: red;">${fmt.format(mx[1,0])}</td>
+                    <td style="color: grey;">${fmt.format(mx[1,1])}</td>
                 </tr>
             </tbody>
         </table>
@@ -41,7 +52,7 @@
             <tbody>
                 <tr>
                     <td><div class="left">${pretty_confusion_matrix(classification_summary.get_confusion_matrix()[target], "{:.0f}")}</div></td>
-                    <td><div class="right">${pretty_confusion_matrix(classification_summary.get_confusion_loss()[target], "{:.4f}")}</div></td>
+                    <td><div class="right">${pretty_confusion_matrix(classification_summary.get_confusion_loss()[target], "{:.2f}")}</div></td>
                 </tr>
                 <tr>
                     <td colspan="2">
@@ -54,8 +65,8 @@
                         <table>
                             % for name, value in classification_summary.get_metrics()[target].items():
                                 <tr>
-                                    <td>${name}</td>
-                                    <td>${f"{value:.2f}"}</td>
+                                    <td>${interpretation[name]}</td>
+                                    <td style="color: ${color[name][0 if value < 0.33 else 1 if value < 0.66 else 2]};">${f"{value:.2f}"}</td>
                                 </tr>
                             % endfor
                         </table>
