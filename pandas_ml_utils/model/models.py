@@ -105,6 +105,7 @@ class SkitModel(Model):
             return deepcopy(self)
         else:
             new_model = SkitModel(type(self.skit_model)(**kwargs), self.features_and_labels)
+            new_model.min_required_data = self.min_required_data
             new_model.kwargs = deepcopy(self.kwargs)
             return new_model
 
@@ -142,6 +143,7 @@ class KerasModel(Model):
         if kwargs:
             new_model.keras_model = new_model.keras_model_provider(**kwargs)
 
+        new_model.min_required_data = self.min_required_data
         return new_model
 
 
@@ -174,6 +176,8 @@ class MultiModel(Model):
 
     def __call__(self, *args, **kwargs):
         new_multi_model = MultiModel(self.model_provider, self.alpha)
+        new_multi_model.min_required_data = self.min_required_data
+
         if kwargs:
             new_multi_model.models = {target: self.model_provider(**kwargs) for target in self.features_and_labels.get_goals().keys()}
 
@@ -226,6 +230,7 @@ class OpenAiGymModel(Model):
         return [self.agent.forward(x[r]) for r in range(len(x))]
 
     def __call__(self, *args, **kwargs):
+        # new_model.min_required_data = self.min_required_data
         if kwargs:
             raise ValueError("hyper parameter tunig currently not supported for RL")
 

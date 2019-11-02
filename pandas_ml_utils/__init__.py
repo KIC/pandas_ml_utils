@@ -47,3 +47,7 @@ PandasObject.agent_take_action = agent_take_action
 
 # data fetcher
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
+
+__doc__ = """
+
+"""

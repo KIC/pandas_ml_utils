@@ -9,6 +9,12 @@ log = logging.getLogger(__name__)
 
 
 class FeaturesAndLabels(object):
+    """
+    *FeaturesAndLabels* is the main object used to hold the context of your problem. Here you define which columns
+    of your `DataFrame` is a feature, a label or a target. This class also provides some functionality to generate
+    autoregressive features. By default lagging features results in an RNN shaped 3D array (in the format of keras
+    RNN layers input format).
+    """
 
     def __init__(self,
                  features: List[str],
@@ -19,6 +25,25 @@ class FeaturesAndLabels(object):
                  feature_rescaling: Dict[Tuple[str], Tuple[int]] = None,
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
                  **kwargs):
+        """
+        :param features: a list of column names which are used as features for your model
+        :param labels: as list of column names which are uses as labels for your model
+        :param label_type: whether to treat a label as int, float, bool
+        :param targets: let's say we cant to classify whether a house is expensive or not, the _target_ would be the
+                        price level at which everything above or below is considered as expensive or not. This parameter
+                        can be a column name or a constant. targets can be combined with a "loss". To use our example
+                        the loss would be how much the house price deviates in case of a miss-classification.
+                        It is possible to train a model for multiple targets and therefore it is also possible to
+                        provide a subset of the labels for each target. With this use case one could use multiple binary
+                        classifiers to cover more then one target
+        :param feature_lags: an iterable of integers specifying the lags of an AR model
+        :param feature_rescaling: this allows to rescale features.
+                                  in a dict we can define a tuple of column names and a target range
+        :param lag_smoothing: very long lags in an AR model can be a bit fuzzy, it is possible to smooth lags i.e. by
+                              using moving averages. the key is the lag length at which a smoothing function starts to
+                              be applied
+        :param kwargs: maybe you want to pass some extra parameters to a model
+        """
         self.features = features
         self.labels = labels
         self.label_type = label_type
