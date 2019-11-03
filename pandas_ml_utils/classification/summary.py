@@ -102,5 +102,5 @@ class ClassificationSummary(Summary):
         from mako.template import Template
         from mako.lookup import TemplateLookup
 
-        template = Template(filename=f"{__file__}.html", lookup=TemplateLookup(directories=['/']))
+        template = Template(filename=f"{os.path.abspath(__file__)}.html", lookup=TemplateLookup(directories=['/']))
         return template.render(classification_summary=self)

@@ -1,7 +1,7 @@
 from typing import Any
 
 import pandas as pd
-
+import os
 from .models import Model
 from .summary import Summary
 
@@ -54,5 +54,5 @@ class Fit(object):
         from mako.template import Template
         from mako.lookup import TemplateLookup
 
-        template = Template(filename=f"{__file__}.html", lookup=TemplateLookup(directories=['/']))
+        template = Template(filename=f"{os.path.abspath(__file__)}.html", lookup=TemplateLookup(directories=['/']))
         return template.render(fit=self)

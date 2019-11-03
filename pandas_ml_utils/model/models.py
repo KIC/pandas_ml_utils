@@ -19,7 +19,10 @@ log = logging.getLogger(__name__)
 class Model(object):
     """
     Represents a statistical or ML model and holds the necessary information how to interpret the columns of a
-    pandas *DataFrame* ( :class:`.FeaturesAndLabels` )
+    pandas *DataFrame* ( :class:`.FeaturesAndLabels` ). Currently available implementations are
+    * SkitModel - provide any skit learn classifier or regressor
+    * KerasModel - provide a function returning a compiled keras model
+    * MultiModel - provide a model which will copied (and fitted) for each provided target
     """
 
     @staticmethod
@@ -50,29 +53,70 @@ class Model(object):
         self.kwargs = kwargs
 
     def __getitem__(self, item):
+        """
+        returns arguments which are stored in the kwargs filed. By providing a tuple, a default in case of missing
+        key can be specified
+        :param item: name of the item im the kwargs dict or tuple of name, default
+        :return: item or default
+        """
         if isinstance(item, tuple) and len(item) == 2:
             return self.kwargs[item[0]] if item[0] in self.kwargs else item[1]
         else:
             return self.kwargs[item] if item in self.kwargs else None
 
     def save(self, filename: str):
+        """
+        save model to disk
+        :param filename: filename
+        :return: None
+        """
         with open(filename, 'wb') as file:
             pickle.dump(self, file)
 
-    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
+    def fit(self, x: np.ndarray, y: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, df_index_train: list, df_index_test: list) -> float:
+        """
+        function called to fit the model
+        :param x: x
+        :param y: y
+        :param x_val: x validation
+        :param y_val: y validation
+        :param df_index_train: index of x, y values in the DataFrame
+        :param df_index_test: index of x_val, y_val values in the DataFrame
+        :return: loss of the fit
+        """
         pass
 
     def predict(self, x: np.ndarray) -> Dict[str, np.ndarray]:
+        """
+        prediction of the model for each target
+
+        :param x: x
+        :return: prediction of the model for each target
+        """
+
         #for target, (loss, labels) in self.features_and_labels.get_goals().items():
         #    pass
         return {target: self._predict(x, target) for target in self.features_and_labels.get_goals().keys()}
 
     def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
+        """
+        prediction of the model for one target
+
+        :param x: x
+        :param target: target
+        :return: prediction of the model for one target
+        """
         pass
 
-    # this lets the model itself act as a provider. However we want to use the same Model configuration
-    # for different datasets (i.e. as part of MultiModel)
     def __call__(self, *args, **kwargs):
+        """
+        returns a copy pf the model with eventually different configuration (kwargs). This is useful for hyper paramter
+        tuning or for MultiModels
+
+        :param args:
+        :param kwargs: arguments which are eventually provided by hyperopt or by different targets
+        :return:
+        """
         if not kwargs:
             return deepcopy(self)
         else:
