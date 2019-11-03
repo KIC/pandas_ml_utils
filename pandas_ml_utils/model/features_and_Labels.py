@@ -38,7 +38,7 @@ class FeaturesAndLabels(object):
                         classification. Another example would be if you want to classify whether a stock price is
                         above (buy) the current price or not (do nothing). Your target is the today's price and your
                         loss is tomorrows price minus today's price.
-                        Note: Not all :class: models <pandas_ml_utils.Model> support multiple targets
+                        Note: Not all :class:`.Model`s support multiple targets
         :param feature_lags: an iterable of integers specifying the lags of an AR model i.e. [1] for AR(1)
                              if the un-lagged feature is needed as well provide also lag of 0 like range(1)
         :param feature_rescaling: this allows to rescale features.

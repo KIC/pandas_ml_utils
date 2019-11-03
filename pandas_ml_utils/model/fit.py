@@ -29,6 +29,9 @@ class Fit(object):
         else:
             return None
 
+    def save_model(self, filename: str):
+        self.model.save(filename)
+
     def _repr_html_(self):
         from mako.template import Template
         from mako.lookup import TemplateLookup

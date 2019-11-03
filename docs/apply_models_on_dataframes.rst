@@ -1,3 +1,10 @@
 Apply Models to DataFrames
 ============================
-lalaa
+
+main concept ...
+df.
+
+.. autoclass:: pandas_ml_utils.FeaturesAndLabels
+   :members:
+
+   .. automethod:: __init__

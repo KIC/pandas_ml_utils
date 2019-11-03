@@ -5,6 +5,9 @@
 
 Welcome to pandas ml utils's documentation!
 ===========================================
+I was really sick of converting data frames to numpy arrays back and forth just to try out a
+simple logistic regression. So I have started a pandas ml utilities library where
+everything should be reachable from the data frame itself.
 
 .. toctree::
    :maxdepth: 2
@@ -13,9 +16,23 @@ Welcome to pandas ml utils's documentation!
    feature_analysis
    apply_models_on_dataframes
 
+
+General Concept
+===============
+
+.. automodule:: pandas_ml_utils
+   :members:
+
+Check the `component tests <https://github.com/KIC/pandas_ml_utils/blob/master/test/component_test.py>`_
+for some more concrete examples.
+
+
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+**A note of caution**: this is a one man show hobby project in pre-alpha state mainly
+serving my own needs. Any help turnng this into a mainstream library is appreciated!

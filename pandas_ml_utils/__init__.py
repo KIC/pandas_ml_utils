@@ -49,5 +49,29 @@ PandasObject.agent_take_action = agent_take_action
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
 
 __doc__ = """
+The main concept is to extend pandas DataFrame objects such that you can apply any statistical or machine learning
+model directly to the DataFrame.
 
+* feature selection
+   - :code:`df.plot_correlation_matrix()`
+   - :code:`df.filtration()`
+
+* classification
+   - :code:`df.fit_classifier(model)`
+   - :code:`df.classify(model)`
+   - :code:`df.backtest_classifier(model)`
+
+* regression functions
+   - :code:`df.fit_regressor(model)`
+   - :code:`df.backtest_regressor(model)`
+   - :code:`df.regress(model)`
+
+* reinforcement learning
+   - :code:`df.fit_agent(model)`
+   - :code:`df.backtest_agent(model)`
+   - :code:`df.agent_take_action(model)`
+  
+Where a model is composed of a ML :class:`.Model` and a :class:`.FeaturesAndLabels` object. Every `fit_` returns a 
+:class:`.Fit` which provides a :class:`.Summary` and :code:`.save_model('./models/super.model')` method. Models can
+be loaded back via :code:`Model.load('./models/super.model')`.
 """
