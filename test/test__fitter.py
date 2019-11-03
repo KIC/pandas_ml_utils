@@ -89,5 +89,25 @@ class TestFitter(TestCase):
         self.assertEqual(predictions[2].columns.tolist(), [('feature', 'feature', 'a'), ('b', 'target', 'value'), ('b', 'prediction', 'b'), ('b', 'prediction', 'c')])
         self.assertEqual(predictions[3].columns.tolist(), [('feature', 'feature', 'a'), ('b', 'target', 'value'), ('b', 'prediction', 'b'), ('b', 'prediction', 'c') , ('a', 'target', 'value'), ('a', 'prediction', 'b'), ('a', 'prediction', 'c')])
 
+    def test__predict_with_lags(self):
+        """given"""
+        df = pd.DataFrame({"a": [0.5592344, 0.60739384, 0.19994533, 0.56642537, 0.50965677,
+                                 0.168989, 0.94080671, 0.76651769, 0.8403563, 0.4003567,
+                                 0.24295908, 0.50706317, 0.66612371, 0.4020924, 0.21776017,
+                                 0.32559497, 0.12721287, 0.13904584, 0.65887554, 0.08830925],
+                           "b": range(20)})
+
+        fl = FeaturesAndLabels(["a"], ["b"], feature_lags=[0,1,2])
+        provider = SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
+                             features_and_labels=fl)
+
+        """when"""
+        model, summaries, trails = _fit(df, provider, 0)
+
+        """then"""
+        predictions = _predict(df, model)
+        print(predictions[-1].columns.tolist())
+
+        self.assertEqual(model.min_required_data, 3)
 
 
