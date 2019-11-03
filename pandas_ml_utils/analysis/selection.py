@@ -1,22 +1,37 @@
 import logging
 import numpy as np
 import pandas as pd
-from typing import List, Iterable, Union
-# from .features_and_Labels import FeaturesAndLabels
+from typing import List, Iterable, Union, Tuple
 from sklearn.ensemble import ExtraTreesClassifier, ExtraTreesRegressor
-from ..analysis.correlation_analysis import plot_correlation_matrix, _sort_correlation, _plot_heatmap
+from pandas_ml_utils.analysis.correlation_analysis import plot_correlation_matrix, _sort_correlation, _plot_heatmap
 log = logging.getLogger(__name__)
 
 
-def filtration(df: pd.DataFrame,
-               label_column: str = None,
-               ignore: Union[List[str], str] = [],
-               top_features: int = 5,
-               correlation_threshold: float = 0.5,
-               minimum_features: int = 1,
-               lags: Iterable[int] = range(100),
-               show_plots: bool = True,
-               figsize=(12, 10)):
+def feature_selection(df: pd.DataFrame,
+                      label_column: str = None,
+                      ignore: Union[List[str], str] = [],
+                      top_features: int = 5,
+                      correlation_threshold: float = 0.5,
+                      minimum_features: int = 1,
+                      lags: Iterable[int] = range(100),
+                      show_plots: bool = True,
+                      figsize: Tuple[int] = (12, 10)):
+    """
+    The *feature_selection* functionality helps you to analyze your features, filter out highly
+    correlated once and focus on the most important features. This function also applies an
+    auto regression and embeds and ACF plot.
+
+    :param df: the DataFrame which you apply the function on
+    :param label_column: column name of your dependent variable
+    :param ignore: columns you want to ignore
+    :param top_features: number of most important features you want to select
+    :param correlation_threshold: threshold at which correlated features drop out
+    :param minimum_features: number of features you want to keep even if they are highly correlated
+    :param lags: iterable of lags you want to analyze as an AR process
+    :param show_plots: whether to show plots or not
+    :param figsize: size of the polots
+    :return: None
+    """
     df = df.drop(ignore, axis=1).dropna()
     N = len(df)
     correlation_mx = _sort_correlation(df.corr())

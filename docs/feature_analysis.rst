@@ -1,18 +1,20 @@
-Analyze your feature space
+Analyze the Feature Space
 ==========================
+
+.. autofunction:: pandas_ml_utils.feature_selection
 
 .. jupyter-execute::
    :hide-code:
 
    %matplotlib inline
    import sys
-   sys.path.append("/home/kic/source/private/github/include-pycharm-modules")
-
-   from include_pycharm_modules import import_source_folders
-   import_source_folders("/home/kic/projects/tranding_options")
+   sys.path.append("../")
 
 .. jupyter-execute::
 
-   print("hello world")
+   import pandas_ml_utils as pmu
+   import pandas as pd
 
-dsada
+   df = pd.read_csv('_static/burritos.csv')[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall"]]
+   df.feature_selection(label_column="overall")
+

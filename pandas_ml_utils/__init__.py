@@ -7,7 +7,7 @@ from .wrappers.lazy_dataframe import *
 from .datafetching.fetch_yahoo import *
 from .model.models import *
 from .model.features_and_Labels import *
-from .model.selection import *
+from pandas_ml_utils.analysis.selection import *
 from .classification.summary import *
 from .classification.classifier import *
 from .reinforcement.agent import *
@@ -28,7 +28,7 @@ PandasObject.make_training_data = make_training_data
 
 # feature selection
 PandasObject.plot_correlation_matrix = plot_correlation_matrix
-PandasObject.filtration = filtration
+PandasObject.feature_selection = feature_selection
 
 # classification functions
 PandasObject.fit_classifier = fit_classifier

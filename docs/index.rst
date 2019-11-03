@@ -7,7 +7,7 @@ Welcome to pandas ml utils's documentation!
 ===========================================
 I was really sick of converting data frames to numpy arrays back and forth just to try out a
 simple logistic regression. So I have started a pandas ml utilities library where
-everything should be reachable from the data frame itself.
+everything should be reachable as a function from the DataFrame itself.
 
 .. toctree::
    :maxdepth: 2
@@ -35,5 +35,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-**A note of caution**: this is a one man show hobby project in pre-alpha state mainly
+A note of caution
+=================
+This is a one man show hobby project in pre-alpha state mainly
 serving my own needs. Any help turnng this into a mainstream library is appreciated!
