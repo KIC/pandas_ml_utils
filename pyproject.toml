@@ -36,3 +36,8 @@ reinforcement = [
     "keras",
     "keras-rl"
 ]
+development = [
+    "sphinx-autodoc-typehints",
+    "jupyter-sphinx",
+    "shpinx"
+]
