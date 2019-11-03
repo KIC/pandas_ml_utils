@@ -29,13 +29,16 @@ class FeaturesAndLabels(object):
         :param features: a list of column names which are used as features for your model
         :param labels: as list of column names which are uses as labels for your model
         :param label_type: whether to treat a label as int, float, bool
-        :param targets: let's say we cant to classify whether a house is expensive or not, the _target_ would be the
-                        price level at which everything above or below is considered as expensive or not. This parameter
-                        can be a column name or a constant. targets can be combined with a "loss". To use our example
-                        the loss would be how much the house price deviates in case of a miss-classification.
-                        It is possible to train a model for multiple targets and therefore it is also possible to
-                        provide a subset of the labels for each target. With this use case one could use multiple binary
-                        classifiers to cover more then one target
+        :param targets: targets are composed of a _target_, _loss_, _subset of labels_ where any part can be None.
+                        Technically at least one target is needed and defaults to ("target", -1, self.labels) but
+                        multiple targets are possible. The concept around targets is like follows. Let's say you want
+                        to classify whether a printer is jamming the next page or not. Halting and servicing the printer
+                        costs 5'000 while a jam costs 15'000. Your target will be 0 or empty but your loss will be
+                        -5000 for all your type II errors and -15'000 for all your type I errors in case of miss-
+                        classification. Another example would be if you want to classify whether a stock price is
+                        above (buy) the current price or not (do nothing). Your target is the today's price and your
+                        loss is tomorrows price minus today's price.
+                        Note: Not all :class: models <pandas_ml_utils.Model> support multiple targets
         :param feature_lags: an iterable of integers specifying the lags of an AR model i.e. [1] for AR(1)
                              if the un-lagged feature is needed as well provide also lag of 0 like range(1)
         :param feature_rescaling: this allows to rescale features.
@@ -49,10 +52,10 @@ class FeaturesAndLabels(object):
         self.labels = labels
         self.label_type = label_type
         self.targets = targets
-        self.feature_lags = feature_lags
+        self.feature_lags = [lag for lag in feature_lags] if feature_lags is not None else None
         self.feature_rescaling = feature_rescaling
         self.lag_smoothing = lag_smoothing
-        self.len_feature_lags = sum(1 for _ in feature_lags) if feature_lags is not None else 1
+        self.len_feature_lags = sum(1 for _ in self.feature_lags) if self.feature_lags is not None else 1
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
         self.kwargs = kwargs
         log.info(f'number of features, lags and total: {self.len_features()}')
