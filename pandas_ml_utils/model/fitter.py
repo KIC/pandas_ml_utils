@@ -74,7 +74,7 @@ def _fit(df: pd.DataFrame,
     header = __stack_header_prediction(goals) + __stack_header_label(goals) + __stack_header_loss(goals)
 
     df_train = df.loc[index_train]
-    df_prediction_train = __predict(df_train, pd.DataFrame({}, index=index_train), model, x_train) \
+    df_prediction_train = __predict(df_train, model, x_train) \
         .join(__truth(df_train, model)) \
         .join(__loss(df_train, model))
     df_prediction_train.columns = pd.MultiIndex.from_tuples(header)
@@ -82,7 +82,7 @@ def _fit(df: pd.DataFrame,
     df_prediction_test = None
     if x_test is not None:
         df_test = df.loc[index_test]
-        df_prediction_test = __predict(df_test, pd.DataFrame({}, index=index_test), model, x_test) \
+        df_prediction_test = __predict(df_test, model, x_test) \
             .join(__truth(df_test, model)) \
             .join(__loss(df_test, model))
         df_prediction_test.columns = pd.MultiIndex.from_tuples(header)
@@ -149,13 +149,11 @@ def _backtest(df: pd.DataFrame, model: Model) -> pd.DataFrame:
 
     # predict probabilities
     df_source = df.loc[index]
-    df_features = df_source[model.features_and_labels.features]
-    df_backtest = __predict(df_source, pd.DataFrame({}, index=index), model, x) \
+    df_backtest = __predict(df_source, model, x) \
         .join(__truth(df_source, model)) \
-        .join(__loss(df_source, model)) \
-        .join(df_features.add_prefix(f"{FEATURE_COLUMN_NAME}_"))
+        .join(__loss(df_source, model))
 
-    header = __stack_header_prediction(goals) + __stack_header_label(goals) + __stack_header_loss(goals) + __stack_header_feature(features_and_labels.features)
+    header = __stack_header_prediction(goals) + __stack_header_label(goals) + __stack_header_loss(goals)
     df_backtest.columns = pd.MultiIndex.from_tuples(header)
 
     return df_backtest
@@ -176,18 +174,19 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
 
     # predict and return data frame
     dff, x = make_forecast_data(df, features_and_labels)
-    df_prediction = __predict(df, dff, model, x)
+    df_prediction = __predict(df.loc[dff.index], model, x)
 
-    header = __stack_header_feature(features_and_labels.features) + __stack_header_prediction(goals)
+    header = __stack_header_prediction(goals)
     df_prediction.columns = pd.MultiIndex.from_tuples(header)
 
     return df_prediction
 
 
-def __predict(df, df_pred, model, x):
+def __predict(df, model, x):
     # first save target columns and loss column
     goals = model.features_and_labels.get_goals()
     predictions = model.predict(x)
+    df_pred = pd.DataFrame({}, index=df.index)
 
     for target, (_, labels) in goals.items():
         prediction = predictions[target]
@@ -250,7 +249,3 @@ def __stack_header_label(goals):
 
 def __stack_header_loss(goals):
     return [(target or TARGET_COLUMN_NAME, LOSS_COLUMN_NAME, "value") for target, (loss, _) in goals.items()]
-
-
-def __stack_header_feature(columns):
-    return [(FEATURE_COLUMN_NAME, FEATURE_COLUMN_NAME, col) for col in columns]

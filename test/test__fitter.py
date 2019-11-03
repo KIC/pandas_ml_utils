@@ -56,10 +56,10 @@ class TestFitter(TestCase):
 
         """then"""
         # print(backtest_columns[3])
-        self.assertEqual(backtest_columns[0], [('target', 'target', 'value'), ('target', 'prediction', 'value'), ('target', 'label', 'value'), ('target', 'loss', 'value'), ('feature', 'feature', 'a')])
-        self.assertEqual(backtest_columns[1], [('b', 'target', 'value'), ('b', 'prediction', 'value'), ('b', 'label', 'value'), ('b', 'loss', 'value'), ('feature', 'feature', 'a')])
-        self.assertEqual(backtest_columns[2], [('b', 'target', 'value'), ('b', 'prediction', 'b'), ('b', 'prediction', 'c'), ('b', 'label', 'b'), ('b', 'label', 'c'), ('b', 'loss', 'value'), ('feature', 'feature', 'a')])
-        self.assertEqual(backtest_columns[3], [('b', 'target', 'value'), ('b', 'prediction', 'b'), ('b', 'prediction', 'c'), ('a', 'target', 'value'), ('a', 'prediction', 'b'), ('a', 'prediction', 'c'), ('b', 'label', 'b'), ('b', 'label', 'c'), ('a', 'label', 'b'), ('a', 'label', 'c'), ('b', 'loss', 'value'), ('a', 'loss', 'value'), ('feature', 'feature', 'a')])
+        self.assertEqual(backtest_columns[0], [('target', 'target', 'value'), ('target', 'prediction', 'value'), ('target', 'label', 'value'), ('target', 'loss', 'value')])
+        self.assertEqual(backtest_columns[1], [('b', 'target', 'value'), ('b', 'prediction', 'value'), ('b', 'label', 'value'), ('b', 'loss', 'value')])
+        self.assertEqual(backtest_columns[2], [('b', 'target', 'value'), ('b', 'prediction', 'b'), ('b', 'prediction', 'c'), ('b', 'label', 'b'), ('b', 'label', 'c'), ('b', 'loss', 'value')])
+        self.assertEqual(backtest_columns[3], [('b', 'target', 'value'), ('b', 'prediction', 'b'), ('b', 'prediction', 'c'), ('a', 'target', 'value'), ('a', 'prediction', 'b'), ('a', 'prediction', 'c'), ('b', 'label', 'b'), ('b', 'label', 'c'), ('a', 'label', 'b'), ('a', 'label', 'c'), ('b', 'loss', 'value'), ('a', 'loss', 'value')])
         np.testing.assert_array_equal(backtests[3]["b", "label", "b"].values, df["b"].values)
         np.testing.assert_array_equal(backtests[3]["a", "label", "b"].values, df["b"].values)
         np.testing.assert_array_equal(backtests[3]["b", "label", "c"].values, df["c"].values)
@@ -84,10 +84,10 @@ class TestFitter(TestCase):
         """then"""
         predictions = [_predict(df, fm) for fm in fitted_models]
         print(predictions[-1].columns.tolist())
-        self.assertEqual(predictions[0].columns.tolist(), [('feature', 'feature', 'a'), ('target', 'target', 'value'), ('target', 'prediction', 'value')])
-        self.assertEqual(predictions[1].columns.tolist(), [('feature', 'feature', 'a'), ('b', 'target', 'value'), ('b', 'prediction', 'value')])
-        self.assertEqual(predictions[2].columns.tolist(), [('feature', 'feature', 'a'), ('b', 'target', 'value'), ('b', 'prediction', 'b'), ('b', 'prediction', 'c')])
-        self.assertEqual(predictions[3].columns.tolist(), [('feature', 'feature', 'a'), ('b', 'target', 'value'), ('b', 'prediction', 'b'), ('b', 'prediction', 'c') , ('a', 'target', 'value'), ('a', 'prediction', 'b'), ('a', 'prediction', 'c')])
+        self.assertEqual(predictions[0].columns.tolist(), [('target', 'target', 'value'), ('target', 'prediction', 'value')])
+        self.assertEqual(predictions[1].columns.tolist(), [('b', 'target', 'value'), ('b', 'prediction', 'value')])
+        self.assertEqual(predictions[2].columns.tolist(), [('b', 'target', 'value'), ('b', 'prediction', 'b'), ('b', 'prediction', 'c')])
+        self.assertEqual(predictions[3].columns.tolist(), [('b', 'target', 'value'), ('b', 'prediction', 'b'), ('b', 'prediction', 'c') , ('a', 'target', 'value'), ('a', 'prediction', 'b'), ('a', 'prediction', 'c')])
 
     def test__predict_with_lags(self):
         """given"""
@@ -103,11 +103,14 @@ class TestFitter(TestCase):
 
         """when"""
         model, summaries, trails = _fit(df, provider, 0)
+        backtest = _backtest(df, model)
 
         """then"""
         predictions = _predict(df, model)
-        print(predictions[-1].columns.tolist())
-
+        self.assertListEqual(predictions.columns.tolist(), [('target', 'target', 'value'), ('target', 'prediction', 'value')])
         self.assertEqual(model.min_required_data, 3)
 
+        self.assertListEqual(backtest.columns.tolist(), [('target', 'target', 'value'), ('target', 'prediction', 'value'), ('target', 'label', 'value'), ('target', 'loss', 'value')])
+        self.assertEqual(backtest["target", "loss", "value"].sum(), -18)
+        self.assertEqual(backtest["target", "label", "value"].sum(), 189)
 

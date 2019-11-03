@@ -45,7 +45,7 @@ def fit_classifier(df: pd.DataFrame,
 
 def backtest_classifier(df: pd.DataFrame, model: Model) -> ClassificationSummary:
     df = _backtest(df, model)
-    df_sumary = _convert_probabilities(df.drop(FEATURE_COLUMN_NAME, axis=1))
+    df_sumary = _convert_probabilities(df)
     return ClassificationSummary(df_sumary, model[("probability_cutoff", 0.5)])
 
 
