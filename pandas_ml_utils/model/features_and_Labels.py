@@ -57,6 +57,7 @@ class FeaturesAndLabels(object):
         self.lag_smoothing = lag_smoothing
         self.len_feature_lags = sum(1 for _ in self.feature_lags) if self.feature_lags is not None else 1
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
+        self.min_required_samples = (max(feature_lags) + 1) if self.feature_lags is not None else 1
         self.kwargs = kwargs
         log.info(f'number of features, lags and total: {self.len_features()}')
 
