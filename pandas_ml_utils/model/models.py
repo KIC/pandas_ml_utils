@@ -17,9 +17,20 @@ log = logging.getLogger(__name__)
 
 
 class Model(object):
+    """
+    Represents a statistical or ML model and holds the necessary information how to interpret the columns of a
+    pandas *DataFrame* ( :class:`.FeaturesAndLabels` )
+    """
 
     @staticmethod
     def load(filename: str):
+        """
+        Loads a previously saved model from disk. By default `dill <https://pypi.org/project/dill/>`_ is used to
+        serialize / deserialize a model.
+
+        :param filename: filename of the seriaized model
+        :return: returns a deserialized model
+        """
         with open(filename, 'rb') as file:
             model = pickle.load(file)
             if isinstance(model, Model):
@@ -28,6 +39,12 @@ class Model(object):
                 raise ValueError("Deserialized pickle was not a Model!")
 
     def __init__(self, features_and_labels: FeaturesAndLabels, **kwargs):
+        """
+        lalala ...
+
+        :param features_and_labels:
+        :param kwargs:
+        """
         self.features_and_labels = features_and_labels
         self.min_required_data: int = None
         self.kwargs = kwargs

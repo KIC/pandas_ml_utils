@@ -21,7 +21,19 @@ def fit_classifier(df: pd.DataFrame,
                    test_validate_split_seed = 42,
                    hyper_parameter_space: Dict = None,
                    ) -> Fit:
+    """
 
+    :param df: the DataFrame you apply this function to
+    :param model_provider: a callable which provides a new :class:`.Model` instance i.e. for each hyper parameter if
+                           hyper parameter tuning is enforced. Usually all the Model subclasses implement __call__
+                           thus they are a provider of itself
+    :param test_size: the fraction [0, 1] of samples which are used for a test set
+    :param cross_validation: tuple of number of epochs for each fold provider and a cross validation provider
+    :param cache_feature_matrix: whether to cache an expensive generation of feature matrices between fit calls
+    :param test_validate_split_seed: seed if train, test split needs to be reproduceable
+    :param hyper_parameter_space: space of hyper parameters passed as kwargs to your model provider
+    :return: returns a :class:`.Fit` object
+    """
     # maybe later we can check if only the cut off changed and then skip the fitting step
     model, (df_train, df_test), trails = _fit(df,
                                               model_provider,

@@ -15,13 +15,14 @@ everything should be reachable from the data frame itself.
 
    feature_analysis
    apply_models_on_dataframes
+   api
 
 
 General Concept
 ===============
-
 .. automodule:: pandas_ml_utils
    :members:
+   :noindex:
 
 Check the `component tests <https://github.com/KIC/pandas_ml_utils/blob/master/test/component_test.py>`_
 for some more concrete examples.

@@ -7,6 +7,9 @@ from .summary import Summary
 
 
 class Fit(object):
+    """
+    After a model is fitted it gets embedded into this class along with some :class:`.Summary` statistics
+    """
 
     def __init__(self,
                  model: Model,
@@ -19,9 +22,18 @@ class Fit(object):
         self._trails = trails
 
     def values(self):
+        """
+        :return: returns the fitted model, a :class:`.Summary` on the training data, a :class:`.Summary` on the test data
+        """
         return self.model, self.training_summary, self.test_summary
 
     def trails(self):
+        """
+        In case of hyper parameter optimization a trails object as used by `Hyperopt <https://github.com/hyperopt/hyperopt/wiki/FMin>`_
+        is available.
+
+        :return: Trails object
+        """
         if self._trails is not None:
             return pd.DataFrame(self._trails.results)\
                      .drop("parameter", axis=1)\
@@ -30,6 +42,12 @@ class Fit(object):
             return None
 
     def save_model(self, filename: str):
+        """
+        Save the fitted model.
+
+        :param filename: filename
+        :return: None
+        """
         self.model.save(filename)
 
     def _repr_html_(self):

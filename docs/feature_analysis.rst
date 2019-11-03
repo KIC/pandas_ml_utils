@@ -1,9 +1,18 @@
-Analyse your Features
-=====================
+Analyze your feature space
+==========================
 
-lalala
+.. jupyter-execute::
+   :hide-code:
 
-.. autoclass:: pandas_ml_utils.FeaturesAndLabels
-   :members:
+   %matplotlib inline
+   import sys
+   sys.path.append("/home/kic/source/private/github/include-pycharm-modules")
 
-   .. automethod:: __init__
+   from include_pycharm_modules import import_source_folders
+   import_source_folders("/home/kic/projects/tranding_options")
+
+.. jupyter-execute::
+
+   print("hello world")
+
+dsada

@@ -37,7 +37,7 @@ release = '0.0.12'
 extensions = [
     "sphinx.ext.autodoc",
     'sphinx_autodoc_typehints',
-    'nbsphinx'
+    'jupyter_sphinx.execute'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

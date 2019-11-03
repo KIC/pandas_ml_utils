@@ -29,7 +29,7 @@ class FeaturesAndLabels(object):
         :param features: a list of column names which are used as features for your model
         :param labels: as list of column names which are uses as labels for your model
         :param label_type: whether to treat a label as int, float, bool
-        :param targets: targets are composed of a _target_, _loss_, _subset of labels_ where any part can be None.
+        :param targets: targets are composed of a *target*, *loss*, *subset of labels* where any part can be None.
                         Technically at least one target is needed and defaults to ("target", -1, self.labels) but
                         multiple targets are possible. The concept around targets is like follows. Let's say you want
                         to classify whether a printer is jamming the next page or not. Halting and servicing the printer
@@ -38,7 +38,7 @@ class FeaturesAndLabels(object):
                         classification. Another example would be if you want to classify whether a stock price is
                         above (buy) the current price or not (do nothing). Your target is the today's price and your
                         loss is tomorrows price minus today's price.
-                        Note: Not all :class:`.Model`s support multiple targets
+                        Note: Not all :class:`.Model` support multiple targets
         :param feature_lags: an iterable of integers specifying the lags of an AR model i.e. [1] for AR(1)
                              if the un-lagged feature is needed as well provide also lag of 0 like range(1)
         :param feature_rescaling: this allows to rescale features.
