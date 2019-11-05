@@ -54,7 +54,7 @@ model directly to the DataFrame.
 
 * feature selection
    - :code:`df.plot_correlation_matrix()`
-   - :code:`df.filtration()`
+   - :code:`df.feature_selection()`
 
 * classification
    - :code:`df.fit_classifier(model)`
