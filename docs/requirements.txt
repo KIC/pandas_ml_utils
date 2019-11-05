@@ -1,4 +1,5 @@
 sphinx-autodoc-typehints
 jupyter-sphinx
+cachetools
 pandas
 numpy
