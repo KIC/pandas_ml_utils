@@ -1,5 +1,5 @@
 """Augment pandas DataFrame with methods for machine learning"""
-__version__ = '0.0.12'
+__version__ = '0.0.13'
 
 from .pandas_utils_extension import *
 from .analysis.correlation_analysis import *
