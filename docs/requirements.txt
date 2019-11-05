@@ -1,2 +1,4 @@
 sphinx-autodoc-typehints
 jupyter-sphinx
+pandas
+numpy
