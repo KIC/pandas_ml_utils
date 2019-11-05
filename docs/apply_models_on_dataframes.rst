@@ -36,5 +36,6 @@ From here you can save and reuse it like so:
    fit.save_model('/tmp/burrito.model')
    df.classify(pmu.Model.load('/tmp/burrito.model')).tail()
 
-That is basically all you need to know. The same patterns are applied to regressors or
+
+This is basically all you need to know. The same patterns are applied to regressors or
 agents for reinforcement learning.

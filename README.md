@@ -1,5 +1,6 @@
 ![PyPI - Downloads](https://img.shields.io/pypi/dw/pandas-ml-utils)
-
+![pandas-ml-utils.readthedocs.io](https://readthedocs.org/projects/pandas-ml-utils/badge/?version=latest&style=plastic
+)
 # Pandas ML Utils
 
 Pandas ML Utils is intended to help you through your journey of applying statistical oder machine learning models to data while you never need to leave the world of pandas.
