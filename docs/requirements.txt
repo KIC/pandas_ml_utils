@@ -1,5 +1,12 @@
 sphinx-autodoc-typehints
 jupyter-sphinx
+sortedcontainers
+scikit-learn
+statsmodels
+matplotlib
 cachetools
+seaborn
 pandas
 numpy
+mako
+dill
