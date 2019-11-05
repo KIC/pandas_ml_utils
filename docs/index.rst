@@ -9,6 +9,13 @@ I was really sick of converting data frames to numpy arrays back and forth just 
 simple logistic regression. So I have started a pandas ml utilities library where
 everything should be reachable as a function from the DataFrame itself.
 
+Install:
+
+.. code-block:: bash
+
+   pip install pandas-ml-utils
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

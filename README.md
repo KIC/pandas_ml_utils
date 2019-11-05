@@ -4,9 +4,15 @@
 
 Pandas ML Utils is intended to help you through your journey of applying statistical oder machine learning models to data while you never need to leave the world of pandas.
 
+1. install
 1. analyze your features
 1. find a model
 1. save and reuse your model
+
+## Install
+```bash
+pip install pandas-ml-utils
+```
 
 ## Analyze your Features
 

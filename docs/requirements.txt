@@ -1,0 +1,3 @@
+sphinx-autodoc-typehints
+jupyter-sphinx
+shpinx
