@@ -10,6 +10,8 @@ Pandas ML Utils is intended to help you through your journey of applying statist
 1. find a model
 1. save and reuse your model
 
+Or [read the docs](https://pandas-ml-utils.readthedocs.io/en/latest/).
+
 ## Install
 ```bash
 pip install pandas-ml-utils
@@ -154,19 +156,6 @@ df.classify(pmu.Model.load("/tmp/burrito.model")).tail()
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead tr th {
-        text-align: left;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr>
