@@ -1,223 +1,228 @@
 ![PyPI - Downloads](https://img.shields.io/pypi/dw/pandas-ml-utils)
 
-# pandas-ml-utils
+# Pandas ML Utils
 
-**A note of caution**: this is a one man show hobby project in pre-alpha state mainly 
- serving my own needs. Be my guest and use it or extend it. 
+Pandas ML Utils is intended to help you through your journey of applying statistical oder machine learning models to data while you never need to leave the world of pandas.
 
-I was really sick of converting data frames to numpy arrays back and forth just to try out a 
- simple logistic regression. So I have started a pandas ml utilities library where
- everything should be reachable from the data frame itself. Something along the lines
- `model = df.fit(my_super_model)`
+1. install
+1. analyze your features
+1. find a model
+1. save and reuse your model
 
-Provided utils include:
- * basic feature analysis / selection
- * fit various kinds of models directly from data frames 
-    * fit binary classifiers 
-    * fit regression models
-    * fit reinforcement agents
- * develop, save, load and deploy models
- 
-Check the [component tests](https://github.com/KIC/pandas_ml_utils/blob/master/test/component_test.py) for some more 
- concrete examples. 
- 
-## Basic Feature Analysis / Selection
-TODO ... write this stuff 
+## Install
+```bash
+pip install pandas-ml-utils
+```
 
-## Fitting Models Directly from DataFrames 
+## Analyze your Features
 
-### Binary Classification
+The feature_selection functionality helps you to analyze your features, filter out highly correlated once and focus on the most important features. This function also applies an auto regression and embeds and ACF plot.
+
+
+```python
+import pandas_ml_utils as pmu
+import pandas as pd
+
+df = pd.read_csv('burritos.csv')[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall"]]
+df.feature_selection(label_column="overall")
+
+```
+
+
+![png](Readme_files/Readme_2_0.png)
+
+
+              Tortilla   overall   Synergy  Fillings      Temp     Salsa  \
+    Tortilla       1.0  0.403981  0.367575  0.345613  0.290702  0.267212   
+    
+                  Meat  Uniformity  Meat:filling      Wrap  
+    Tortilla  0.260194    0.208666      0.207518  0.160831  
+    label is continuous: True
+
+
+
+![png](Readme_files/Readme_2_2.png)
+
+
+    Feature ranking:
+    ['Synergy', 'Meat', 'Fillings', 'Meat:filling', 'Wrap', 'Tortilla', 'Uniformity', 'Salsa', 'Temp']
+    
+    TOP 5 features
+             Synergy      Meat  Fillings  Meat:filling     Wrap
+    Synergy      1.0  0.601545  0.663328      0.428505  0.08685
+    
+    filtered features with correlation < 0.5
+               Synergy  Meat:filling      Wrap
+    Tortilla  0.367575      0.207518  0.160831
+
+
+
+![png](Readme_files/Readme_2_4.png)
+
+
+
+![png](Readme_files/Readme_2_5.png)
+
+
+    Synergy       1.000000
+    Synergy_0     1.000000
+    Synergy_1     0.147495
+    Synergy_56    0.128449
+    Synergy_78    0.119272
+    Synergy_55    0.111832
+    Synergy_79    0.086466
+    Synergy_47    0.085117
+    Synergy_53    0.084786
+    Synergy_37    0.084312
+    Name: Synergy, dtype: float64
+
+
+
+![png](Readme_files/Readme_2_7.png)
+
+
+    Meat:filling       1.000000
+    Meat:filling_0     1.000000
+    Meat:filling_15    0.185946
+    Meat:filling_35    0.175837
+    Meat:filling_1     0.122546
+    Meat:filling_87    0.118597
+    Meat:filling_33    0.112875
+    Meat:filling_73    0.103090
+    Meat:filling_72    0.103054
+    Meat:filling_71    0.089437
+    Name: Meat:filling, dtype: float64
+
+
+
+![png](Readme_files/Readme_2_9.png)
+
+
+    Wrap       1.000000
+    Wrap_0     1.000000
+    Wrap_63    0.210823
+    Wrap_88    0.189735
+    Wrap_1     0.169132
+    Wrap_87    0.166502
+    Wrap_66    0.146689
+    Wrap_89    0.141822
+    Wrap_74    0.120047
+    Wrap_11    0.115095
+    Name: Wrap, dtype: float64
+    best lags are
+    [(1, '-1.00'), (2, '-0.15'), (88, '-0.10'), (64, '-0.07'), (19, '-0.07'), (89, '-0.06'), (36, '-0.05'), (43, '-0.05'), (16, '-0.05'), (68, '-0.04'), (90, '-0.04'), (87, '-0.04'), (3, '-0.03'), (20, '-0.03'), (59, '-0.03'), (75, '-0.03'), (91, '-0.03'), (57, '-0.03'), (46, '-0.02'), (48, '-0.02'), (54, '-0.02'), (73, '-0.02'), (25, '-0.02'), (79, '-0.02'), (76, '-0.02'), (37, '-0.02'), (71, '-0.02'), (15, '-0.02'), (49, '-0.02'), (12, '-0.02'), (65, '-0.02'), (40, '-0.02'), (24, '-0.02'), (78, '-0.02'), (53, '-0.02'), (8, '-0.02'), (44, '-0.01'), (45, '0.01'), (56, '0.01'), (26, '0.01'), (82, '0.01'), (77, '0.02'), (22, '0.02'), (83, '0.02'), (11, '0.02'), (66, '0.02'), (31, '0.02'), (80, '0.02'), (92, '0.02'), (39, '0.03'), (27, '0.03'), (70, '0.04'), (41, '0.04'), (51, '0.04'), (4, '0.04'), (7, '0.05'), (13, '0.05'), (97, '0.06'), (60, '0.06'), (42, '0.06'), (96, '0.06'), (95, '0.06'), (30, '0.07'), (81, '0.07'), (52, '0.07'), (9, '0.07'), (61, '0.07'), (84, '0.07'), (29, '0.08'), (94, '0.08'), (28, '0.11')]
+
+
+## Find a Model
+
+
 ```python
 import pandas as pd
 import pandas_ml_utils as pmu
-from sklearn.datasets import load_breast_cancer
 from sklearn.linear_model import LogisticRegression
 
-bc = load_breast_cancer()
-
-df = pd.DataFrame(bc.data, columns = bc.feature_names)
-df["label"] = bc.target
-
-
-fit = df.fit_classifier(pmu.SkitModel(LogisticRegression(solver='lbfgs', max_iter=300),
-                                      pmu.FeaturesAndLabels(features=['mean radius', 'mean texture', 'mean perimeter', 'mean area', 
-                                                                      'worst concave points', 'worst fractal dimension'],
-                                                            labels=['label'])),
-                        test_size=0.4)
-``` 
-
-As a result you get a Fit object which holds the fitted model and two ClassificationSummary.
- One for the training data and one for the test Data. In case of the classification was
- executed in a notebook you get a nice table:
-
-![Fit](./images/simple-fit.png)
-
-### Binary Classification with Loss
-As you can see in the above example are two confusion matrices the regular well known one 
- and a "loss". The intend of loss matrix is to tell you if a miss classification has a cost
- i.e. a loss in dollars. 
-```python
-import pandas as pd
-import pandas_ml_utils as pmu
-from sklearn.linear_model import LogisticRegression
-
-df = pd.fetch_yahoo(spy='SPY')
-df["label"] = df["spy_Close"] > df["spy_Open"]
-df["loss"] = (df["spy_Open"] / df["spy_Close"] - 1) * 100
-
+df = pd.read_csv('burritos.csv')
+df["with_fires"] = df["Fries"].apply(lambda x: str(x).lower() == "x")
+df["price"] = df["Cost"] * -1
+df = df[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "with_fires", "price"]].dropna()
 fit = df.fit_classifier(pmu.SkitModel(LogisticRegression(solver='lbfgs'),
-                                      pmu.FeaturesAndLabels(features=['spy_Open', 'spy_Low'],
-                                                            labels=['label'],
-                                                            loss_column='loss')),
-                        test_size=0.4)
+                                      pmu.FeaturesAndLabels(["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling",
+                                                             "Uniformity", "Salsa", "Synergy", "Wrap", "overall"],
+                                                            ["with_fires"],
+                                                            targets=("price", "price"))))
+
+fit
 ```
 
-![Fit with loss](./images/fit-with-loss.png)
-         
-Now you can see the loss in % of dollars of your miss classification. The classification
- probabilities are plotted on the very top of the plot.
+![png](Readme_files/fit_burritos.png)
 
-### Autoregressive Models and RNN Shape
-It is also possible to use the FeaturesAndLabels object to generate autoregressive 
- features. By default lagging features results in an RNN shaped 3D array (in the format
- as Keras likes it). However we can also use SkitModels the features will be implicitly 
- transformed back into a 2D array (by using the `reshape_rnn_as_ar` function).  
+
+## Save and use your model
+
 
 ```python
-import pandas_ml_utils as pmu
-pmu.FeaturesAndLabels(features=['feature'],
-                      labels=['label'],
-                      feature_lags=range(0, 10))
+fit.save_model("/tmp/burrito.model")
 ```
 
-One may like to use very long lags i.e. to catch seasonal effects. Since very long lags
-are a bit fuzzy I usually like to smooth them a bit by using simple averages.
 
 ```python
-import pandas_ml_utils as pmu
-pmu.FeaturesAndLabels(features=['feature'], 
-                      labels=['label'], 
-                      target_columns=['strike'],
-                      loss_column='put_loss',
-                      feature_lags=[0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233],
-                      lag_smoothing={
-                          6: lambda df: df.SMA(3, price=df.columns[0]),
-                          35: lambda df: df.SMA(5, price=df.columns[0])
-                      })
+df = pd.read_csv('burritos.csv')
+df["price"] = df["Cost"] * -1
+df = df[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "price"]].dropna()
+df.classify(pmu.Model.load("/tmp/burrito.model")).tail()
 ```
 
-Every lag from 6 onwards will be smoothed by a 3 period average, every lag from 35 onwards
- with a 5 periods moving average.
- 
-## Cross Validation
-It is possible to apply a cross validation algorithm to the training data (after the train
- test split). In case you only want cross validation pass `test_size=0`
- 
-Note that the current implementation is just fitting the models on all folds one after the
- other without any averaging of the validation loss. However the folds can be looped many
- times which essentially means we invented something like fold epochs. Therefore your fitter
- epochs can be reduced by division of the number of fold epochs.
- 
-```python
-from sklearn.model_selection import KFold
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
-cv = KFold(n_splits = 10)
-fit = df.fit_classifier(...,
-                        SomeModel(epochs=100/10),
-                        test_size=0.1 # keep 10% very unseen
-                        cross_validation=(10, cv.split), 
-                        ...)
-```  
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
 
-## Back-Testing a Model
-todo ... `df.backtest_classifier(...)`
+    .dataframe thead tr th {
+        text-align: left;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="3" halign="left">price</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th colspan="2" halign="left">prediction</th>
+      <th>target</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>value</th>
+      <th>value_proba</th>
+      <th>value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>380</th>
+      <td>False</td>
+      <td>0.251311</td>
+      <td>-6.85</td>
+    </tr>
+    <tr>
+      <th>381</th>
+      <td>False</td>
+      <td>0.328659</td>
+      <td>-6.85</td>
+    </tr>
+    <tr>
+      <th>382</th>
+      <td>False</td>
+      <td>0.064751</td>
+      <td>-11.50</td>
+    </tr>
+    <tr>
+      <th>383</th>
+      <td>False</td>
+      <td>0.428745</td>
+      <td>-7.89</td>
+    </tr>
+    <tr>
+      <th>384</th>
+      <td>False</td>
+      <td>0.265546</td>
+      <td>-7.89</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
-## Save, load reuse a Model
-To save a model you simply call the save method on the model inside of the fit.
-```
-fit.model.save('/tmp/foo.model')
-```
-
-Loading is as simply as calling load on the Model object. You can immediately apply
- the model on the dataframe to get back the features along with the classification
- (which is just another data frame).
-
-```python
-
-import pandas as pd
-import pandas_ml_utils as pmu
-from sklearn.datasets import load_breast_cancer
-
-bc = load_breast_cancer()
-df = pd.DataFrame(bc.data, columns = bc.feature_names)
-
-df.classify(pmu.Model.load('/tmp/foo.model')).tail()
-```  
-
-NOTE If you have a target level for your binary classifier like all houses cheaper then
- 50k then you can define this target level to the FeaturesAndLabels object likes so:
- `FeaturesAndLabels(target_columns=['House Price'])`. This target column is simply fed 
- through to the classified dataframe as target columns.
- 
-### Fitting other models then classifiers
-#### Regression Models
-For non classification tasks use the regressor functions the same way as the classifier 
- functions.
- 
-* df.fit_regressor(...)
-* df.backtest_regressor(...)
-* df.regress(...)
- 
-#### Reinforcement Learning
-For reinforcement learning there is a keras-rl backend implemented. The API is the same
- as for the others like classification or regression.
- 
-* df.fit_agent(...)
-* df.backtest_agent(...)
-* df.agent_take_action(...)
-
-However the model is a bit more complicated as the regular SkitModel, you might take a look
- at the [component tests](https://github.com/KIC/pandas_ml_utils/blob/master/test/component_test.py). 
-  
-### Other utility objects
-#### LazyDataFrame
-Very often I need to do a lot of feature engineering. And very often I do not want to
- treat averages or other engineering methods as part of the data(frame). For this use
- case I have added a LazyDataFrame object wrapping around a regular DataFrame where
- some columns will always be calculated on the fly.
- 
-Here is an example:
-```python
-import pandas_ml_utils as pmu
-import pandas as pd
-import talib
-
-df = pd.fetch_yahoo(spy='SPY')
-ldf = pmu.LazyDataFrame(df,
-                        rolling_stddev=lambda x: talib.STDDEV(x['spy_Close'], timeperiod=30) / 100)
-
-ldf["rolling_stddev"].tail()  # Will always be calculated only the fly    
-```   
-
-#### HashableDataFrame
-The hashable dataframe is nothing which should be used directly. However this is just a 
-hack to allow caching of feature matrices. With heavy usage of LazyDataFrame and heavily 
-lagging of features for AR models the training data preparation might take a long time.
-To shorten this time i.e. for hyper parameter tuning a cache is very helpful (but keep
-in mind this is still kind of a hack).
-
-to set the cache size (default is 1) set the following environment variable before import
- `os.environ["CACHE_FEATUES_AND_LABELS"] = "2"`. And to use the cache simply pass the 
- argument to the fit_classifier method like so:`df.fit_classifier(..., cache_feature_matrix=True)`
- 
-#### MultiModel
-TODO describe multi models ... 
 
 ## TODO
-* multi model is just another implementation of model
-* `_make_features` needs to be tuned for lagged features it is just too slow
+* allow multiple class for classification 
 * replace hard coded summary objects by a summary provider function 
-* add documentation ([read the docs](https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html))
 * add more tests
 * add Proximity https://stats.stackexchange.com/questions/270201/pooling-levels-of-categorical-variables-for-regression-trees/275867#275867
 
@@ -232,6 +237,13 @@ TODO describe multi models ...
 
 ## Change Log
 ### 0.0.12
+* added sphinx documentation
+* added multi model as regular model which has quite a big impact
+  * features and labels signature changed
+  * multiple targets has now the consequence that a lot of things a returning a dict now
+  * everything is using now DataFrames instead of arrays after plain model invoke
+* added some tests
+* fixed some bugs a long the way
 
 ### 0.0.11
 * Added Hyper parameter tuning 
@@ -241,8 +253,7 @@ from hyperopt import hp
 fit = df.fit_classifier(
             pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
                           pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
-                                                target_columns=["vix_Open"],
-                                                loss_column="spy_Volume")),
+                                                targets=("vix_Open", "spy_Volume"))),
             test_size=0.4,
             test_validate_split_seed=42,
             hyper_parameter_space={'alpha': hp.choice('alpha', [0.001, 0.1]), 'early_stopping': True, 'max_iter': 50,

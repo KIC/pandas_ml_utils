@@ -7,7 +7,7 @@ from .wrappers.lazy_dataframe import *
 from .datafetching.fetch_yahoo import *
 from .model.models import *
 from .model.features_and_Labels import *
-from .model.selection import *
+from pandas_ml_utils.analysis.selection import *
 from .classification.summary import *
 from .classification.classifier import *
 from .reinforcement.agent import *
@@ -28,7 +28,7 @@ PandasObject.make_training_data = make_training_data
 
 # feature selection
 PandasObject.plot_correlation_matrix = plot_correlation_matrix
-PandasObject.filtration = filtration
+PandasObject.feature_selection = feature_selection
 
 # classification functions
 PandasObject.fit_classifier = fit_classifier
@@ -47,3 +47,31 @@ PandasObject.agent_take_action = agent_take_action
 
 # data fetcher
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
+
+__doc__ = """
+The main concept is to extend pandas DataFrame objects such that you can apply any statistical or machine learning
+model directly to the DataFrame.
+
+* feature selection
+   - :code:`df.plot_correlation_matrix()`
+   - :code:`df.filtration()`
+
+* classification
+   - :code:`df.fit_classifier(model)`
+   - :code:`df.classify(model)`
+   - :code:`df.backtest_classifier(model)`
+
+* regression functions
+   - :code:`df.fit_regressor(model)`
+   - :code:`df.backtest_regressor(model)`
+   - :code:`df.regress(model)`
+
+* reinforcement learning
+   - :code:`df.fit_agent(model)`
+   - :code:`df.backtest_agent(model)`
+   - :code:`df.agent_take_action(model)`
+  
+Where a model is composed of a ML :class:`.Model` and a :class:`.FeaturesAndLabels` object. Every `fit_` returns a 
+:class:`.Fit` which provides a :class:`.Summary` and a :code:`.save_model('./models/super.model')` method. Models can
+be loaded back via :code:`Model.load('./models/super.model')`.
+"""

@@ -198,6 +198,34 @@ class TestTrainTestData(unittest.TestCase):
         print(x_train)
         np.testing.assert_array_almost_equal(x_train[0], np.array([-1, 0.1, 1]))
 
+    def test_lagging(self):
+        df = pd.DataFrame({"featureA": [0.5592344 , 0.60739384, 0.19994533, 0.56642537, 0.50965677,
+                                        0.168989  , 0.94080671, 0.76651769, 0.8403563 , 0.4003567 ,
+                                        0.24295908, 0.50706317, 0.66612371, 0.4020924 , 0.21776017,
+                                        0.32559497, 0.12721287, 0.13904584, 0.65887554, 0.08830925],
+                           "featureC": [0.43700002, 0.36804634, 0.37568437, 0.34575936, 0.45747071,
+                                        0.49749949, 0.09991126, 0.64710179, 0.93479635, 0.40651901,
+                                        0.22387503, 0.18458239, 0.0271485 , 0.68792433, 0.69638729,
+                                        0.60715125, 0.52557556, 0.88319929, 0.34808869, 0.50250121],
+                           "featureB": [0.6784767 , 0.184668  , 0.02049038, 0.92983967, 0.67628553,
+                                        0.71373065, 0.30594832, 0.63038278, 0.78284284, 0.84566334,
+                                        0.00558188, 0.15819783, 0.09404578, 0.34460875, 0.69161826,
+                                        0.41633249, 0.51130681, 0.66703763, 0.74652599, 0.26560367],
+                           "labelA": range(20)})
+
+        fl = pdu.FeaturesAndLabels(["featureA", "featureB", "featureC"],
+                                   ["labelA"],
+                                   feature_lags=[0,1,2,3,4])
+
+        x_train, x_test, y_train, y_test, _, _, _ = df.make_training_data(fl, test_size=0)
+
+        self.assertEqual(len(x_train), len(df) - 4)
+        np.testing.assert_array_equal(x_train[0,:,0], df["featureA"].values[[4,3,2,1,0]])
+        np.testing.assert_array_equal(x_train[-1,:,0], df["featureA"].values[[-1, -2, -3, -4, -5]])
+        np.testing.assert_array_equal(x_train[0,:,1], df["featureB"].values[[4,3,2,1,0]])
+        np.testing.assert_array_equal(x_train[-1,:,1], df["featureB"].values[[-1, -2, -3, -4, -5]])
+        np.testing.assert_array_equal(x_train[0,:,2], df["featureC"].values[[4,3,2,1,0]])
+        np.testing.assert_array_equal(x_train[-1,:,2], df["featureC"].values[[-1, -2, -3, -4, -5]])
 
 if __name__ == '__main__':
     unittest.main()

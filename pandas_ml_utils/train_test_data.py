@@ -7,7 +7,7 @@ import logging
 
 from time import perf_counter as pc
 from sortedcontainers import SortedDict
-from typing import Type, Callable
+from typing import Type, Callable, Tuple
 
 from pandas_ml_utils.wrappers.hashable_dataframe import HashableDataFrame
 from pandas_ml_utils.utils import log_with_time, ReScaler
@@ -26,7 +26,7 @@ def make_training_data(df: pd.DataFrame,
                        test_size: float = 0.4,
                        label_type: Type = int,
                        seed: int = 42,
-                       cache: bool = False):
+                       cache: bool = False) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list, int]:
     # only import if this method is needed
     from sklearn.model_selection import train_test_split
 
@@ -107,10 +107,8 @@ def _make_features(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
         df = df.dropna()
 
         # RNN shape need to be [row, time_step, feature]
-        x = np.array([[[df.iloc[row][f'{feat}_{lag}']
-                        for feat in features]
-                       for lag in feature_lags] for row in range(len(df))],
-                     ndmin=3)
+        columns = features_and_labels.get_feature_names()
+        x = np.array([df[cols].values for cols in columns], ndmin=3).swapaxes(0, 1)
     else:
         # return simple 2D arrays
         x = df[features].values

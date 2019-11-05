@@ -39,7 +39,7 @@ def fit_regressor(df: pd.DataFrame,
 
 def backtest_regressor(df: pd.DataFrame, model: Model) -> None:
     df = _backtest(df, model)
-    return RegressionSummary(df.drop(FEATURE_COLUMN_NAME, axis=1))
+    return RegressionSummary(df)
 
 
 def regress(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:

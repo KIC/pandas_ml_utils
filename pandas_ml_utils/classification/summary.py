@@ -77,7 +77,7 @@ class ClassificationSummary(Summary):
 
             scatt = sns.scatterplot(ax=ax1,
                                     x=range(len(df)),
-                                    y=df[(LOSS_COLUMN_NAME, "value")],
+                                    y=df[(LOSS_COLUMN_NAME, "value")].clip(upper=0),
                                     size=df[(LOSS_COLUMN_NAME, "value")] * -1,
                                     hue=color,
                                     palette=palette)
@@ -102,5 +102,5 @@ class ClassificationSummary(Summary):
         from mako.template import Template
         from mako.lookup import TemplateLookup
 
-        template = Template(filename=f"{__file__}.html", lookup=TemplateLookup(directories=['/']))
+        template = Template(filename=f"{os.path.abspath(__file__)}.html", lookup=TemplateLookup(directories=['/']))
         return template.render(classification_summary=self)

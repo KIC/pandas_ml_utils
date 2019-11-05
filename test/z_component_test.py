@@ -32,6 +32,24 @@ class ComponentTest(unittest.TestCase):
 
         self.assertListEqual(corr.columns.tolist(), ["spy_Open", "spy_High", "spy_Close", "spy_Low"])
 
+    def test_make_train_data(self):
+        df = pd.read_csv(f'{__name__}.csv', index_col='Date')
+        df['label'] = df["spy_Close"] > df["spy_Open"]
+
+        x_train, x_test, y_train, y_test, index_train, index_test, min_required_data = \
+            df.make_training_data(pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'], feature_lags=[0, 1, 2]))
+
+        self.assertEqual(x_train.shape, (4022, 3, 1))
+        self.assertEqual(y_train.shape, (4022, ))
+
+        self.assertEqual(x_test.shape, (2682, 3, 1))
+        self.assertEqual(y_test.shape, (2682,))
+
+        self.assertEqual(len(x_train), len(index_train))
+        self.assertEqual(len(x_test), len(index_test))
+
+        self.assertEqual(min_required_data, 3)
+
     def test_fit_classifier_full(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')
         df['label'] = df["spy_Close"] > df["spy_Open"]
@@ -63,7 +81,7 @@ class ComponentTest(unittest.TestCase):
         self.assertTrue(classified_df["vix_Open", "prediction", "value_proba"].min() > 0)
         self.assertTrue(classified_df["vix_Open", "prediction", "value_proba"].max() < 1)
         self.assertListEqual(classified_df.columns.tolist(),
-                             [('feature', 'feature', 'vix_Close'), ('vix_Open', 'prediction', 'value'), ('vix_Open', 'prediction', 'value_proba'), ('vix_Open', 'target', 'value')])
+                             [('vix_Open', 'prediction', 'value'), ('vix_Open', 'prediction', 'value_proba'), ('vix_Open', 'target', 'value')])
 
         # classify tail
         fitted_model = fit.model
@@ -85,7 +103,7 @@ class ComponentTest(unittest.TestCase):
         classified_df = df.classify(fitted_model)
 
         self.assertListEqual(classified_df.columns.tolist(),
-                             [('feature', 'feature', 'vix_Close'), ('target', 'prediction', 'value'), ('target', 'prediction', 'value_proba'), ('target', 'target', 'value')])
+                             [('target', 'prediction', 'value'), ('target', 'prediction', 'value_proba'), ('target', 'target', 'value')])
 
     def test_fit_regressor(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date') / 50.
@@ -109,11 +127,7 @@ class ComponentTest(unittest.TestCase):
         regressed = df.regress(fitted_model)
         print(regressed.tail())
         self.assertListEqual(regressed.columns.tolist(),
-                             [('feature', 'feature', 'vix_Open'),
-                              ('feature', 'feature', 'vix_High'),
-                              ('feature', 'feature', 'vix_Low'),
-                              ('feature', 'feature', 'vix_Close'),
-                              ('target', 'target', 'value'),
+                             [('target', 'target', 'value'),
                               ('target', 'prediction', 'vix_Open'),
                               ('target', 'prediction', 'vix_High'),
                               ('target', 'prediction', 'vix_Low'),
