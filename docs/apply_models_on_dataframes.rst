@@ -31,10 +31,10 @@ along the lines.
 
 From here you can save and reuse it like so:
 
-.. code-block:: python
+.. jupyter-execute::
 
-   fit.save_model('burrito.model')
-   df.classify(pmu.Model.load('burrito.model'))
+   fit.save_model('/tmp/burrito.model')
+   df.classify(pmu.Model.load('/tmp/burrito.model')).tail()
 
 That is basically all you need to know. The same patterns are applied to regressors or
 agents for reinforcement learning.

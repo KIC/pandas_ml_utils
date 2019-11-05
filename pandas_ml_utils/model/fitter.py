@@ -212,7 +212,7 @@ def __loss(df, model):
     for target, (loss, _) in goals.items():
         postfix = f"_{target}" if len(goals) > 1 else ""
         if loss in df.columns:
-            df_loss[f"{LOSS_COLUMN_NAME}{postfix}_{loss}"] = df[loss].clip(upper=0)
+            df_loss[f"{LOSS_COLUMN_NAME}{postfix}_{loss}"] = df[loss]
         else:
             df_loss[f"{LOSS_COLUMN_NAME}{postfix}"] = -abs(loss) if loss is not None else -1.0
 

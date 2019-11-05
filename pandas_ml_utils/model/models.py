@@ -130,6 +130,10 @@ class SkitModel(Model):
         self.skit_model = skit_model
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
+        # shape correction if needed
+        y = y.ravel() if len(y.shape) > 1 and y.shape[1] == 1 else y
+        y_val = y_val.ravel() if len(y_val.shape) > 1 and y_val.shape[1] == 1 else y_val
+
         # remember fitted model
         self.skit_model = self.skit_model.fit(reshape_rnn_as_ar(x), y)
 

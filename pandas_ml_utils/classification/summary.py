@@ -77,7 +77,7 @@ class ClassificationSummary(Summary):
 
             scatt = sns.scatterplot(ax=ax1,
                                     x=range(len(df)),
-                                    y=df[(LOSS_COLUMN_NAME, "value")],
+                                    y=df[(LOSS_COLUMN_NAME, "value")].clip(upper=0),
                                     size=df[(LOSS_COLUMN_NAME, "value")] * -1,
                                     hue=color,
                                     palette=palette)
