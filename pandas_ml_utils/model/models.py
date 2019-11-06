@@ -183,16 +183,18 @@ class KerasModel(Model):
     def __init__(self,
                  keras_compiled_model_provider: Callable[[], KModel],
                  features_and_labels: FeaturesAndLabels,
-                 callbacks: List[Callable],
+                 epochs: int = 100,
+                 callbacks: List[Callable] = [],
                  **kwargs):
         super().__init__(features_and_labels, **kwargs)
         self.keras_model_provider = keras_compiled_model_provider
         self.keras_model = keras_compiled_model_provider()
+        self.epochs = epochs
         self.callbacks = callbacks
         self.history = None
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
-        self.history = self.keras_model.fit(x, y, validation_data=(x_val, y_val), callbacks=self.callbacks)
+        self.history = self.keras_model.fit(x, y, epochs=self.epochs, validation_data=(x_val, y_val), callbacks=self.callbacks)
         return min(self.history.history['loss'])
 
     def _predict(self, x, target):
@@ -201,6 +203,7 @@ class KerasModel(Model):
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,
                                self.features_and_labels,
+                               self.epochs,
                                deepcopy(self.callbacks),
                                **deepcopy(self.kwargs))
 

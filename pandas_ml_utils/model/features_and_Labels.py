@@ -61,6 +61,7 @@ class FeaturesAndLabels(object):
         self.kwargs = kwargs
         log.info(f'number of features, lags and total: {self.len_features()}')
 
+    @property
     def shape(self):
         return self.get_feature_names().shape, (self.len_labels(), )
 

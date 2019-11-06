@@ -31,11 +31,19 @@ class ClassificationSummary(Summary):
 
     @lru_cache(maxsize=None)
     def get_metrics(self):
-        return {target: {"FP Ratio": fp_ratio,
-                         "FN Ratio": fn_ratio,
-                         "F1 Score": f1_score(self.df[target, LABEL_COLUMN_NAME, "value"],
-                                              self.df[target, PREDICTION_COLUMN_NAME, "value"])}
-                for target, (fp_ratio, fn_ratio) in self.get_ratios().items()}
+        metrics = {}
+        for target, (fp_ratio, fn_ratio) in self.get_ratios().items():
+            try:
+                f1 = f1_score(self.df[target, LABEL_COLUMN_NAME, "value"],
+                              self.df[target, PREDICTION_COLUMN_NAME, "value"])
+            except:
+                f1 = 0
+
+            metrics['target'] =  {"FP Ratio": fp_ratio,
+                                  "FN Ratio": fn_ratio,
+                                  "F1 Score": f1}
+
+        return metrics
 
     @lru_cache(maxsize=None)
     def get_ratios(self):
