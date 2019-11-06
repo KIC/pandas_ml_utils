@@ -10,5 +10,6 @@ keras-rl
 seaborn
 pandas
 keras
+mako
 dill
 gym
