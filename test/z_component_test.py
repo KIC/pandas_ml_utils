@@ -1,19 +1,17 @@
-import pandas as pd
-import numpy as np
+import logging
 import unittest
 
-from keras.models import Sequential
+import numpy as np
+import pandas as pd
 from keras.layers import Dense, Activation, Flatten
+from keras.models import Sequential
 from keras.optimizers import Adam
 from rl.agents import SARSAAgent
 from rl.policy import MaxBoltzmannQPolicy
 from sklearn.model_selection import KFold
-
-import pandas_ml_utils as pdu
-
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 
-import logging
+import pandas_ml_utils as pdu
 from pandas_ml_utils.analysis.correlation_analysis import _sort_correlation
 
 logger = logging.getLogger()

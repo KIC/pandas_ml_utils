@@ -1,8 +1,9 @@
+import logging
+from unittest import TestCase
+
 import numpy as np
 import pandas as pd
-import logging
 
-from unittest import TestCase
 from pandas_ml_utils.classification.classifier import _convert_probabilities
 
 logger = logging.getLogger()

@@ -1,7 +1,9 @@
 import unittest
-import pandas_ml_utils as pdu
+
 import numpy as np
 import pandas as pd
+
+import pandas_ml_utils as pdu
 
 
 class TestTrainTestData(unittest.TestCase):

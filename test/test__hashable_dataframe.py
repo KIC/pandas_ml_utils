@@ -1,6 +1,7 @@
-import unittest
-import pandas as pd
 import math
+import unittest
+
+import pandas as pd
 
 from pandas_ml_utils.wrappers.hashable_dataframe import HashableDataFrame
 
