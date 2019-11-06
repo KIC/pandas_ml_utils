@@ -113,4 +113,3 @@ class TestFitter(TestCase):
         self.assertListEqual(backtest.columns.tolist(), [('target', 'target', 'value'), ('target', 'prediction', 'value'), ('target', 'label', 'value'), ('target', 'loss', 'value')])
         self.assertEqual(backtest["target", "loss", "value"].sum(), -18)
         self.assertEqual(backtest["target", "label", "value"].sum(), 189)
-

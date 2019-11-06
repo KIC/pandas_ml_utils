@@ -39,9 +39,9 @@ class ClassificationSummary(Summary):
             except:
                 f1 = 0
 
-            metrics['target'] =  {"FP Ratio": fp_ratio,
-                                  "FN Ratio": fn_ratio,
-                                  "F1 Score": f1}
+            metrics[target] = {"FP Ratio": fp_ratio,
+                               "FN Ratio": fn_ratio,
+                               "F1 Score": f1}
 
         return metrics
 

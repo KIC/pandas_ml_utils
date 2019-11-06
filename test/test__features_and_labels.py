@@ -21,7 +21,7 @@ class TestFeaturesAndLabels(TestCase):
         fl = FeaturesAndLabels(["a", "b", "c"], ["d", "e"])
 
         """when"""
-        shape = fl.shape()
+        shape = fl.shape
 
         """then"""
         self.assertEqual(shape, ((3, ), (2, )))
@@ -32,7 +32,7 @@ class TestFeaturesAndLabels(TestCase):
         fl = FeaturesAndLabels(["a", "b", "c"], ["d", "e"], feature_lags=range(4))
 
         """when"""
-        shape = fl.shape()
+        shape = fl.shape
 
         """then"""
         # shape is ((timesteps, features), (labels, )

@@ -40,10 +40,10 @@ class ComponentTest(unittest.TestCase):
             df.make_training_data(pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'], feature_lags=[0, 1, 2]))
 
         self.assertEqual(x_train.shape, (4022, 3, 1))
-        self.assertEqual(y_train.shape, (4022, ))
+        self.assertEqual(y_train.shape, (4022, 1))
 
         self.assertEqual(x_test.shape, (2682, 3, 1))
-        self.assertEqual(y_test.shape, (2682,))
+        self.assertEqual(y_test.shape, (2682, 1))
 
         self.assertEqual(len(x_train), len(index_train))
         self.assertEqual(len(x_test), len(index_test))

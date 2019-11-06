@@ -20,7 +20,7 @@ class TestTrainTestData(unittest.TestCase):
         self.assertIsNone(x_test)
         self.assertIsNone(y_test)
         np.testing.assert_array_almost_equal(x_train, df[["featureA", "featureB"]].values)
-        np.testing.assert_array_almost_equal(y_train, df["labelA"].values)
+        np.testing.assert_array_almost_equal(y_train, df[["labelA"]].values)
 
     def test_make_training_data(self):
         df = pd.DataFrame({"featureA": [1,2,3,4,5],
@@ -33,7 +33,7 @@ class TestTrainTestData(unittest.TestCase):
             test_size=0.5)
 
         np.testing.assert_array_almost_equal(x_test, np.array([[2, 4], [5, 1], [3, 3]]))
-        np.testing.assert_array_almost_equal(y_test, np.array([2, 5, 3]))
+        np.testing.assert_array_almost_equal(y_test, np.array([[2], [5], [3]]))
 
     def test_make_training_data_two_labels(self):
         df = pd.DataFrame({"featureA": [1,2,3,4,5],
@@ -60,7 +60,7 @@ class TestTrainTestData(unittest.TestCase):
 
         # test whole shape and labels
         np.testing.assert_array_almost_equal(x_test, np.array([[[3, 3], [2, 4]], [[5, 1], [4, 2]]]))
-        np.testing.assert_array_almost_equal(y_test, np.array([3, 5]))
+        np.testing.assert_array_almost_equal(y_test, np.array([[3], [5]]))
 
         # all rows, all lags one feature -> feature[0] needs lag of -1
         np.testing.assert_array_almost_equal(x_test[:,:,0], np.array([[3, 2], [5, 4]]))
@@ -85,7 +85,7 @@ class TestTrainTestData(unittest.TestCase):
             test_size=0.5)
 
         np.testing.assert_array_almost_equal(x_test, np.array([[[2], [1]], [[3], [2]]]))
-        np.testing.assert_array_almost_equal(y_test, np.array([3, 4]))
+        np.testing.assert_array_almost_equal(y_test, np.array([[3], [4]]))
 
     def test_make_smoothed_training_data(self):
         df = pd.DataFrame({"featureA": [1,2,3,4,5,6,7,8,9,10],

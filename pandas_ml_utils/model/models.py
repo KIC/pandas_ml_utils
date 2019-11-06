@@ -94,8 +94,6 @@ class Model(object):
         :return: prediction of the model for each target
         """
 
-        #for target, (loss, labels) in self.features_and_labels.get_goals().items():
-        #    pass
         return {target: self._predict(x, target) for target in self.features_and_labels.get_goals().keys()}
 
     def _predict(self, x: np.ndarray, target: str) -> np.ndarray:

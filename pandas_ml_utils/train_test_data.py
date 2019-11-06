@@ -50,16 +50,9 @@ def make_training_data(df: pd.DataFrame,
         train_test_split(x, y, df_new.index, test_size=test_size, random_state=seed) if test_size > 0 \
             else (x, None, y, None, df_new.index, None)
     log.info(f"  splitting ... done in {pc() - start_split_pc: .2f} sec!")
-
-    # ravel one dimensional labels
-    if len(features_and_labels.labels) == 1:
-        y_train = y_train.ravel().astype(label_type)
-        y_test = y_test.ravel().astype(label_type) if y_test is not None else None
-
     log.info(f"make training / test data split ... done in {pc() - start_pc: .2f} sec!")
 
     # return the split
-    #log.debug(f"${len(x_train)}, {len(x_test)}, {len(y_train)}, {len(y_test)}, {len(index_train)}, {len(index_test)}, {min_required_data}")
     return x_train, x_test, y_train, y_test, index_train, index_test, min_required_data
 
 
