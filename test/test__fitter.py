@@ -107,7 +107,7 @@ class TestFitter(TestCase):
         """then"""
         predictions = _predict(df, model)
         self.assertListEqual(predictions.columns.tolist(), [('target', 'target', 'value'), ('target', 'prediction', 'value')])
-        self.assertEqual(model.min_required_data, 3)
+        self.assertEqual(fl.min_required_samples, 3)
 
         self.assertListEqual(backtest.columns.tolist(), [('target', 'target', 'value'), ('target', 'prediction', 'value'), ('target', 'label', 'value'), ('target', 'loss', 'value')])
         self.assertEqual(backtest["target", "loss", "value"].sum(), -18)

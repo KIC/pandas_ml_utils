@@ -35,7 +35,7 @@ def _fit(df: pd.DataFrame,
     goals = features_and_labels.get_goals()
 
     # make training and test data sets
-    x_train, x_test, y_train, y_test, index_train, index_test, min_required_data = \
+    x_train, x_test, y_train, y_test, index_train, index_test = \
         make_training_data(df,
                            features_and_labels,
                            test_size,
@@ -43,8 +43,7 @@ def _fit(df: pd.DataFrame,
                            seed=test_validate_split_seed,
                            cache=cache_feature_matrix)
 
-    _log.info(f"create model (min required data = {min_required_data}")
-    model.min_required_data = min_required_data
+    _log.info(f"create model (min required data = {features_and_labels.min_required_samples}")
 
     # eventually perform a hyper parameter optimization first
     start_performance_count = log_with_time(lambda: _log.info("fit model"))
@@ -145,7 +144,7 @@ def _backtest(df: pd.DataFrame, model: Model) -> pd.DataFrame:
     goals = features_and_labels.get_goals()
 
     # make training and test data with no 0 test data fraction
-    x, _, y, _, index, _, _ = make_training_data(df, features_and_labels, 0, int)
+    x, _, y, _, index, _ = make_training_data(df, features_and_labels, 0, int)
 
     # predict probabilities
     df_source = df.loc[index]
@@ -166,9 +165,9 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     if tail is not None:
         if tail <= 0:
             raise ValueError("tail must be > 0 or None")
-        elif model.min_required_data is not None:
+        elif features_and_labels.min_required_samples is not None:
             # just use the tail for feature engineering
-            df = df[-(tail + (model.min_required_data - 1)):]
+            df = df[-(tail + (features_and_labels.min_required_samples - 1)):]
         else:
             _log.warning("could not determine the minimum required data from the model")
 

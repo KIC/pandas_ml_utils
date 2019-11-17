@@ -26,7 +26,7 @@ def make_training_data(df: pd.DataFrame,
                        test_size: float = 0.4,
                        label_type: Type = int,
                        seed: int = 42,
-                       cache: bool = False) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list, int]:
+                       cache: bool = False) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list]:
     # only import if this method is needed
     from sklearn.model_selection import train_test_split
 
@@ -37,9 +37,6 @@ def make_training_data(df: pd.DataFrame,
     # create features and re-assign data frame with all nan rows dropped
     df_new, x = _make_features_with_cache(HashableDataFrame(df), features_and_labels) if cache else \
                 _make_features(df, features_and_labels)
-
-    # calculate the minimum required data
-    min_required_data = len(df) - len(df_new) + 1
 
     # assign labels
     y = df_new[features_and_labels.labels].values.astype(label_type)
@@ -53,7 +50,7 @@ def make_training_data(df: pd.DataFrame,
     _log.info(f"make training / test data split ... done in {pc() - start_pc: .2f} sec!")
 
     # return the split
-    return x_train, x_test, y_train, y_test, index_train, index_test, min_required_data
+    return x_train, x_test, y_train, y_test, index_train, index_test
 
 
 def make_forecast_data(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
