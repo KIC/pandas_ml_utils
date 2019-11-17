@@ -14,7 +14,7 @@ from ..utils import log_with_time
 from ..model.models import Model
 from ..constants import *
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from hyperopt import Trials
@@ -43,11 +43,11 @@ def _fit(df: pd.DataFrame,
                            seed=test_validate_split_seed,
                            cache=cache_feature_matrix)
 
-    log.info(f"create model (min required data = {min_required_data}")
+    _log.info(f"create model (min required data = {min_required_data}")
     model.min_required_data = min_required_data
 
     # eventually perform a hyper parameter optimization first
-    start_performance_count = log_with_time(lambda: log.info("fit model"))
+    start_performance_count = log_with_time(lambda: _log.info("fit model"))
     if hyper_parameter_space is not None:
         # next isolate hyperopt parameters and constants only used for hyper parameter tuning like early stopping
         constants = {}
@@ -70,7 +70,7 @@ def _fit(df: pd.DataFrame,
     # finally train the model with eventually tuned hyper parameters
     __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
 
-    log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
+    _log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
     header = __stack_header_prediction(goals) + __stack_header_label(goals) + __stack_header_loss(goals)
 
     df_train = df.loc[index_train]
@@ -96,7 +96,7 @@ def __train_loop(model, cross_validation, x_train, y_train, index_train,  x_test
         for fold_epoch in range(cross_validation[0]):
             # cross validation, make sure we re-shuffle every fold_epoch
             for f, (train_idx, test_idx) in enumerate(cross_validation[1](x_train, y_train)):
-                log.info(f'fit fold {f}')
+                _log.info(f'fit fold {f}')
                 loss = model.fit(x_train[train_idx], y_train[train_idx], x_train[test_idx], y_train[test_idx],
                                  index_train[train_idx], index_train[test_idx])
 
@@ -170,7 +170,7 @@ def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
             # just use the tail for feature engineering
             df = df[-(tail + (model.min_required_data - 1)):]
         else:
-            log.warning("could not determine the minimum required data from the model")
+            _log.warning("could not determine the minimum required data from the model")
 
     # predict and return data frame
     dff, x = make_forecast_data(df, features_and_labels)

@@ -7,7 +7,7 @@ import pandas as pd
 
 from ..model.summary import Summary
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 class ReinforcementSummary(Summary):

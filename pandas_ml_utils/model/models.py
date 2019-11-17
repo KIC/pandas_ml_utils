@@ -13,7 +13,7 @@ from ..train_test_data import reshape_rnn_as_ar
 from ..reinforcement.gym import RowWiseGym
 from ..extern.loss_functions import mse
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 class Model(object):
@@ -227,7 +227,7 @@ class MultiModel(Model):
             index = [self.features_and_labels.labels.index(label) for label in labels]
             target_y = y[:,index]
             target_y_val = y_val[:,index]
-            log.info(f"fit model for target {target}")
+            _log.info(f"fit model for target {target}")
             losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, df_index_train, df_index_test))
 
         losses = np.array(losses)

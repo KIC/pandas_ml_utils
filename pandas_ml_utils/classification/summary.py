@@ -11,7 +11,7 @@ from ..constants import *
 from ..model.summary import Summary
 from sklearn.metrics import f1_score
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 class ClassificationSummary(Summary):

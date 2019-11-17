@@ -12,7 +12,7 @@ from ..model.models import Model
 from ..error.functions import mse as _mse
 from ..constants import *
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 def fit_regressor(df: pd.DataFrame,

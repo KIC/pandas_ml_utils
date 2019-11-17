@@ -5,7 +5,7 @@ from typing import Union, Callable, List
 import numpy as np
 import pandas as pd
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 def add_apply(df, **kwargs: Callable[[pd.DataFrame], Union[pd.Series, pd.DataFrame]]):

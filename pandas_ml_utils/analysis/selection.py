@@ -4,7 +4,8 @@ import pandas as pd
 from typing import List, Iterable, Union, Tuple
 from sklearn.ensemble import ExtraTreesClassifier, ExtraTreesRegressor
 from pandas_ml_utils.analysis.correlation_analysis import plot_correlation_matrix, _sort_correlation, _plot_heatmap
-log = logging.getLogger(__name__)
+
+_log = logging.getLogger(__name__)
 
 
 def feature_selection(df: pd.DataFrame,

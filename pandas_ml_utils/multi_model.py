@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 # TODO we want multi model to somehow become a Model
@@ -65,7 +65,7 @@ class MultiModel(object):
                                       cross_validation=cross_validation,
                                       test_validate_split_seed=test_validate_split_seed)
 
-            log.info(f'fit for { {**kwargs}}\n{fit.test_summary.confusion_count()}\n{fit.test_summary.confusion_count()}')
+            _log.info(f'fit for { {**kwargs}}\n{fit.test_summary.confusion_count()}\n{fit.test_summary.confusion_count()}')
             return fit
 
         # TODO there should be a way to generate one ClassificationSummary out of several by summing or averaging
