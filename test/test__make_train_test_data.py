@@ -157,8 +157,8 @@ class TestTrainTestData(unittest.TestCase):
                                     lag_smoothing={2: lambda df: df[["featureA"]] * 2,
                                                    4: lambda df: df[["featureA"]] * 4})
 
-        x_train, x_test, y_train, y_test, index_train, index_test, min = make_training_data(df, ful, cache=True)
-        x_train, x_test, y_train, y_test, index_train, index_test, min = make_training_data(df, ful, cache=True)
+        make_training_data(df, ful, cache=True)
+        make_training_data(df, ful, cache=True)
 
         cache_info = _make_features_with_cache.cache_info()
         print(cache_info)
