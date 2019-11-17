@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from pandas_ml_utils.model.features_and_Labels import FeaturesAndLabels
-
+import talib
 
 class TestFeaturesAndLabels(TestCase):
 
@@ -59,3 +59,23 @@ class TestFeaturesAndLabels(TestCase):
         self.assertEqual(g3, {'a': ('b', ["d", "e"])})
         self.assertEqual(g4, {'a': ('b', ["d"])})
         self.assertEqual(g5, {'a': ('b', ["d"])})
+
+    def test_min_required_samples(self):
+        """when"""
+        fl1 = FeaturesAndLabels(["a", "b", "c"], ["d", "e"],
+                                feature_lags=[1])
+        fl2 = FeaturesAndLabels(["a", "b", "c"], ["d", "e"],
+                                feature_lags=[1],
+                                lag_smoothing={1: lambda df: talib.SMA(df[df.columns[0]], timeperiod=2)})
+
+        """then"""
+        # original | lagged | smoothed
+        # 1        |        |
+        # 2        | 1      |
+        self.assertEqual(fl1.min_required_samples, 1 + 1)
+
+        # original | lagged | smoothed
+        # 1        |        |
+        # 2        | 1      |
+        # 3        | 2      | 1.5
+        self.assertEqual(fl2.min_required_samples, 1 + 1 + (2 -1))

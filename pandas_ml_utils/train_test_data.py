@@ -42,7 +42,7 @@ def make_training_data(df: pd.DataFrame,
     min_required_data = len(df) - len(df_new) + 1
 
     # assign labels
-    y = df_new[features_and_labels.labels].values
+    y = df_new[features_and_labels.labels].values.astype(label_type)
 
     # split training and test data
     start_split_pc = log_with_time(lambda: log.debug("  splitting ..."))
