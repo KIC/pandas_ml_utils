@@ -8,6 +8,7 @@ import numpy as np
 _log = logging.getLogger(__name__)
 _SIMULATED_VECTOR = np.ones(10000)
 
+
 class FeaturesAndLabels(object):
     """
     *FeaturesAndLabels* is the main object used to hold the context of your problem. Here you define which columns
@@ -62,16 +63,39 @@ class FeaturesAndLabels(object):
         _log.info(f'number of features, lags and total: {self.len_features()}')
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[Tuple[int], Tuple[int]]:
+        """
+        Returns the shape of features and labels how they get passed to the :class:`.Model`. If laging is used, then
+        the features shape is in Keras RNN form.
+
+        :return: a tuple of (features.shape, labels.shape)
+        """
+
         return self.get_feature_names().shape, (self.len_labels(), )
 
-    def len_features(self):
+    def len_features(self) -> Tuple[int]:
+        """
+        Returns the length of the defined features, the number of lags used and the total number of all features * lags
+
+        :return: tuple of (#features, #lags, #features * #lags)
+        """
+
         return len(self.features), self.len_feature_lags, self.expanded_feature_length
 
-    def len_labels(self):
+    def len_labels(self) -> int:
+        """
+        Returns the number of labels
+
+        :return:  number of labels
+        """
         return len(self.labels)
 
-    def get_feature_names(self):
+    def get_feature_names(self) -> np.ndarray:
+        """
+        Returns all features names eventually post-fixed with the length of the lag
+
+        :return: numpy array of strings in the shape of the features
+        """
         if self.feature_lags is not None:
             return np.array([[f'{feat}_{lag}'
                               for feat in self.features]
@@ -80,6 +104,11 @@ class FeaturesAndLabels(object):
             return np.array(self.features)
 
     def get_goals(self) -> Dict[str, Tuple[str, List[str]]]:
+        """
+        A Goal is the combination of the target and its loss and labels
+
+        :return: all goals for all given targets
+        """
         # if we can return a dictionary of target -> (loss, labels) where loss will be a column or constant 1
         if isinstance(self.targets, Number) or isinstance(self.targets, str):
             # we have a target value but no loss
