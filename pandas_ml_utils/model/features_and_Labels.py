@@ -24,8 +24,8 @@ def _simulate_smoothing(features, lag_smoothing):
     return smoothing_length + 1
 
 
-# This class should be able to be pickeld and unpickeld without risk of change between versions
-# This means business logic need to be kept ouside of this class!
+# This class should be able to be pickled and unpickled without risk of change between versions
+# This means business logic need to be kept outside of this class!
 class FeaturesAndLabels(object):
     """
     *FeaturesAndLabels* is the main object used to hold the context of your problem. Here you define which columns
