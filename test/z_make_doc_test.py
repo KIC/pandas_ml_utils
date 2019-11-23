@@ -1,10 +1,6 @@
-from unittest import TestCase
-
-import numpy as np
-
-from pandas_ml_utils.utils import unfold_parameter_space, KFoldBoostRareEvents, ReScaler
-import subprocess
 import os
+import subprocess
+from unittest import TestCase
 
 path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs")
 

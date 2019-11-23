@@ -133,7 +133,7 @@ class FeaturesAndLabels(object):
             else:
                 raise ValueError("you need to provide a loss or a tuple[loss, list[str]")
         else:
-            raise ValueError("you need to provide a traget column name oder a dictionary with target column name as key")
+            raise ValueError("you need to provide a target column name oder a dictionary with target column name as key")
 
     def __simulate_smoothing(self):
         simulated_frame = pd.DataFrame({f: _SIMULATED_VECTOR for f in self.features})

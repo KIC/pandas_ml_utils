@@ -37,11 +37,11 @@ def fit_classifier(df: pd.DataFrame,
     # maybe later we can check if only the cut off changed and then skip the fitting step
     model, (df_train, df_test), trails = _fit(df,
                                               model_provider,
-                                              test_size = test_size,
-                                              cross_validation = cross_validation,
-                                              cache_feature_matrix = cache_feature_matrix,
-                                              test_validate_split_seed = test_validate_split_seed,
-                                              hyper_parameter_space = hyper_parameter_space)
+                                              test_size=test_size,
+                                              cross_validation=cross_validation,
+                                              cache_feature_matrix=cache_feature_matrix,
+                                              test_validate_split_seed=test_validate_split_seed,
+                                              hyper_parameter_space=hyper_parameter_space)
 
     # assemble the result objects
     cutoff = model[("probability_cutoff", 0.5)]
