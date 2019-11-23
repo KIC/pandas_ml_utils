@@ -12,18 +12,19 @@ from typing import Type, Callable, Tuple
 from pandas_ml_utils.wrappers.hashable_dataframe import HashableDataFrame
 from pandas_ml_utils.utils.classes import ReScaler
 from pandas_ml_utils.utils.functions import log_with_time
+from pandas_ml_utils.model.features_and_Labels import FeaturesAndLabels
 
 _log = logging.getLogger(__name__)
 
 
 def make_backtest_data(df: pd.DataFrame,
-                       features_and_labels: 'FeaturesAndLabels',
+                       features_and_labels: FeaturesAndLabels,
                        label_type: Type = int):
     return make_training_data(df, features_and_labels, 0, label_type)
 
 
 def make_training_data(df: pd.DataFrame,
-                       features_and_labels: 'FeaturesAndLabels',
+                       features_and_labels: FeaturesAndLabels,
                        test_size: float = 0.4,
                        label_type: Type = int,
                        seed: int = 42,
@@ -54,17 +55,17 @@ def make_training_data(df: pd.DataFrame,
     return x_train, x_test, y_train, y_test, index_train, index_test
 
 
-def make_forecast_data(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
-    return _make_features(df[features_and_labels.features], features_and_labels)
+def make_forecast_data(df: pd.DataFrame, features_and_labels: FeaturesAndLabels):
+    return _make_features(df, features_and_labels, drop_nan_features_only=True)
 
 
 @lru_cache(maxsize=int(os.getenv('CACHE_FEATUES_AND_LABELS', '1')))
-def _make_features_with_cache(df: HashableDataFrame, features_and_labels: 'FeaturesAndLabels'):
+def _make_features_with_cache(df: HashableDataFrame, features_and_labels: FeaturesAndLabels):
     _log.info(f"no cache entry available for {hash(df), hash(features_and_labels)}")
     return _make_features(df, features_and_labels)
 
 
-def _make_features(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
+def _make_features(df: pd.DataFrame, features_and_labels: FeaturesAndLabels, drop_nan_features_only: bool = False):
     start_pc = log_with_time(lambda: _log.debug(" make features ..."))
     feature_lags = features_and_labels.feature_lags
     feature_rescaling = features_and_labels.feature_rescaling
@@ -72,7 +73,7 @@ def _make_features(df: pd.DataFrame, features_and_labels: 'FeaturesAndLabels'):
     lag_smoothing = features_and_labels.lag_smoothing
 
     # drop nan's and copy frame
-    df = df.dropna().copy()
+    df = (df[features] if drop_nan_features_only else df).dropna().copy()
 
     # generate feature matrix
     if feature_lags is not None:
