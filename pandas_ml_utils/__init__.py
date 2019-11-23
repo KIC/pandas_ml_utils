@@ -1,19 +1,22 @@
 """Augment pandas DataFrame with methods for machine learning"""
 __version__ = '0.0.16'
 
+# imports to provide functionality via root import like import pandas_ml_utils as pmu; pmu.XY
 from .pandas_utils_extension import *
-from .analysis.correlation_analysis import *
-from .wrappers.lazy_dataframe import *
-from .datafetching.fetch_yahoo import *
-from .model.models import *
-from .model.features_and_Labels import *
-from pandas_ml_utils.analysis.selection import *
-from .classification.summary import *
-from .classification.classifier import *
-from .reinforcement.agent import *
-from .regression.regressor import *
-from .train_test_data import *
+from .model.models import Model, SkitModel, KerasModel, MultiModel
+from .train_test_data import make_training_data, reshape_rnn_as_ar
+from .wrappers.lazy_dataframe import LazyDataFrame
+
+# imports only used to augment pandas classes
+from .analysis.correlation_analysis import plot_correlation_matrix
+from .datafetching.fetch_yahoo import fetch_yahoo
+from .model.features_and_Labels import FeaturesAndLabels
+from .analysis.selection import feature_selection
+from .classification.classifier import fit_classifier, backtest_classifier, classify
+from .reinforcement.agent import fit_agent, backtest_agent, agent_take_action
+from .regression.regressor import fit_regressor, backtest_regressor, regress
 from pandas.core.base import PandasObject
+import pandas as pd
 
 
 # add functions to pandas

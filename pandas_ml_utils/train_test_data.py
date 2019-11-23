@@ -10,7 +10,8 @@ from sortedcontainers import SortedDict
 from typing import Type, Callable, Tuple
 
 from pandas_ml_utils.wrappers.hashable_dataframe import HashableDataFrame
-from pandas_ml_utils.utils import log_with_time, ReScaler
+from pandas_ml_utils.utils.classes import ReScaler
+from pandas_ml_utils.utils.functions import log_with_time
 
 _log = logging.getLogger(__name__)
 

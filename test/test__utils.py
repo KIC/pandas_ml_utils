@@ -2,7 +2,8 @@ from unittest import TestCase
 
 import numpy as np
 
-from pandas_ml_utils.utils import unfold_parameter_space, KFoldBoostRareEvents, ReScaler
+from pandas_ml_utils.utils.functions import unfold_parameter_space
+from pandas_ml_utils.utils.classes import KFoldBoostRareEvents, ReScaler
 
 
 class TestUtils(TestCase):

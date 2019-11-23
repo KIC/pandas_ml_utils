@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from ..train_test_data import make_training_data, make_forecast_data
-from ..utils import log_with_time
+from ..utils.functions import log_with_time
 from ..model.models import Model
 from ..constants import *
 

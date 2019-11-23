@@ -4,10 +4,7 @@ import traceback
 import cachetools.func
 import pandas as pd
 
-
-def inner_join(df, join: pd.DataFrame, prefix: str = ''):
-    return pd.merge(df, join.add_prefix(prefix), left_index=True, right_index=True, how='inner', sort=True)
-
+from ..pandas_utils_extension import inner_join
 
 @cachetools.func.ttl_cache(maxsize=1, ttl=10 * 60)
 def fetch_yahoo(*args: str, period: str = 'max', multi_index: bool = False, **kwargs: str):
@@ -27,13 +24,13 @@ def fetch_yahoo(*args: str, period: str = 'max', multi_index: bool = False, **kw
                 if df is None:
                     df = df_
                 else:
-                    df = df.inner_join(df_)
+                    df = inner_join(df, df_)
                 pass
             else:
                 if df is None:
                     df = df_.add_prefix(px)
                 else:
-                    df = df.inner_join(df_, prefix=px)
+                    df = inner_join(df, df_, prefix=px)
 
     # print some statistics
     if df is None:

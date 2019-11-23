@@ -2,6 +2,7 @@ import inspect
 import logging
 from typing import List, Callable, Iterable, Dict, Type, Tuple, Union
 from numbers import Number
+from .target_encoder import TargetLabelEncoder
 import pandas as pd
 import numpy as np
 
@@ -21,7 +22,7 @@ class FeaturesAndLabels(object):
                  features: List[str],
                  labels: List[str],
                  label_type:Type = int,
-                 targets: Union[List[str], Tuple[str, str], Dict[str, str], Dict[str, Tuple[str, List[str]]], Dict[str, Tuple[str, str]]] = None,
+                 targets: Union[List[str], Tuple[str, str], Dict[str, str], Dict[str, Tuple[str, List[str]]], Dict[str, Tuple[str, str]], TargetLabelEncoder] = None,
                  feature_lags: Iterable[int] = None,
                  feature_rescaling: Dict[Tuple[str], Tuple[int]] = None,
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
@@ -49,10 +50,10 @@ class FeaturesAndLabels(object):
                               be applied
         :param kwargs: maybe you want to pass some extra parameters to a model
         """
-        self.features = features
-        self.labels = labels
+        self._features = features
+        self._labels = labels
+        self._targets = targets
         self.label_type = label_type
-        self.targets = targets
         self.feature_lags = [lag for lag in feature_lags] if feature_lags is not None else None
         self.feature_rescaling = feature_rescaling
         self.lag_smoothing = lag_smoothing
@@ -61,6 +62,18 @@ class FeaturesAndLabels(object):
         self.min_required_samples = (max(feature_lags) + self.__simulate_smoothing()) if self.feature_lags is not None else 1
         self.kwargs = kwargs
         _log.info(f'number of features, lags and total: {self.len_features()}')
+
+    @property
+    def features(self):
+        return self._features
+
+    @property
+    def labels(self):
+        return self._labels
+
+    @property
+    def targets(self):
+        return self._targets
 
     @property
     def shape(self) -> Tuple[Tuple[int], Tuple[int]]:
@@ -109,8 +122,11 @@ class FeaturesAndLabels(object):
 
         :return: all goals for all given targets
         """
-        # if we can return a dictionary of target -> (loss, labels) where loss will be a column or constant 1
-        if isinstance(self.targets, Number) or isinstance(self.targets, str):
+
+        if isinstance(self.targets, TargetLabelEncoder):
+            # FIXME implement this ...
+            return None
+        elif isinstance(self.targets, Number) or isinstance(self.targets, str):
             # we have a target value but no loss
             return {self.targets: (None, self.labels)}
         elif self.targets is None or len(self.targets) <= 0:
@@ -176,4 +192,5 @@ class FeaturesAndLabels(object):
 
     def __str__(self):
         return self.__repr__()
+
 
