@@ -1,13 +1,12 @@
-import numpy as np
-import pandas as pd
 import logging
-
 from unittest import TestCase
 
+import numpy as np
+import pandas as pd
 from matplotlib.figure import Figure
-from sklearn.metrics import confusion_matrix
-from pandas_ml_utils.classification.summary import ClassificationSummary
+
 from pandas_ml_utils.classification.classifier import _convert_probabilities
+from pandas_ml_utils.classification.summary import ClassificationSummary
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

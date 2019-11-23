@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 def plot_forecast_heatmap(df: pd.DataFrame,

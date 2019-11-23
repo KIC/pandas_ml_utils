@@ -5,7 +5,8 @@ from numbers import Number
 import pandas as pd
 import numpy as np
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
+_SIMULATED_VECTOR = np.ones(10000)
 
 
 class FeaturesAndLabels(object):
@@ -57,21 +58,44 @@ class FeaturesAndLabels(object):
         self.lag_smoothing = lag_smoothing
         self.len_feature_lags = sum(1 for _ in self.feature_lags) if self.feature_lags is not None else 1
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
-        self.min_required_samples = (max(feature_lags) + 1) if self.feature_lags is not None else 1
+        self.min_required_samples = (max(feature_lags) + self.__simulate_smoothing()) if self.feature_lags is not None else 1
         self.kwargs = kwargs
-        log.info(f'number of features, lags and total: {self.len_features()}')
+        _log.info(f'number of features, lags and total: {self.len_features()}')
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[Tuple[int], Tuple[int]]:
+        """
+        Returns the shape of features and labels how they get passed to the :class:`.Model`. If laging is used, then
+        the features shape is in Keras RNN form.
+
+        :return: a tuple of (features.shape, labels.shape)
+        """
+
         return self.get_feature_names().shape, (self.len_labels(), )
 
-    def len_features(self):
+    def len_features(self) -> Tuple[int]:
+        """
+        Returns the length of the defined features, the number of lags used and the total number of all features * lags
+
+        :return: tuple of (#features, #lags, #features * #lags)
+        """
+
         return len(self.features), self.len_feature_lags, self.expanded_feature_length
 
-    def len_labels(self):
+    def len_labels(self) -> int:
+        """
+        Returns the number of labels
+
+        :return:  number of labels
+        """
         return len(self.labels)
 
-    def get_feature_names(self):
+    def get_feature_names(self) -> np.ndarray:
+        """
+        Returns all features names eventually post-fixed with the length of the lag
+
+        :return: numpy array of strings in the shape of the features
+        """
         if self.feature_lags is not None:
             return np.array([[f'{feat}_{lag}'
                               for feat in self.features]
@@ -80,6 +104,11 @@ class FeaturesAndLabels(object):
             return np.array(self.features)
 
     def get_goals(self) -> Dict[str, Tuple[str, List[str]]]:
+        """
+        A Goal is the combination of the target and its loss and labels
+
+        :return: all goals for all given targets
+        """
         # if we can return a dictionary of target -> (loss, labels) where loss will be a column or constant 1
         if isinstance(self.targets, Number) or isinstance(self.targets, str):
             # we have a target value but no loss
@@ -105,6 +134,18 @@ class FeaturesAndLabels(object):
                 raise ValueError("you need to provide a loss or a tuple[loss, list[str]")
         else:
             raise ValueError("you need to provide a traget column name oder a dictionary with target column name as key")
+
+    def __simulate_smoothing(self):
+        simulated_frame = pd.DataFrame({f: _SIMULATED_VECTOR for f in self.features})
+        smoothing_length = 0
+
+        for k, v in (self.lag_smoothing or {}).items():
+            simulated_result = v(simulated_frame)
+            nan_count = np.isnan(simulated_result.values if isinstance(simulated_result, (pd.Series, pd.DataFrame)) else simulated_result).sum()
+            gap_len = len(simulated_frame) - len(simulated_result)
+            smoothing_length = max(smoothing_length, gap_len + nan_count)
+
+        return smoothing_length + 1
 
     def __getitem__(self, item):
         if isinstance(item, tuple) and len(item) == 2:

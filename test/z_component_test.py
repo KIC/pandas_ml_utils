@@ -1,19 +1,17 @@
-import pandas as pd
-import numpy as np
+import logging
 import unittest
 
-from keras.models import Sequential
+import numpy as np
+import pandas as pd
 from keras.layers import Dense, Activation, Flatten
+from keras.models import Sequential
 from keras.optimizers import Adam
 from rl.agents import SARSAAgent
 from rl.policy import MaxBoltzmannQPolicy
 from sklearn.model_selection import KFold
-
-import pandas_ml_utils as pdu
-
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 
-import logging
+import pandas_ml_utils as pdu
 from pandas_ml_utils.analysis.correlation_analysis import _sort_correlation
 
 logger = logging.getLogger()
@@ -36,7 +34,7 @@ class ComponentTest(unittest.TestCase):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')
         df['label'] = df["spy_Close"] > df["spy_Open"]
 
-        x_train, x_test, y_train, y_test, index_train, index_test, min_required_data = \
+        x_train, x_test, y_train, y_test, index_train, index_test = \
             df.make_training_data(pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'], feature_lags=[0, 1, 2]))
 
         self.assertEqual(x_train.shape, (4022, 3, 1))
@@ -47,8 +45,6 @@ class ComponentTest(unittest.TestCase):
 
         self.assertEqual(len(x_train), len(index_train))
         self.assertEqual(len(x_test), len(index_test))
-
-        self.assertEqual(min_required_data, 3)
 
     def test_fit_classifier_full(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')
@@ -62,7 +58,7 @@ class ComponentTest(unittest.TestCase):
                                 test_size=0.4,
                                 test_validate_split_seed=42)
 
-        self.assertEqual(fit.model.min_required_data, 1)
+        self.assertEqual(fit.model.features_and_labels.min_required_samples, 1)
         np.testing.assert_array_equal(fit.training_summary.get_confusion_matrix()['vix_Open'], np.array([[1067,  872], [1002, 1082]]))
         np.testing.assert_array_equal(fit.test_summary.get_confusion_matrix()['vix_Open'], np.array([[744, 586], [655, 698]]))
 
@@ -104,6 +100,26 @@ class ComponentTest(unittest.TestCase):
 
         self.assertListEqual(classified_df.columns.tolist(),
                              [('target', 'prediction', 'value'), ('target', 'prediction', 'value_proba'), ('target', 'target', 'value')])
+
+    def test_fit_classifier_tail(self):
+        import talib
+        df = pd.read_csv(f'{__name__}.csv', index_col='Date')
+        df['label'] = df["spy_Close"] > df["spy_Open"]
+
+        # fit
+        fit = df.fit_classifier(pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001,
+                                                            random_state=42),
+                                              pdu.FeaturesAndLabels(['vix_Close'], ['label'],
+                                                                    feature_lags=[0, 1],
+                                                                    lag_smoothing={1: lambda df: talib.SMA(df["vix_Close"], timeperiod=2)})),
+                                test_size=0.4,
+                                test_validate_split_seed=42)
+
+        fitted_model = fit.model
+        classified_df = df.classify(fitted_model, tail=1)
+
+        self.assertEqual(len(classified_df), 1)
+        self.assertTrue(classified_df[('target', 'prediction', 'value_proba')][-1:].values[0] > 0.0)
 
     def test_fit_regressor(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date') / 50.
@@ -152,7 +168,7 @@ class ComponentTest(unittest.TestCase):
                                 cross_validation = (2, cv.split),
                                 test_validate_split_seed=42)
 
-        self.assertEqual(fit.model.min_required_data, 1)
+        self.assertEqual(fit.model.features_and_labels.min_required_samples, 1)
         np.testing.assert_array_equal(fit.test_summary.get_confusion_matrix()["vix_Open"],
                                       np.array([[257, 169], [1142, 1115]]))
 

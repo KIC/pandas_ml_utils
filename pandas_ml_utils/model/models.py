@@ -13,7 +13,7 @@ from ..train_test_data import reshape_rnn_as_ar
 from ..reinforcement.gym import RowWiseGym
 from ..extern.loss_functions import mse
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 class Model(object):
@@ -49,7 +49,6 @@ class Model(object):
         :param kwargs:
         """
         self.features_and_labels = features_and_labels
-        self.min_required_data: int = None
         self.kwargs = kwargs
 
     def __getitem__(self, item):
@@ -167,7 +166,6 @@ class SkitModel(Model):
             return deepcopy(self)
         else:
             new_model = SkitModel(type(self.skit_model)(**kwargs), self.features_and_labels)
-            new_model.min_required_data = self.min_required_data
             new_model.kwargs = deepcopy(self.kwargs)
             return new_model
 
@@ -208,7 +206,6 @@ class KerasModel(Model):
         if kwargs:
             new_model.keras_model = new_model.keras_model_provider(**kwargs)
 
-        new_model.min_required_data = self.min_required_data
         return new_model
 
 
@@ -227,7 +224,7 @@ class MultiModel(Model):
             index = [self.features_and_labels.labels.index(label) for label in labels]
             target_y = y[:,index]
             target_y_val = y_val[:,index]
-            log.info(f"fit model for target {target}")
+            _log.info(f"fit model for target {target}")
             losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, df_index_train, df_index_test))
 
         losses = np.array(losses)
@@ -241,7 +238,6 @@ class MultiModel(Model):
 
     def __call__(self, *args, **kwargs):
         new_multi_model = MultiModel(self.model_provider, self.alpha)
-        new_multi_model.min_required_data = self.min_required_data
 
         if kwargs:
             new_multi_model.models = {target: self.model_provider(**kwargs) for target in self.features_and_labels.get_goals().keys()}
@@ -295,7 +291,6 @@ class OpenAiGymModel(Model):
         return [self.agent.forward(x[r]) for r in range(len(x))]
 
     def __call__(self, *args, **kwargs):
-        # new_model.min_required_data = self.min_required_data
         if kwargs:
             raise ValueError("hyper parameter tunig currently not supported for RL")
 

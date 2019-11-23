@@ -1,14 +1,13 @@
-import pandas as pd
 from unittest import TestCase
 
-from pandas_ml_utils.model.models import *
-from pandas_ml_utils.model.fitter import _fit, _backtest, _predict
-
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.svm import LinearSVC
 
+from pandas_ml_utils.model.fitter import _fit, _backtest, _predict
+from pandas_ml_utils.model.models import *
 
 df = pd.DataFrame({"a": np.array([0.1, 0.01]), "b": np.array([True, False]), "c": np.array([False, True])})
 
@@ -108,7 +107,7 @@ class TestFitter(TestCase):
         """then"""
         predictions = _predict(df, model)
         self.assertListEqual(predictions.columns.tolist(), [('target', 'target', 'value'), ('target', 'prediction', 'value')])
-        self.assertEqual(model.min_required_data, 3)
+        self.assertEqual(fl.min_required_samples, 3)
 
         self.assertListEqual(backtest.columns.tolist(), [('target', 'target', 'value'), ('target', 'prediction', 'value'), ('target', 'label', 'value'), ('target', 'loss', 'value')])
         self.assertEqual(backtest["target", "loss", "value"].sum(), -18)

@@ -10,7 +10,7 @@ from ..model.fitter import _fit, _backtest, _predict
 from ..model.models import Model
 from ..constants import *
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 def fit_classifier(df: pd.DataFrame,

@@ -1,15 +1,15 @@
-import pandas_ml_utils as pmu
-import pandas as pd
-import numpy as np
 from unittest import TestCase
 
+import numpy as np
+import pandas as pd
 from keras import Sequential
 from keras.layers import Dense
-
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
+
+import pandas_ml_utils as pmu
 
 df = pd.DataFrame({"a": [0.5592344, 0.60739384, 0.19994533, 0.56642537, 0.50965677,
                          0.168989, 0.94080671, 0.76651769, 0.8403563, 0.4003567,

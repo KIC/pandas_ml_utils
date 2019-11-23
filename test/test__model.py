@@ -1,17 +1,15 @@
 from unittest import TestCase
 
+from keras.callbacks import BaseLogger
+from keras.layers import Dense
+from keras.models import Sequential
 from keras.optimizers import Adam, RMSprop
-
-from pandas_ml_utils.model.features_and_Labels import FeaturesAndLabels
-from pandas_ml_utils.model.models import *
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.callbacks import BaseLogger
+from pandas_ml_utils.model.models import *
 
 features_and_labels = FeaturesAndLabels([], [])
 

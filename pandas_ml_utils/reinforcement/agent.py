@@ -10,7 +10,7 @@ from ..model.models import Model
 from ..train_test_data import make_training_data
 from .summary import ReinforcementSummary
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 def fit_agent(df: pd.DataFrame,

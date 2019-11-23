@@ -116,7 +116,9 @@ df.feature_selection(label_column="overall")
     [(1, '-1.00'), (2, '-0.15'), (88, '-0.10'), (64, '-0.07'), (19, '-0.07'), (89, '-0.06'), (36, '-0.05'), (43, '-0.05'), (16, '-0.05'), (68, '-0.04'), (90, '-0.04'), (87, '-0.04'), (3, '-0.03'), (20, '-0.03'), (59, '-0.03'), (75, '-0.03'), (91, '-0.03'), (57, '-0.03'), (46, '-0.02'), (48, '-0.02'), (54, '-0.02'), (73, '-0.02'), (25, '-0.02'), (79, '-0.02'), (76, '-0.02'), (37, '-0.02'), (71, '-0.02'), (15, '-0.02'), (49, '-0.02'), (12, '-0.02'), (65, '-0.02'), (40, '-0.02'), (24, '-0.02'), (78, '-0.02'), (53, '-0.02'), (8, '-0.02'), (44, '-0.01'), (45, '0.01'), (56, '0.01'), (26, '0.01'), (82, '0.01'), (77, '0.02'), (22, '0.02'), (83, '0.02'), (11, '0.02'), (66, '0.02'), (31, '0.02'), (80, '0.02'), (92, '0.02'), (39, '0.03'), (27, '0.03'), (70, '0.04'), (41, '0.04'), (51, '0.04'), (4, '0.04'), (7, '0.05'), (13, '0.05'), (97, '0.06'), (60, '0.06'), (42, '0.06'), (96, '0.06'), (95, '0.06'), (30, '0.07'), (81, '0.07'), (52, '0.07'), (9, '0.07'), (61, '0.07'), (84, '0.07'), (29, '0.08'), (94, '0.08'), (28, '0.11')]
 
 
-## Find a Model
+## Fit a Model
+Once you know your features you can start to try out different models i.e. a very basic
+Logistic Regression. It is also possible to search through a set of hyper parameters. 
 
 
 ```python
@@ -141,7 +143,8 @@ fit
 
 
 ## Save and use your model
-
+Once you are happy with your model you can save it and apply it on any DataFrame which
+serves the needed columns by your features.
 
 ```python
 fit.save_model("/tmp/burrito.model")
@@ -222,8 +225,7 @@ df.classify(pmu.Model.load("/tmp/burrito.model")).tail()
 * for non classification problems you might want to augment the `Summary` 
 * write some tests
 * add different more charts for a better understanding/interpretation of the models
-* implement hyper parameter tuning
-* add feature importance 
+* add whatever you need for yourself and share it with us 
 
 ## Change Log
 ### 0.0.12
