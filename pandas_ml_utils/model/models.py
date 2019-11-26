@@ -4,10 +4,12 @@ from copy import deepcopy
 
 import dill as pickle
 import numpy as np
+import pandas as pd
 from typing import List, Callable, Tuple, TYPE_CHECKING, Dict
 
 from sklearn.linear_model import LogisticRegression
 
+from pandas_ml_utils.model.summary import Summary
 from .features_and_Labels import FeaturesAndLabels
 from ..train_test_data import reshape_rnn_as_ar
 from ..reinforcement.gym import RowWiseGym
@@ -41,15 +43,27 @@ class Model(object):
             else:
                 raise ValueError("Deserialized pickle was not a Model!")
 
-    def __init__(self, features_and_labels: FeaturesAndLabels, **kwargs):
+    def __init__(self,
+                 features_and_labels: FeaturesAndLabels,
+                 classification_summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 **kwargs):
         """
         lalala ...
 
         :param features_and_labels:
         :param kwargs:
         """
-        self.features_and_labels = features_and_labels
+        self._features_and_labels = features_and_labels
+        self._classification_summary_provider = classification_summary_provider
         self.kwargs = kwargs
+
+    @property
+    def features_and_labels(self):
+        return self._features_and_labels
+
+    @property
+    def summary_provider(self):
+        return self._classification_summary_provider
 
     def __getitem__(self, item):
         """
@@ -85,7 +99,7 @@ class Model(object):
         """
         pass
 
-    def predict(self, x: np.ndarray) -> Dict[str, np.ndarray]:
+    def predict(self, x: np.ndarray) -> np.ndarray:
         """
         prediction of the model for each target
 
@@ -93,16 +107,6 @@ class Model(object):
         :return: prediction of the model for each target
         """
 
-        return {target: self._predict(x, target) for target in self.features_and_labels.get_goals().keys()}
-
-    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
-        """
-        prediction of the model for one target
-
-        :param x: x
-        :param target: target
-        :return: prediction of the model for one target
-        """
         pass
 
     def __call__(self, *args, **kwargs):
@@ -122,8 +126,12 @@ class Model(object):
 
 class SkitModel(Model):
 
-    def __init__(self, skit_model, features_and_labels: FeaturesAndLabels, **kwargs):
-        super().__init__(features_and_labels, **kwargs)
+    def __init__(self,
+                 skit_model,
+                 features_and_labels: FeaturesAndLabels,
+                 classification_summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 **kwargs):
+        super().__init__(features_and_labels, classification_summary_provider, **kwargs)
         self.skit_model = skit_model
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
@@ -152,7 +160,7 @@ class SkitModel(Model):
                 from sklearn.metrics import mean_squared_error
                 return np.mean([mean_squared_error(p, y) for p in predictions])
 
-    def _predict(self, x, target) -> np.ndarray:
+    def predict(self, x) -> np.ndarray:
         if callable(getattr(self.skit_model, 'predict_proba', None)):
             return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
         else:
@@ -165,7 +173,7 @@ class SkitModel(Model):
         if not kwargs:
             return deepcopy(self)
         else:
-            new_model = SkitModel(type(self.skit_model)(**kwargs), self.features_and_labels)
+            new_model = SkitModel(type(self.skit_model)(**kwargs), self.features_and_labels, self.classification_summary_provider)
             new_model.kwargs = deepcopy(self.kwargs)
             return new_model
 
@@ -179,10 +187,11 @@ class KerasModel(Model):
     def __init__(self,
                  keras_compiled_model_provider: Callable[[], KModel],
                  features_and_labels: FeaturesAndLabels,
+                 classification_summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
                  epochs: int = 100,
                  callbacks: List[Callable] = [],
                  **kwargs):
-        super().__init__(features_and_labels, **kwargs)
+        super().__init__(features_and_labels, classification_summary_provider, **kwargs)
         self.keras_model_provider = keras_compiled_model_provider
         self.keras_model = keras_compiled_model_provider()
         self.epochs = epochs
@@ -199,6 +208,7 @@ class KerasModel(Model):
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,
                                self.features_and_labels,
+                               self.classification_summary_provider,
                                self.epochs,
                                deepcopy(self.callbacks),
                                **deepcopy(self.kwargs))
@@ -211,8 +221,11 @@ class KerasModel(Model):
 
 class MultiModel(Model):
 
-    def __init__(self, model_provider: Model, alpha: float = 0.5):
-        super().__init__(model_provider.features_and_labels)
+    def __init__(self,
+                 model_provider: Model,
+                 classification_summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 alpha: float = 0.5):
+        super().__init__(model_provider.features_and_labels, classification_summary_provider)
         self.model_provider = model_provider
         self.models = {target: model_provider() for target in self.features_and_labels.get_goals().keys()}
         self.alpha = alpha
@@ -237,7 +250,7 @@ class MultiModel(Model):
         return self.models[target]._predict(x, target)
 
     def __call__(self, *args, **kwargs):
-        new_multi_model = MultiModel(self.model_provider, self.alpha)
+        new_multi_model = MultiModel(self.model_provider, self.classification_summary_provider, self.alpha)
 
         if kwargs:
             new_multi_model.models = {target: self.model_provider(**kwargs) for target in self.features_and_labels.get_goals().keys()}
@@ -245,6 +258,8 @@ class MultiModel(Model):
         return new_multi_model
 
 
+
+## THIS need to be fixed somewhen
 class OpenAiGymModel(Model):
     from typing import TYPE_CHECKING
     if TYPE_CHECKING:

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 import pandas_ml_utils as pdu
+from pandas_ml_utils.model.features_and_labels_utils.extractor import FeatureTargetLabelExtractor
 
 
 class TestTrainTestData(unittest.TestCase):
@@ -106,11 +107,11 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                            "labelB": [5, 4, 3, 2, 1, 0, 1, 2, 3, None]})
 
-        from pandas_ml_utils.train_test_data import _make_features
-        fl = pdu.FeaturesAndLabels(["featureA"], None, feature_lags=[0, 1],
+        fl = pdu.FeaturesAndLabels(["featureA"], ["labelB"], feature_lags=[0, 1],
                                    lag_smoothing={1: lambda df: df["featureA"].shift(2)})
 
-        df, x = _make_features(df, fl)
+        FeatureTargetLabelExtractor(df, fl).features_df
+        df, _, _ = FeatureTargetLabelExtractor(df, fl).features_labels
         len_features = 10 - 1 - 2
         len_none_lables = 1
 

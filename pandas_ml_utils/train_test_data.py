@@ -9,6 +9,7 @@ from time import perf_counter as pc
 from sortedcontainers import SortedDict
 from typing import Type, Callable, Tuple
 
+from pandas_ml_utils.model.features_and_labels_utils.extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.wrappers.hashable_dataframe import HashableDataFrame
 from pandas_ml_utils.utils.classes import ReScaler
 from pandas_ml_utils.utils.functions import log_with_time
@@ -17,37 +18,29 @@ from pandas_ml_utils.model.features_and_Labels import FeaturesAndLabels
 _log = logging.getLogger(__name__)
 
 
-def make_backtest_data(df: pd.DataFrame,
-                       features_and_labels: FeaturesAndLabels,
-                       label_type: Type = int):
-    return make_training_data(df, features_and_labels, 0, label_type)
+def make_backtest_data(df: pd.DataFrame, features_and_labels: FeatureTargetLabelExtractor):
+    return make_training_data(df, features_and_labels, 0)
 
 
-def make_training_data(df: pd.DataFrame,
-                       features_and_labels: FeaturesAndLabels,
+def make_training_data(features_and_labels: FeatureTargetLabelExtractor,
                        test_size: float = 0.4,
-                       label_type: Type = int,
-                       seed: int = 42,
-                       cache: bool = False) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list]:
+                       seed: int = 42) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list]:
     # only import if this method is needed
     from sklearn.model_selection import train_test_split
 
     # use only feature and label columns
     start_pc = log_with_time(lambda: _log.debug("make training / test data split ..."))
-    df = df[set(features_and_labels.features + features_and_labels.labels)]
 
-    # create features and re-assign data frame with all nan rows dropped
-    df_new, x = _make_features_with_cache(HashableDataFrame(df), features_and_labels) if cache else \
-                _make_features(df, features_and_labels)
-
-    # assign labels
-    y = df_new[features_and_labels.labels].values.astype(label_type)
+    # get features and labels
+    df_features_and_labels, x, y = features_and_labels.features_labels
+    index = df_features_and_labels.index.tolist()
 
     # split training and test data
     start_split_pc = log_with_time(lambda: _log.debug("  splitting ..."))
     x_train, x_test, y_train, y_test, index_train, index_test = \
-        train_test_split(x, y, df_new.index, test_size=test_size, random_state=seed) if test_size > 0 \
-            else (x, None, y, None, df_new.index, None)
+        train_test_split(x, y, index, test_size=test_size, random_state=seed) if test_size > 0 \
+            else (x, None, y, None, index, None)
+
     _log.info(f"  splitting ... done in {pc() - start_split_pc: .2f} sec!")
     _log.info(f"make training / test data split ... done in {pc() - start_pc: .2f} sec!")
 
@@ -55,73 +48,11 @@ def make_training_data(df: pd.DataFrame,
     return x_train, x_test, y_train, y_test, index_train, index_test
 
 
-def make_forecast_data(df: pd.DataFrame, features_and_labels: FeaturesAndLabels):
-    return _make_features(df, features_and_labels, drop_nan_features_only=True)
+def make_forecast_data(features_and_labels: FeatureTargetLabelExtractor):
+    return features_and_labels.features
 
 
-@lru_cache(maxsize=int(os.getenv('CACHE_FEATUES_AND_LABELS', '1')))
-def _make_features_with_cache(df: HashableDataFrame, features_and_labels: FeaturesAndLabels):
-    _log.info(f"no cache entry available for {hash(df), hash(features_and_labels)}")
-    return _make_features(df, features_and_labels)
-
-
-def _make_features(df: pd.DataFrame, features_and_labels: FeaturesAndLabels, drop_nan_features_only: bool = False):
-    start_pc = log_with_time(lambda: _log.debug(" make features ..."))
-    feature_lags = features_and_labels.feature_lags
-    feature_rescaling = features_and_labels.feature_rescaling
-    features = features_and_labels.features
-    lag_smoothing = features_and_labels.lag_smoothing
-
-    # drop nan's and copy frame
-    df = (df[features] if drop_nan_features_only else df).dropna().copy()
-
-    # generate feature matrix
-    if feature_lags is not None:
-        # return RNN shaped 3D arrays
-        for feature in features:
-            feature_series = df[feature]
-            smoothers = None
-
-            # smooth out feature if requested
-            if lag_smoothing is not None:
-                smoothers = SortedDict({lag: smoother(feature_series.to_frame())
-                                        for lag, smoother in lag_smoothing.items()})
-
-            for lag in feature_lags:
-                # if smoothed values are applicable use smoothed values
-                if smoothers is not None and len(smoothers) > 0 and smoothers.peekitem(0)[0] <= lag:
-                    feature_series = smoothers.popitem(0)[1]
-
-                # assign the lagged (eventually smoothed) feature to the features frame
-                df[f'{feature}_{lag}'] = feature_series.shift(lag)
-
-        # drop all rows which got nan now
-        df = df.dropna()
-
-        # RNN shape need to be [row, time_step, feature]
-        columns = features_and_labels.get_feature_names()
-        x = np.array([df[cols].values for cols in columns], ndmin=3).swapaxes(0, 1)
-    else:
-        # return simple 2D arrays
-        x = df[features].values
-
-    if feature_rescaling is not None:
-        for tuple, target_range in feature_rescaling.items():
-            for i in range(len(x)):
-                cols = [features.index(j) for j in tuple]
-                if len(x.shape) == 3:
-                    data = x[i, :, cols]
-                    x[i,:,cols] = ReScaler((data.min(), data.max()), target_range)(data)
-                elif len(x.shape) == 2:
-                    data = x[i,cols]
-                    x[i,cols] = ReScaler((data.min(), data.max()), target_range)(data)
-                else:
-                    ValueError("unknown array dimensions")
-
-    _log.info(f" make features ... done in {pc() - start_pc: .2f} sec!")
-    return df, x
-
-
+# FIXME move to SkitModel
 def reshape_rnn_as_ar(arr3d):
     if len(arr3d.shape) < 3:
         print("Data was not in RNN shape")

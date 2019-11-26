@@ -2,26 +2,12 @@ import inspect
 import logging
 from typing import List, Callable, Iterable, Dict, Type, Tuple, Union
 from numbers import Number
-from .target_encoder import TargetLabelEncoder
-from ..constants import SIMULATED_VECTOR
-
+from pandas_ml_utils.model.features_and_labels_utils.target_encoder import TargetLabelEncoder
+from pandas_ml_utils.model.features_and_labels_utils.sample_size_estimator import _simulate_smoothing
 import pandas as pd
 import numpy as np
 
 _log = logging.getLogger(__name__)
-
-
-def _simulate_smoothing(features, lag_smoothing):
-    simulated_frame = pd.DataFrame({f: SIMULATED_VECTOR for f in features})
-    smoothing_length = 0
-
-    for k, v in (lag_smoothing or {}).items():
-        simulated_result = v(simulated_frame)
-        nan_count = np.isnan(simulated_result.values if isinstance(simulated_result, (pd.Series, pd.DataFrame)) else simulated_result).sum()
-        gap_len = len(simulated_frame) - len(simulated_result)
-        smoothing_length = max(smoothing_length, gap_len + nan_count)
-
-    return smoothing_length + 1
 
 
 # This class should be able to be pickled and unpickled without risk of change between versions
@@ -36,8 +22,9 @@ class FeaturesAndLabels(object):
 
     def __init__(self,
                  features: List[str],
-                 labels: List[str],
+                 labels: Union[List[str], Tuple[str, List[str]], TargetLabelEncoder, Dict[str, Union[List[str], TargetLabelEncoder]]],
                  label_type:Type = int,
+                 loss: Callable[[str, pd.DataFrame], pd.Series] = None,
                  targets: Union[List[str], Tuple[str, str], Dict[str, str], Dict[str, Tuple[str, List[str]]], Dict[str, Tuple[str, str]], TargetLabelEncoder] = None,
                  feature_lags: Iterable[int] = None,
                  feature_rescaling: Dict[Tuple[str], Tuple[int]] = None,
@@ -69,6 +56,7 @@ class FeaturesAndLabels(object):
         self._features = features
         self._labels = labels
         self._targets = targets
+        self._loss = loss
         self.label_type = label_type
         self.feature_lags = [lag for lag in feature_lags] if feature_lags is not None else None
         self.feature_rescaling = feature_rescaling
@@ -90,6 +78,10 @@ class FeaturesAndLabels(object):
     @property
     def targets(self):
         return self._targets
+
+    @property
+    def loss(self):
+        return self._loss
 
     @property
     def shape(self) -> Tuple[Tuple[int], Tuple[int]]:
@@ -119,6 +111,7 @@ class FeaturesAndLabels(object):
         """
         return len(self.labels)
 
+    #@deprecation.deprecated()
     def get_feature_names(self) -> np.ndarray:
         """
         Returns all features names eventually post-fixed with the length of the lag
@@ -132,6 +125,7 @@ class FeaturesAndLabels(object):
         else:
             return np.array(self.features)
 
+    # @deprecation.deprecated()
     def get_goals(self) -> Dict[str, Tuple[str, List[str]]]:
         """
         A Goal is the combination of the target and its loss and labels

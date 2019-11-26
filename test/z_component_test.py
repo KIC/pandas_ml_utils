@@ -218,6 +218,8 @@ class ComponentTest(unittest.TestCase):
                                                                         ('vix_High', 'loss', 'value'),
                                                                         ('vix_Low', 'loss', 'value')])
 
+
+
     @unittest.skip("we need a better model for reinforcement learning")
     def test_reinforcement_model(self):
         df = pd.read_csv(f'{__name__}.csv', index_col='Date')

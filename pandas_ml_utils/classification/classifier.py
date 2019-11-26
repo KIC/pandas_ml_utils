@@ -6,7 +6,7 @@ import pandas as pd
 
 from ..classification.summary import ClassificationSummary
 from ..model.fit import Fit
-from ..model.fitter import _fit, _backtest, _predict
+from ..model.fitter import fit, _backtest, _predict
 from ..model.models import Model
 from ..constants import *
 

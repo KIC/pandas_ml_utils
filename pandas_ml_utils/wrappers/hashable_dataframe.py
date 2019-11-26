@@ -1,6 +1,7 @@
 import pandas as pd
 
 
+# DEPRECATED
 class HashableDataFrame(object):
 
     def __init__(self, df: pd.DataFrame) -> None:

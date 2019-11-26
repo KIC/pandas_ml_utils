@@ -9,6 +9,8 @@ from sklearn.exceptions import ConvergenceWarning
 import numpy as np
 import pandas as pd
 
+from pandas_ml_utils.model.features_and_labels_utils.extractor import FeatureTargetLabelExtractor
+from pandas_ml_utils.model.fit import Fit
 from ..train_test_data import make_training_data, make_forecast_data
 from ..utils.functions import log_with_time
 from ..model.models import Model
@@ -20,30 +22,37 @@ if TYPE_CHECKING:
     from hyperopt import Trials
 
 
-def _fit(df: pd.DataFrame,
+def fit(df: pd.DataFrame,
          model_provider: Callable[[int], Model],
          test_size: float = 0.4,
          cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None,
-         cache_feature_matrix: bool = False,
          test_validate_split_seed = 42,
-         hyper_parameter_space: Dict = None,
-         ) -> Tuple[Model, Tuple[pd.DataFrame, pd.DataFrame], Trials]:
-    # get a new model
+         hyper_parameter_space: Dict = None
+         ) -> Fit:
+    """
+
+    :param df: the DataFrame you apply this function to
+    :param model_provider: a callable which provides a new :class:`.Model` instance i.e. for each hyper parameter if
+                           hyper parameter tuning is enforced. Usually all the Model subclasses implement __call__
+                           thus they are a provider of itself
+    :param test_size: the fraction [0, 1] of samples which are used for a test set
+    :param cross_validation: tuple of number of epochs for each fold provider and a cross validation provider
+    :param test_validate_split_seed: seed if train, test split needs to be reproduceable
+    :param hyper_parameter_space: space of hyper parameters passed as kwargs to your model provider
+    :return: returns a :class:`.Fit` object
+    """
+
     trails = None
     model = model_provider()
-    features_and_labels = model.features_and_labels
-    goals = features_and_labels.get_goals()
+    features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels)
 
     # make training and test data sets
     x_train, x_test, y_train, y_test, index_train, index_test = \
-        make_training_data(df,
-                           features_and_labels,
+        make_training_data(features_and_labels,
                            test_size,
-                           label_type=features_and_labels.label_type,
-                           seed=test_validate_split_seed,
-                           cache=cache_feature_matrix)
+                           seed=test_validate_split_seed)
 
-    _log.info(f"create model (min required data = {features_and_labels.min_required_samples}")
+    _log.info(f"create model ({features_and_labels})")
 
     # eventually perform a hyper parameter optimization first
     start_performance_count = log_with_time(lambda: _log.info("fit model"))
@@ -68,25 +77,13 @@ def _fit(df: pd.DataFrame,
 
     # finally train the model with eventually tuned hyper parameters
     __train_loop(model, cross_validation, x_train, y_train, index_train, x_test, y_test, index_test)
-
     _log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
-    header = __stack_header_prediction(goals) + __stack_header_label(goals) + __stack_header_loss(goals)
 
-    df_train = df.loc[index_train]
-    df_prediction_train = __predict(df_train, model, x_train) \
-        .join(__truth(df_train, model)) \
-        .join(__loss(df_train, model))
-    df_prediction_train.columns = pd.MultiIndex.from_tuples(header)
+    # assemble result objects
+    df_train = features_and_labels.prediction_to_frame(model.predict(x_train), index=index_train, inclusive_labels=True)
+    df_test = features_and_labels.prediction_to_frame(model.predict(x_test), index=index_test, inclusive_labels=True) if x_test is not None else None
 
-    df_prediction_test = None
-    if x_test is not None:
-        df_test = df.loc[index_test]
-        df_prediction_test = __predict(df_test, model, x_test) \
-            .join(__truth(df_test, model)) \
-            .join(__loss(df_test, model))
-        df_prediction_test.columns = pd.MultiIndex.from_tuples(header)
-
-    return model, (df_prediction_train, df_prediction_test), trails
+    return Fit(model, model.summary_provider(df_train), model.summary_provider(df_test), trails)
 
 
 def __train_loop(model, cross_validation, x_train, y_train, index_train,  x_test, y_test, index_test):
@@ -141,23 +138,17 @@ def __hyper_opt(hyper_parameter_space,
 
 def _backtest(df: pd.DataFrame, model: Model) -> pd.DataFrame:
     features_and_labels = model.features_and_labels
-    goals = features_and_labels.get_goals()
 
     # make training and test data with no 0 test data fraction
     x, _, y, _, index, _ = make_training_data(df, features_and_labels, 0, int)
 
     # predict probabilities
-    df_source = df.loc[index]
-    df_backtest = __predict(df_source, model, x) \
-        .join(__truth(df_source, model)) \
-        .join(__loss(df_source, model))
-
-    header = __stack_header_prediction(goals) + __stack_header_label(goals) + __stack_header_loss(goals)
-    df_backtest.columns = pd.MultiIndex.from_tuples(header)
-
-    return df_backtest
+    df = features_and_labels.prediction_to_frame(model.predict(x), index=index, inclusive_labels=True)
+    # TODO later return Fit object using model.summary_provider so we can et rid of df.backtest_xxx
+    return df
 
 
+# TODO DELETE everything below this comment
 def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     features_and_labels = model.features_and_labels
     goals = features_and_labels.get_goals()

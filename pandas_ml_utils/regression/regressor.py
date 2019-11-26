@@ -7,7 +7,7 @@ import pandas as pd
 
 from .summary import RegressionSummary
 from ..model.fit import Fit
-from ..model.fitter import _fit, _backtest, _predict
+from ..model.fitter import fit, _backtest, _predict
 from ..model.models import Model
 from ..error.functions import mse as _mse
 from ..constants import *

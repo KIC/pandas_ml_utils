@@ -4,13 +4,13 @@ __version__ = '0.0.16'
 # imports to provide functionality via root import like import pandas_ml_utils as pmu; pmu.XY
 from .pandas_utils_extension import *
 from .model.models import Model, SkitModel, KerasModel, MultiModel
-from .train_test_data import make_training_data, reshape_rnn_as_ar
 from .wrappers.lazy_dataframe import LazyDataFrame
 
 # imports only used to augment pandas classes
 from .analysis.correlation_analysis import plot_correlation_matrix
 from .datafetching.fetch_yahoo import fetch_yahoo
 from .model.features_and_Labels import FeaturesAndLabels
+from .model.fitter import fit
 from .analysis.selection import feature_selection
 from .classification.classifier import fit_classifier, backtest_classifier, classify
 from .reinforcement.agent import fit_agent, backtest_agent, agent_take_action
@@ -27,26 +27,13 @@ PandasObject.drop_zero_or_nan = drop_zero_or_nan
 PandasObject.add_apply = add_apply
 PandasObject.shift_inplace = shift_inplace
 PandasObject.extend_forecast = extend_forecast
-PandasObject.make_training_data = make_training_data
 
 # feature selection
 PandasObject.plot_correlation_matrix = plot_correlation_matrix
 PandasObject.feature_selection = feature_selection
 
-# classification functions
-PandasObject.fit_classifier = fit_classifier
-PandasObject.classify = classify
-PandasObject.backtest_classifier = backtest_classifier
-
-# regression functions
-PandasObject.fit_regressor = fit_regressor
-PandasObject.backtest_regressor = backtest_regressor
-PandasObject.regress = regress
-
-# reinforcement learning
-PandasObject.fit_agent = fit_agent
-PandasObject.backtest_agent = backtest_agent
-PandasObject.agent_take_action = agent_take_action
+# new we just have one fit method
+PandasObject.fit = fit
 
 # data fetcher
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
