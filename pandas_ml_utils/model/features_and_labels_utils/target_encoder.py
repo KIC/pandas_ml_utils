@@ -1,17 +1,18 @@
 import pandas as pd
 import numpy as np
-from typing import Iterable
+from typing import Iterable, List
+
+from pandas_ml_utils.utils.functions import one_hot
 
 
 class TargetLabelEncoder(object):
 
     @property
-    def targets(self):
-        return None
+    def labels(self) -> List[str]:
+        pass
 
-    @property
-    def labels(self):
-        return None
+    def encode(self, df: pd.DataFrame) -> pd.DataFrame:
+        pass
 
 
 class OneHotEncodedTargets(TargetLabelEncoder):
@@ -36,31 +37,20 @@ class OneHotEncodedTargets(TargetLabelEncoder):
                 [(-float("inf") if r == 0 else borders[r], float("inf") if r == len(borders) - 2 else borders[r + 1]) for r in
                  range(len(borders) - 1)])
 
-    def targets(self):
-        return None
+        self.label = label
+        self.number_of_categories = len(self.buckets)
 
-    def labels(self):
-        return None
+    @property
+    def labels(self) -> List[str]:
+        return [self.label]
 
-    """
-    def __init__(self, series, buckets):
-        def naming(name, category):
-            return f"{name if isinstance(buckets, str) else category}"
-
-        bucketers = list(range(buckets) if isinstance(buckets, int) else buckets)
-        buckets = pd.cut(series, bins=len(bucketers) if bucketers else buckets)
-
+    def encode(self, df: pd.DataFrame) -> pd.DataFrame:
+        col = self.label
+        buckets = pd.cut(df[col], self.buckets)
         indexes = buckets.cat.codes.values
-        categories = buckets.cat.categories.tolist()
-        number_of_categories = len(categories)
 
-        names = [naming(bucketers[i], c) for i, c in enumerate(categories)]
+        one_hot_matrix = np.array([one_hot(i, self.number_of_categories) for i in indexes]).T
+        one_hot_categories = pd.DataFrame({f'{col} #{i}': v for i, v in enumerate(one_hot_matrix)}, index=df.index)
 
-        one_hot_matrix = np.array([one_hot(i, number_of_categories) for i in indexes]).T
-        target_matrix = np.array([series.apply(lambda x: f(categories[i], x) if callable(f) else f).values
-                                  for i, f in enumerate(bucketers)])
-
-        self.one_hot_categories = {names[i]: v for i, v in enumerate(one_hot_matrix)}
-        self.one_hot_targets = {f"{names[i]}_target": v for i, v in enumerate(target_matrix)}
-    """
+        return one_hot_categories
 

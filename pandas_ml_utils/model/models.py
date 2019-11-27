@@ -162,7 +162,8 @@ class SkitModel(Model):
 
     def predict(self, x) -> np.ndarray:
         if callable(getattr(self.skit_model, 'predict_proba', None)):
-            return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
+            y_hat = self.skit_model.predict_proba(reshape_rnn_as_ar(x))
+            return y_hat[:, 1] if y_hat.shape[1] == 2 else y_hat
         else:
             return self.skit_model.predict(reshape_rnn_as_ar(x))
 

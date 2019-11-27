@@ -1,6 +1,6 @@
 import inspect
 import logging
-from typing import List, Callable, Iterable, Dict, Type, Tuple, Union
+from typing import List, Callable, Iterable, Dict, Type, Tuple, Union, Any
 from numbers import Number
 from pandas_ml_utils.model.features_and_labels_utils.target_encoder import TargetLabelEncoder
 from pandas_ml_utils.model.features_and_labels_utils.sample_size_estimator import _simulate_smoothing
@@ -22,10 +22,10 @@ class FeaturesAndLabels(object):
 
     def __init__(self,
                  features: List[str],
-                 labels: Union[List[str], Tuple[str, List[str]], TargetLabelEncoder, Dict[str, Union[List[str], TargetLabelEncoder]]],
+                 labels: Union[List[str], TargetLabelEncoder, Dict[str, Union[List[str], TargetLabelEncoder]]],
                  label_type:Type = int,
-                 loss: Callable[[str, pd.DataFrame], pd.Series] = None,
-                 targets: Union[List[str], Tuple[str, str], Dict[str, str], Dict[str, Tuple[str, List[str]]], Dict[str, Tuple[str, str]], TargetLabelEncoder] = None,
+                 loss: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
+                 targets: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  feature_lags: Iterable[int] = None,
                  feature_rescaling: Dict[Tuple[str], Tuple[int]] = None,
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,

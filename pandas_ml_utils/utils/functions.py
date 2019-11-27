@@ -32,6 +32,9 @@ def fig_to_png_base64(fig):
 
 def one_hot(index: int, number_of_classes: int):
     vec = np.zeros(number_of_classes)
-    vec[index] = 1
+
+    if index >= 0:
+        vec[index] = 1
+
     return vec
 
