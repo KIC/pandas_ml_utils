@@ -125,42 +125,6 @@ class FeaturesAndLabels(object):
         else:
             return np.array(self.features)
 
-    # @deprecation.deprecated()
-    def get_goals(self) -> Dict[str, Tuple[str, List[str]]]:
-        """
-        A Goal is the combination of the target and its loss and labels
-
-        :return: all goals for all given targets
-        """
-
-        if isinstance(self.targets, TargetLabelEncoder):
-            # FIXME implement this ...
-            return None
-        elif isinstance(self.targets, Number) or isinstance(self.targets, str):
-            # we have a target value but no loss
-            return {self.targets: (None, self.labels)}
-        elif self.targets is None or len(self.targets) <= 0:
-            # we have got no target no loss an no labels
-            return {None: (None, self.labels)}
-        elif isinstance(self.targets, tuple):
-            # we have a pair of target value and loss
-            return {self.targets[0]: (self.targets[1], self.labels)}
-        elif isinstance(self.targets, dict):
-            sample_value = next(iter(self.targets.values()))
-            if isinstance(sample_value, tuple) and len(sample_value) == 2 and isinstance(sample_value[1], list):
-                # we have a dict of target values and tuple losses, labels
-                return self.targets
-            elif isinstance(sample_value, tuple) and len(sample_value) == 2 and isinstance(sample_value[1], str):
-                # we have a dict of target values and tuple losses, labels
-                return {k: (v[0], [v[1]]) for k, v in self.targets.items()}
-            elif isinstance(sample_value, str) or isinstance(sample_value, Number):
-                # we have a dict of target values and losses
-                return {k: (v, self.labels) for k, v in self.targets.items()}
-            else:
-                raise ValueError("you need to provide a loss or a tuple[loss, list[str]")
-        else:
-            raise ValueError("you need to provide a target column name oder a dictionary with target column name as key")
-
     def __getitem__(self, item):
         if isinstance(item, tuple) and len(item) == 2:
             return self.kwargs[item[0]] if item[0] in self.kwargs else item[1]

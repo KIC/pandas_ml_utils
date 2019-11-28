@@ -33,13 +33,13 @@ class ClassificationTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42)
-        result = fit.training_summary.target_data
+        result = fit.training_summary.df
 
         """then"""
         self.assertListEqual(result.columns.tolist(), [('prediction', 'is_above'), ('label', 'is_above'), ('loss', 'loss'), ('target', 'sma')])
         self.assertEqual(len(result), 4023)
 
-    def test_multiple_classifications(self):
+    def test_multi_class_classification(self):
         from pandas_ml_utils.model.features_and_labels_utils.target_encoder import OneHotEncodedTargets
         import talib
 
@@ -63,34 +63,13 @@ class ClassificationTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
-        result = fit.training_summary.target_data
+        result = fit.training_summary.df
 
         """then"""
-        print(result.columns.tolist())
+        self.assertEqual(len(result), 4023)
         self.assertListEqual(result.columns.tolist(),
                              [('prediction', 'label #0'), ('prediction', 'label #1'), ('prediction', 'label #2'), ('prediction', 'label #3'),
                               ('label', 'label #0'), ('label', 'label #1'), ('label', 'label #2'), ('label', 'label #3'),
-                              ('target', 'close <0.1'), ('target', 'close <0.05'), ('target', 'close >0'), ('target', 'close >0.05')]
-)
-        #self.assertEqual(len(result["sma"]), 4023)
+                              ('target', 'close <0.1'), ('target', 'close <0.05'), ('target', 'close >0'), ('target', 'close >0.05')])
 
-    def test_multi_model_multiple_classifications(self):
-        # FIXME implement this
-        from pandas_ml_utils.model.features_and_labels_utils.target_encoder import OneHotEncodedTargets
-        import talib
-
-        df = pd.read_csv(f'{__name__}.csv', index_col='Date')
-        df["sma"] = talib.SMA(df["spy_Close"])
-        df["label_1"] = df["spy_Close"] / df["sma"] - 1
-        df["label_2"] = df["spy_Close"] / df["sma"] - 2
-
-        model = pdu.MultiModel(
-            pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
-                          pdu.FeaturesAndLabels(features=['vix_Close'],
-                                                labels={f"-{t}": OneHotEncodedTargets("label", np.linspace(-0.1, 0.1, 3, endpoint=True)) for t in range(1, 3)})))
-
-        fit = df.fit_classifier(model, test_size=0.4, test_validate_split_seed=42,)
-
-        self.assertTrue(False)
-
-
+    # TODO: should we make a test for skit model using a dict for labels?

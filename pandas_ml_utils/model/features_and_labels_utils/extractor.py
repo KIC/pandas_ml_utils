@@ -32,10 +32,9 @@ class FeatureTargetLabelExtractor(object):
             targets = None
             encoder = labels.encode
             label_columns = labels.labels
-        elif isinstance(features_and_labels.labels, Dict):
+        elif isinstance(labels, Dict):
             # this is our multi model case, here we add an extra dimension to the labels array
-            # TODO implement
-            pass
+            label_columns = [l for ls in labels.values() for l in ls ]
 
         self.df = df
         self._features_and_labels = features_and_labels
@@ -46,7 +45,6 @@ class FeatureTargetLabelExtractor(object):
     def prediction_to_frame(self, prediction: np.ndarray, index: pd.Index = None, inclusive_labels: bool = False) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
         index = self.df.index if index is None else index
 
-        # create a data frame from the prediction # FIXME multi model dimension size ..
         if len(self._labels) > 1:
             df = pd.DataFrame({l: prediction[:, i] for i, l in enumerate(self._labels)}, index=index)
         elif len(self._labels) == 1 and len( prediction.shape) > 1 and prediction.shape[1] > 1:
@@ -59,32 +57,62 @@ class FeatureTargetLabelExtractor(object):
 
         # add labels if requested
         if inclusive_labels:
+            labels = self._features_and_labels.labels
             dfl = self.labels_df
             dfl.columns = pd.MultiIndex.from_arrays([[LABEL_COLUMN_NAME] * len(dfl.columns), dfl.columns])
             df = df.join(dfl, how='inner')
 
             # and add loss if provided
             if self._features_and_labels.loss is not None:
-                dfl = self._features_and_labels.loss(None, self.df.loc[df.index]) # FIXME none vs multi model
-                if isinstance(dfl, pd.Series):
-                    if dfl.name is None:
-                        dfl.name = LOSS_COLUMN_NAME
-                    dfl = dfl.to_frame()
+                for target in (labels.keys() if isinstance(labels, dict) else [None]):
+                    dfl = self._features_and_labels.loss(target, self.df.loc[df.index])
+                    if isinstance(dfl, pd.Series):
+                        if dfl.name is None:
+                            dfl.name = target or LOSS_COLUMN_NAME
+                        dfl = dfl.to_frame()
 
-                dfl.columns = pd.MultiIndex.from_arrays([[LOSS_COLUMN_NAME] * len(dfl.columns), dfl.columns])
-                df = df.join(dfl, how='inner')
+                    dfl.columns = pd.MultiIndex.from_arrays([[LOSS_COLUMN_NAME] * len(dfl.columns), dfl.columns])
+                    df = df.join(dfl, how='inner')
 
         # add target if provided
         if self._features_and_labels.targets is not None:
-            dft = self._features_and_labels.targets(None, self.df.loc[df.index]) # FIXME none vs multi model
-            if isinstance(dft, pd.Series):
-                if dft.name is None:
-                    dft.name = TARGET_COLUMN_NAME
-                dft = dft.to_frame()
+            labels = self._features_and_labels.labels
+            for i, target in enumerate(labels.keys() if isinstance(labels, dict) else [None]):
+                dft = self._features_and_labels.targets(target, self.df.loc[df.index])
+                if isinstance(dft, pd.Series):
+                    if dft.name is None:
+                        dft.name = target or TARGET_COLUMN_NAME
+                    dft = dft.to_frame()
 
-            dft.columns = pd.MultiIndex.from_arrays([[TARGET_COLUMN_NAME] * len(dft.columns), dft.columns])
-            df = df.join(dft, how='inner')
+                dft.columns = pd.MultiIndex.from_arrays([[TARGET_COLUMN_NAME] * len(dft.columns), dft.columns])
+                df = df.join(dft, how='inner')
 
+        #
+        # if multiple targets were passed we need to add an extra level on top of the multi index
+        #
+
+        if isinstance(self._features_and_labels.labels, dict):
+            # len(labels)'s columns of "prediction" and "label" go under the top level "target" index
+            # i.e. if len(labels) == 2 for 2 targets we have: a,a, b,b , a,a, b,b for prediction and label
+            targets = [target * len(labels) for target, labels in self._features_and_labels.labels.items()]
+            top_level = targets
+
+            if inclusive_labels:
+                top_level += targets
+
+                if self._features_and_labels.loss is not None:
+                    top_level += list(self._features_and_labels.labels.keys())
+
+            # if we have a target and or loss defined add a level as well
+            if self._features_and_labels.targets is not None:
+                top_level += list(self._features_and_labels.labels.keys())
+
+            # add the new level as column to an intermediate data frame
+            df_headers = df.columns.to_frame()
+            df_headers.insert(0, "target", top_level)
+            df.columns = pd.MultiIndex.from_frame(df_headers)
+
+        # finally we can return our nice and shiny df
         return df
 
     @property
@@ -107,7 +135,6 @@ class FeatureTargetLabelExtractor(object):
             np.array([df[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1)
 
         # labels are straight forward but eventually need to be type corrected
-        # TODO if len(targets > 1) then we need an extra dimension for y array
         y = df_labels.values.astype(self._features_and_labels.label_type)
 
         _log.info(f"  features shape: {x.shape}, labels shape: {y.shape}")

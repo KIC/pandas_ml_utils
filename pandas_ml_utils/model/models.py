@@ -45,7 +45,7 @@ class Model(object):
 
     def __init__(self,
                  features_and_labels: FeaturesAndLabels,
-                 classification_summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
                  **kwargs):
         """
         lalala ...
@@ -54,7 +54,7 @@ class Model(object):
         :param kwargs:
         """
         self._features_and_labels = features_and_labels
-        self._classification_summary_provider = classification_summary_provider
+        self._summary_provider = summary_provider
         self.kwargs = kwargs
 
     @property
@@ -63,7 +63,7 @@ class Model(object):
 
     @property
     def summary_provider(self):
-        return self._classification_summary_provider
+        return self._summary_provider
 
     def __getitem__(self, item):
         """
@@ -129,9 +129,9 @@ class SkitModel(Model):
     def __init__(self,
                  skit_model,
                  features_and_labels: FeaturesAndLabels,
-                 classification_summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
                  **kwargs):
-        super().__init__(features_and_labels, classification_summary_provider, **kwargs)
+        super().__init__(features_and_labels, summary_provider, **kwargs)
         self.skit_model = skit_model
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
@@ -188,11 +188,11 @@ class KerasModel(Model):
     def __init__(self,
                  keras_compiled_model_provider: Callable[[], KModel],
                  features_and_labels: FeaturesAndLabels,
-                 classification_summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
                  epochs: int = 100,
                  callbacks: List[Callable] = [],
                  **kwargs):
-        super().__init__(features_and_labels, classification_summary_provider, **kwargs)
+        super().__init__(features_and_labels, summary_provider, **kwargs)
         self.keras_model_provider = keras_compiled_model_provider
         self.keras_model = keras_compiled_model_provider()
         self.epochs = epochs
@@ -203,7 +203,7 @@ class KerasModel(Model):
         self.history = self.keras_model.fit(x, y, epochs=self.epochs, validation_data=(x_val, y_val), callbacks=self.callbacks)
         return min(self.history.history['loss'])
 
-    def _predict(self, x, target):
+    def predict(self, x):
         return self.keras_model.predict(x)
 
     def __call__(self, *args, **kwargs):
@@ -224,22 +224,27 @@ class MultiModel(Model):
 
     def __init__(self,
                  model_provider: Model,
-                 classification_summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
                  alpha: float = 0.5):
-        super().__init__(model_provider.features_and_labels, classification_summary_provider)
+        super().__init__(model_provider.features_and_labels, summary_provider)
+
+        if isinstance(model_provider, MultiModel):
+            raise ValueError("Nesting Multi Models is not supported, you might use a flat structure of all your models")
+
         self.model_provider = model_provider
-        self.models = {target: model_provider() for target in self.features_and_labels.get_goals().keys()}
+        self.models = {target: model_provider() for target in self.features_and_labels.labels.keys()}
         self.alpha = alpha
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
-        goals = self.features_and_labels.get_goals()
         losses = []
-        for target, (_, labels) in goals.items():
-            index = [self.features_and_labels.labels.index(label) for label in labels]
+        pos = 0
+        for target, labels in self.features_and_labels.labels.items():
+            index = range(pos, pos + len(labels))
             target_y = y[:,index]
             target_y_val = y_val[:,index]
             _log.info(f"fit model for target {target}")
             losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, df_index_train, df_index_test))
+            pos += len(labels)
 
         losses = np.array(losses)
         a = self.alpha
@@ -247,11 +252,19 @@ class MultiModel(Model):
         # return weighted loss between mean and max loss
         return (losses.mean() * (1 - a) + a * losses.max()) if len(losses) > 0 else None
 
-    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
-        return self.models[target]._predict(x, target)
+    def predict(self, x: np.ndarray) -> np.ndarray:
+        def predict_as_column_matrix(target):
+            prediction = self.models[target].predict(x)
+            if len(prediction.shape) <= 1:
+                return prediction.reshape((-1, 1))
+            else:
+                return prediction
+
+        return np.concatenate([predict_as_column_matrix(target) for target in self.features_and_labels.labels.keys()],
+                              axis=1)
 
     def __call__(self, *args, **kwargs):
-        new_multi_model = MultiModel(self.model_provider, self.classification_summary_provider, self.alpha)
+        new_multi_model = MultiModel(self.model_provider, self.summary_provider, self.alpha)
 
         if kwargs:
             new_multi_model.models = {target: self.model_provider(**kwargs) for target in self.features_and_labels.get_goals().keys()}
