@@ -72,4 +72,25 @@ class ClassificationTest(unittest.TestCase):
                               ('label', 'label #0'), ('label', 'label #1'), ('label', 'label #2'), ('label', 'label #3'),
                               ('target', 'close <0.1'), ('target', 'close <0.05'), ('target', 'close >0'), ('target', 'close >0.05')])
 
-    # TODO: should we make a test for skit model using a dict for labels?
+    def test_target_classification(self):
+        import talib
+
+        """given"""
+        df = pd.read_csv(TEST_FILE, index_col='Date')
+        df["sma"] = talib.SMA(df["spy_Close"])
+        df["is_above_1.0"] = (df["spy_Close"] / df["sma"]) > 1
+        df["is_above_1.2"] = (df["spy_Close"] / df["sma"]) > 1.2
+
+        model = pdu.SkitModel(
+            MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
+            pdu.FeaturesAndLabels(features=['vix_Close'],
+                                  labels={"a": ["is_above_1.0"], "b": ["is_above_1.2"]}))
+
+        """when"""
+        fit = df.fit(model, test_size=0.4, test_validate_split_seed=42)
+        result = fit.training_summary.df
+
+        """then"""
+        self.assertListEqual(result.columns.tolist(),
+                             [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2'),
+                              ('a', 'label', 'is_above_1.0'), ('b', 'label', 'is_above_1.2')])

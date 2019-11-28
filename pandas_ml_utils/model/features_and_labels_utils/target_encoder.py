@@ -14,6 +14,9 @@ class TargetLabelEncoder(object):
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
         pass
 
+    def __len__(self):
+        1
+
 
 class OneHotEncodedTargets(TargetLabelEncoder):
     """
@@ -54,3 +57,5 @@ class OneHotEncodedTargets(TargetLabelEncoder):
 
         return one_hot_categories
 
+    def __len__(self):
+        return len(self.buckets)
