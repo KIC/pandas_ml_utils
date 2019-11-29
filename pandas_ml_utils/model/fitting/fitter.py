@@ -11,6 +11,7 @@ import pandas as pd
 
 from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLabelExtractor
 from model.fitting.fit import Fit
+from summary.summary import Summary
 from train_test_data import make_training_data, make_forecast_data
 from utils.functions import log_with_time
 from model.models import Model
@@ -136,6 +137,25 @@ def __hyper_opt(hyper_parameter_space,
     return best_model, trails
 
 
+def predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
+    min_required_samples = model.features_and_labels.min_required_samples
+
+    if tail is not None:
+        if min_required_samples is not None:
+            # just use the tail for feature engineering
+            df = df[-(abs(tail) + (min_required_samples - 1)):]
+        else:
+            _log.warning("could not determine the minimum required data from the model")
+
+    features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels)
+    dff, x = make_forecast_data(features_and_labels)
+    return features_and_labels.prediction_to_frame(model.predict(x), index=dff.index, inclusive_labels=False)
+
+
+def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.DataFrame], Summary] = Summary):
+    pass
+
+
 def _backtest(df: pd.DataFrame, model: Model) -> pd.DataFrame:
     features_and_labels = model.features_and_labels
 
@@ -146,96 +166,3 @@ def _backtest(df: pd.DataFrame, model: Model) -> pd.DataFrame:
     df = features_and_labels.prediction_to_frame(model.predict(x), index=index, inclusive_labels=True)
     # TODO later return Fit object using model.summary_provider so we can et rid of df.backtest_xxx
     return df
-
-
-# TODO DELETE everything below this comment
-def _predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
-    features_and_labels = model.features_and_labels
-    goals = features_and_labels.get_goals()
-
-    if tail is not None:
-        if tail <= 0:
-            raise ValueError("tail must be > 0 or None")
-        elif features_and_labels.min_required_samples is not None:
-            # just use the tail for feature engineering
-            df = df[-(tail + (features_and_labels.min_required_samples - 1)):]
-        else:
-            _log.warning("could not determine the minimum required data from the model")
-
-    # predict and return data frame
-    dff, x = make_forecast_data(df, features_and_labels)
-    df_prediction = __predict(df.loc[dff.index], model, x)
-
-    header = __stack_header_prediction(goals)
-    df_prediction.columns = pd.MultiIndex.from_tuples(header)
-
-    return df_prediction
-
-
-def __predict(df, model, x):
-    # first save target columns and loss column
-    goals = model.features_and_labels.get_goals()
-    predictions = model.predict(x)
-    df_pred = pd.DataFrame({}, index=df.index)
-
-    for target, (_, labels) in goals.items():
-        prediction = predictions[target]
-        postfix = "" if target is None else f'_{target}'
-
-        if target is not None:
-            df_pred[f'{TARGET_COLUMN_NAME}_{target}'] = df[target]
-        else:
-            df_pred[f"{TARGET_COLUMN_NAME}"] = ""
-
-        if len(labels) > 1:
-            for i, label in enumerate(labels):
-                df_pred[f"{PREDICTION_COLUMN_NAME}{postfix}_{label}"] = prediction[:, i]
-        else:
-            df_pred[f"{PREDICTION_COLUMN_NAME}{postfix}"] = prediction
-
-    return df_pred
-
-
-def __loss(df, model):
-    df_loss = pd.DataFrame({}, index=df.index)
-    goals = model.features_and_labels.get_goals()
-    for target, (loss, _) in goals.items():
-        postfix = f"_{target}" if len(goals) > 1 else ""
-        if loss in df.columns:
-            df_loss[f"{LOSS_COLUMN_NAME}{postfix}_{loss}"] = df[loss]
-        else:
-            df_loss[f"{LOSS_COLUMN_NAME}{postfix}"] = -abs(loss) if loss is not None else -1.0
-
-    return df_loss
-
-
-def __truth(df, model):
-    df_truth = pd.DataFrame({}, index=df.index)
-    goals = model.features_and_labels.get_goals()
-
-    for target, (_, labels) in goals.items():
-        postfix = "" if target is None else f'_{target}'
-        for label in labels:
-            postfix2 = "" if len(labels) <= 1 else f"_{label}"
-            df_truth[f"{LABEL_COLUMN_NAME}{postfix}{postfix2}"] = df[label]
-
-    return df_truth
-
-
-def __stack_header_prediction(goals):
-    prediction_headers = []
-    # prediction
-    for target, (loss, labels) in goals.items():
-        prediction_headers.append((target or TARGET_COLUMN_NAME, TARGET_COLUMN_NAME, "value"))
-        for l in labels:
-            prediction_headers.append((target or TARGET_COLUMN_NAME, PREDICTION_COLUMN_NAME, l if len(labels) > 1 else "value"))
-
-    return prediction_headers
-
-
-def __stack_header_label(goals):
-    return [(target or TARGET_COLUMN_NAME, LABEL_COLUMN_NAME, l if len(labels) > 1 else "value") for target, (_, labels) in goals.items() for l in labels ]
-
-
-def __stack_header_loss(goals):
-    return [(target or TARGET_COLUMN_NAME, LOSS_COLUMN_NAME, "value") for target, (loss, _) in goals.items()]

@@ -42,7 +42,7 @@ class Model(object):
 
     def __init__(self,
                  features_and_labels: FeaturesAndLabels,
-                 summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
                  **kwargs):
         """
         lalala ...
@@ -126,7 +126,7 @@ class SkitModel(Model):
     def __init__(self,
                  skit_model,
                  features_and_labels: FeaturesAndLabels,
-                 summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
                  **kwargs):
         super().__init__(features_and_labels, summary_provider, **kwargs)
         self.skit_model = skit_model
@@ -193,7 +193,7 @@ class KerasModel(Model):
     def __init__(self,
                  keras_compiled_model_provider: Callable[[], KModel],
                  features_and_labels: FeaturesAndLabels,
-                 summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
                  epochs: int = 100,
                  callbacks: List[Callable] = [],
                  **kwargs):
@@ -229,7 +229,7 @@ class MultiModel(Model):
 
     def __init__(self,
                  model_provider: Model,
-                 summary_provider: Callable[[Dict[str, pd.DataFrame]], None] = Summary,
+                 summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
                  alpha: float = 0.5):
         super().__init__(model_provider.features_and_labels, summary_provider)
 

@@ -41,13 +41,17 @@ class MultiModelTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
-        result = fit.training_summary.df
+        fit_summary_df = fit.training_summary.df
+        predict_df = df.predict(fit.model, tail=1)
 
         """then"""
-        self.assertListEqual(result.columns.tolist(),
+        self.assertListEqual(fit_summary_df.columns.tolist(),
                              [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2'),
                               ('a', 'label', 'is_above_1.0'), ('b', 'label', 'is_above_1.2'),
                               ('a', 'loss', 'a'), ('b', 'loss', 'b'),
+                              ('a', 'target', 'sma a'), ('b', 'target', 'sma b')])
+        self.assertListEqual(predict_df.columns.tolist(),
+                             [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2'),
                               ('a', 'target', 'sma a'), ('b', 'target', 'sma b')])
 
     def test_multi_model_multi_class_classifications(self):
@@ -70,13 +74,19 @@ class MultiModelTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
-        result = fit.training_summary.df
+        fit_summary_df = fit.training_summary.df
+        predict_df = df.predict(fit.model, tail=1)
 
         """then"""
-        self.assertListEqual(result.columns.tolist(),
+        self.assertListEqual(fit_summary_df.columns.tolist(),
                              [('1', 'prediction', 'is_above_1.0 #0'), ('1', 'prediction', 'is_above_1.0 #1'), ('1', 'prediction', 'is_above_1.0 #2'), ('1', 'prediction', 'is_above_1.0 #3'),
                               ('2', 'prediction', 'is_above_1.2 #0'), ('2', 'prediction', 'is_above_1.2 #1'), ('2', 'prediction', 'is_above_1.2 #2'), ('2', 'prediction', 'is_above_1.2 #3'),
                               ('1', 'label', 'is_above_1.0 #0'), ('1', 'label', 'is_above_1.0 #1'), ('1', 'label', 'is_above_1.0 #2'), ('1', 'label', 'is_above_1.0 #3'),
                               ('2', 'label', 'is_above_1.2 #0'), ('2', 'label', 'is_above_1.2 #1'), ('2', 'label', 'is_above_1.2 #2'), ('2', 'label', 'is_above_1.2 #3'),
                               ('1', 'loss', '1'), ('2', 'loss', '2'),
                               ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
+        self.assertListEqual(predict_df.columns.tolist(),
+                             [('1', 'prediction', 'is_above_1.0 #0'), ('1', 'prediction', 'is_above_1.0 #1'), ('1', 'prediction', 'is_above_1.0 #2'), ('1', 'prediction', 'is_above_1.0 #3'),
+                              ('2', 'prediction', 'is_above_1.2 #0'), ('2', 'prediction', 'is_above_1.2 #1'), ('2', 'prediction', 'is_above_1.2 #2'), ('2', 'prediction', 'is_above_1.2 #3'),
+                              ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
+
