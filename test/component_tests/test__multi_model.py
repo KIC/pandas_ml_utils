@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.neural_network import MLPClassifier
 
 import pandas_ml_utils as pdu
-from pandas_ml_utils.model.features_and_labels_utils.target_encoder import OneHotEncodedTargets
+from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

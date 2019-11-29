@@ -1,12 +1,10 @@
 from unittest import TestCase
 
-import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.svm import LinearSVC
 
-from pandas_ml_utils.model.fitter import _fit, _backtest, _predict
+from model.fitting.fitter import _fit, _backtest, _predict
 from pandas_ml_utils.model.models import *
 
 df = pd.DataFrame({"a": np.array([0.1, 0.01]), "b": np.array([True, False]), "c": np.array([False, True])})

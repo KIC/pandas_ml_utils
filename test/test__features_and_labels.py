@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from pandas_ml_utils.model.features_and_Labels import FeaturesAndLabels
+from model.features_and_labels.features_and_labels import FeaturesAndLabels
 import talib
 
 class TestFeaturesAndLabels(TestCase):

@@ -8,8 +8,8 @@ import pandas as pd
 from sortedcontainers import SortedDict
 
 from pandas_ml_utils.constants import *
-from pandas_ml_utils.model.features_and_Labels import FeaturesAndLabels
-from pandas_ml_utils.model.features_and_labels_utils.target_encoder import TargetLabelEncoder, \
+from model.features_and_labels.features_and_labels import FeaturesAndLabels
+from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder, \
     MultipleTargetEncodingWrapper, IdentityEncoder
 from pandas_ml_utils.utils.classes import ReScaler
 from pandas_ml_utils.utils.functions import log_with_time

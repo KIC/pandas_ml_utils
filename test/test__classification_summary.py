@@ -6,7 +6,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 
 from pandas_ml_utils.classification.classifier import _convert_probabilities
-from pandas_ml_utils.classification.summary import ClassificationSummary
+from summary.binary_classification_summary import ClassificationSummary
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

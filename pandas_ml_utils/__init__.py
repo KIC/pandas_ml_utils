@@ -5,16 +5,13 @@ __version__ = '0.0.16'
 from .pandas_utils_extension import *
 from .model.models import Model, SkitModel, KerasModel, MultiModel
 from .wrappers.lazy_dataframe import LazyDataFrame
+from .model.features_and_labels.features_and_labels import FeaturesAndLabels
 
 # imports only used to augment pandas classes
 from .analysis.correlation_analysis import plot_correlation_matrix
 from .datafetching.fetch_yahoo import fetch_yahoo
-from .model.features_and_Labels import FeaturesAndLabels
-from .model.fitter import fit
+from model.fitting.fitter import fit
 from .analysis.selection import feature_selection
-from .classification.classifier import fit_classifier, backtest_classifier, classify
-from .reinforcement.agent import fit_agent, backtest_agent, agent_take_action
-from .regression.regressor import fit_regressor, backtest_regressor, regress
 from pandas.core.base import PandasObject
 import pandas as pd
 
@@ -46,20 +43,11 @@ model directly to the DataFrame.
    - :code:`df.plot_correlation_matrix()`
    - :code:`df.feature_selection()`
 
-* classification
-   - :code:`df.fit_classifier(model)`
-   - :code:`df.classify(model)`
-   - :code:`df.backtest_classifier(model)`
+* fitting, testing and using models
+   - :code:`df.fit(model)`
+   - :code:`df.backtest(model)`
+   - :code:`df.predict(model)`
 
-* regression functions
-   - :code:`df.fit_regressor(model)`
-   - :code:`df.backtest_regressor(model)`
-   - :code:`df.regress(model)`
-
-* reinforcement learning
-   - :code:`df.fit_agent(model)`
-   - :code:`df.backtest_agent(model)`
-   - :code:`df.agent_take_action(model)`
   
 Where a model is composed of a ML :class:`.Model` and a :class:`.FeaturesAndLabels` object. Every `fit_` returns a 
 :class:`.Fit` which provides a :class:`.Summary` and a :code:`.save_model('./models/super.model')` method. Models can

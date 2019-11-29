@@ -9,11 +9,8 @@ from typing import List, Callable, Tuple, TYPE_CHECKING, Dict
 
 from sklearn.linear_model import LogisticRegression
 
-from pandas_ml_utils.model.summary import Summary
-from .features_and_Labels import FeaturesAndLabels
-from ..train_test_data import reshape_rnn_as_ar
-from ..reinforcement.gym import RowWiseGym
-from ..extern.loss_functions import mse
+from summary.summary import Summary
+from model.features_and_labels.features_and_labels import FeaturesAndLabels
 
 _log = logging.getLogger(__name__)
 
@@ -139,7 +136,7 @@ class SkitModel(Model):
         y = y.ravel() if len(y.shape) > 1 and y.shape[1] == 1 else y
 
         # remember fitted model
-        self.skit_model = self.skit_model.fit(reshape_rnn_as_ar(x), y)
+        self.skit_model = self.skit_model.fit(SkitModel.reshape_rnn_as_ar(x), y)
 
         if getattr(self.skit_model, 'loss_', None):
             return self.skit_model.loss_
@@ -162,10 +159,10 @@ class SkitModel(Model):
 
     def predict(self, x) -> np.ndarray:
         if callable(getattr(self.skit_model, 'predict_proba', None)):
-            y_hat = self.skit_model.predict_proba(reshape_rnn_as_ar(x))
+            y_hat = self.skit_model.predict_proba(SkitModel.reshape_rnn_as_ar(x))
             return y_hat[:, 1] if len(self.features_and_labels.labels) == 1 and y_hat.shape[1] == 2 else y_hat
         else:
-            return self.skit_model.predict(reshape_rnn_as_ar(x))
+            return self.skit_model.predict(SkitModel.reshape_rnn_as_ar(x))
 
     def __str__(self):
         return f'{__name__}({repr(self.skit_model)}, {self.features_and_labels})'
@@ -177,6 +174,14 @@ class SkitModel(Model):
             new_model = SkitModel(type(self.skit_model)(**kwargs), self.features_and_labels, self.classification_summary_provider)
             new_model.kwargs = deepcopy(self.kwargs)
             return new_model
+
+    @staticmethod
+    def reshape_rnn_as_ar(arr3d):
+        if len(arr3d.shape) < 3:
+            print("Data was not in RNN shape")
+            return arr3d
+        else:
+            return arr3d.reshape(arr3d.shape[0], arr3d.shape[1] * arr3d.shape[2])
 
 
 class KerasModel(Model):

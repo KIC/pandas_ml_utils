@@ -40,7 +40,7 @@ class ClassificationTest(unittest.TestCase):
         self.assertEqual(len(result), 4023)
 
     def test_multi_class_classification(self):
-        from pandas_ml_utils.model.features_and_labels_utils.target_encoder import OneHotEncodedTargets
+        from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets
         import talib
 
         """given"""

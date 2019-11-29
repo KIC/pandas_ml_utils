@@ -1,19 +1,12 @@
-import os
-from functools import lru_cache
-
 import numpy as np
 import pandas as pd
 import logging
 
 from time import perf_counter as pc
-from sortedcontainers import SortedDict
-from typing import Type, Callable, Tuple
+from typing import Tuple
 
-from pandas_ml_utils.model.features_and_labels_utils.extractor import FeatureTargetLabelExtractor
-from pandas_ml_utils.wrappers.hashable_dataframe import HashableDataFrame
-from pandas_ml_utils.utils.classes import ReScaler
+from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.utils.functions import log_with_time
-from pandas_ml_utils.model.features_and_Labels import FeaturesAndLabels
 
 _log = logging.getLogger(__name__)
 
@@ -50,13 +43,4 @@ def make_training_data(features_and_labels: FeatureTargetLabelExtractor,
 
 def make_forecast_data(features_and_labels: FeatureTargetLabelExtractor):
     return features_and_labels.features
-
-
-# FIXME move to SkitModel
-def reshape_rnn_as_ar(arr3d):
-    if len(arr3d.shape) < 3:
-        print("Data was not in RNN shape")
-        return arr3d
-    else:
-        return arr3d.reshape(arr3d.shape[0], arr3d.shape[1] * arr3d.shape[2])
 

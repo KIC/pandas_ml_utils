@@ -2,8 +2,8 @@ import inspect
 import logging
 from typing import List, Callable, Iterable, Dict, Type, Tuple, Union, Any
 from numbers import Number
-from pandas_ml_utils.model.features_and_labels_utils.target_encoder import TargetLabelEncoder
-from pandas_ml_utils.model.features_and_labels_utils.sample_size_estimator import _simulate_smoothing
+from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
+from pandas_ml_utils.model.features_and_labels.sample_size_estimator import _simulate_smoothing
 import pandas as pd
 import numpy as np
 

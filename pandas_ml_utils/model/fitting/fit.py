@@ -2,8 +2,8 @@ from typing import Any
 
 import pandas as pd
 import os
-from .models import Model
-from .summary import Summary
+from model.models import Model
+from summary.summary import Summary
 
 
 class Fit(object):

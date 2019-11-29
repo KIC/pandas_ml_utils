@@ -1,14 +1,13 @@
 import logging
 import os
-import sys
 from functools import lru_cache
-from typing import Tuple, Union, Dict
+from typing import Dict
 
 import numpy as np
 import pandas as pd
 
-from ..constants import *
-from ..model.summary import Summary
+from constants import *
+from summary.summary import Summary
 from sklearn.metrics import f1_score
 
 _log = logging.getLogger(__name__)

@@ -9,12 +9,12 @@ from sklearn.exceptions import ConvergenceWarning
 import numpy as np
 import pandas as pd
 
-from pandas_ml_utils.model.features_and_labels_utils.extractor import FeatureTargetLabelExtractor
-from pandas_ml_utils.model.fit import Fit
-from ..train_test_data import make_training_data, make_forecast_data
-from ..utils.functions import log_with_time
-from ..model.models import Model
-from ..constants import *
+from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLabelExtractor
+from model.fitting.fit import Fit
+from train_test_data import make_training_data, make_forecast_data
+from utils.functions import log_with_time
+from model.models import Model
+from constants import *
 
 _log = logging.getLogger(__name__)
 
