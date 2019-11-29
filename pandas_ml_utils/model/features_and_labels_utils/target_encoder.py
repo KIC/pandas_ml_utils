@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Iterable, List
+from typing import Iterable, List, Dict
 
 from pandas_ml_utils.utils.functions import one_hot
 
@@ -8,7 +8,7 @@ from pandas_ml_utils.utils.functions import one_hot
 class TargetLabelEncoder(object):
 
     @property
-    def labels(self) -> List[str]:
+    def labels_source_columns(self) -> List[str]:
         pass
 
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -16,6 +16,44 @@ class TargetLabelEncoder(object):
 
     def __len__(self):
         1
+
+
+class IdentityEncoder(TargetLabelEncoder):
+
+    def __init__(self, target_labels: List[str]):
+        super().__init__()
+        self.target_labels = target_labels
+
+    @property
+    def labels_source_columns(self) -> List[str]:
+        return self.target_labels
+
+    def encode(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df[self.target_labels]
+
+    def __len__(self):
+        return len(self.target_labels)
+
+
+class MultipleTargetEncodingWrapper(TargetLabelEncoder):
+
+    def __init__(self, target_labels: Dict[str, TargetLabelEncoder]):
+        super().__init__()
+        self.target_labels = target_labels
+
+    @property
+    def labels_source_columns(self) -> List[str]:
+        return [l for enc in self.target_labels.values() for l in enc.labels_source_columns]
+
+    def encode(self, df: pd.DataFrame) -> pd.DataFrame:
+        df_labels = pd.DataFrame({}, index=df.index)
+        for target, enc in self.target_labels.items():
+            df_labels = df_labels.join(enc.encode(df), how='inner')
+
+        return df_labels
+
+    def __len__(self):
+        sum([len(enc) for enc in self.target_labels.values()])
 
 
 class OneHotEncodedTargets(TargetLabelEncoder):
@@ -44,7 +82,7 @@ class OneHotEncodedTargets(TargetLabelEncoder):
         self.number_of_categories = len(self.buckets)
 
     @property
-    def labels(self) -> List[str]:
+    def labels_source_columns(self) -> List[str]:
         return [self.label]
 
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:

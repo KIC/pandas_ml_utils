@@ -9,7 +9,8 @@ from sortedcontainers import SortedDict
 
 from pandas_ml_utils.constants import *
 from pandas_ml_utils.model.features_and_Labels import FeaturesAndLabels
-from pandas_ml_utils.model.features_and_labels_utils.target_encoder import TargetLabelEncoder
+from pandas_ml_utils.model.features_and_labels_utils.target_encoder import TargetLabelEncoder, \
+    MultipleTargetEncodingWrapper, IdentityEncoder
 from pandas_ml_utils.utils.classes import ReScaler
 from pandas_ml_utils.utils.functions import log_with_time
 
@@ -31,10 +32,16 @@ class FeatureTargetLabelExtractor(object):
         elif isinstance(labels, TargetLabelEncoder):
             targets = None
             encoder = labels.encode
-            label_columns = labels.labels
+            label_columns = labels.labels_source_columns
         elif isinstance(labels, Dict):
             # this is our multi model case, here we add an extra dimension to the labels array
-            label_columns = [l for ls in labels.values() for l in ls ]
+            label_columns = [l for ls in labels.values()
+                             for l in (ls if isinstance(ls, list) else ls.labels_source_columns)]
+
+            # we need a special encoder which is wrapping all encoder for each target
+            encoder = MultipleTargetEncodingWrapper({
+                t: l if isinstance(l, TargetLabelEncoder) else IdentityEncoder(l) for t, l in labels.items()
+            }).encode
 
         self.df = df
         self._features_and_labels = features_and_labels
