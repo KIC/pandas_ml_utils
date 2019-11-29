@@ -52,7 +52,19 @@ class FeatureTargetLabelExtractor(object):
     def prediction_to_frame(self, prediction: np.ndarray, index: pd.Index = None, inclusive_labels: bool = False) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
         index = self.df.index if index is None else index
 
-        if len(self._labels) > 1:
+        if isinstance(self._features_and_labels.labels, dict):
+            df = pd.DataFrame({}, index=index)
+            pos = 0
+            for target, labels in self._features_and_labels.labels.items():
+                if isinstance(labels, TargetLabelEncoder):
+                    columns = [f'{labels.labels_source_columns[0]} #{i}' for i in range(len(labels))] \
+                               if len(labels.labels_source_columns) == 1 and len(labels) > 1 else labels.labels_source_columns
+                else:
+                    columns = labels
+
+                df = df.join(pd.DataFrame({label_col: prediction[:, i + pos] for i, label_col in enumerate(columns)}, index=index))
+                pos += len(labels)
+        elif len(self._labels) > 1:
             df = pd.DataFrame({l: prediction[:, i] for i, l in enumerate(self._labels)}, index=index)
         elif len(self._labels) == 1 and len( prediction.shape) > 1 and prediction.shape[1] > 1:
             df = pd.DataFrame({f'{self._labels[0]} #{i}': prediction[:, i] for i in range(prediction.shape[1])}, index=index)
@@ -101,7 +113,7 @@ class FeatureTargetLabelExtractor(object):
         if isinstance(self._features_and_labels.labels, dict):
             # len(labels)'s columns of "prediction" and "label" go under the top level "target" index
             # i.e. if len(labels) == 2 for 2 targets we have: a,a, b,b , a,a, b,b for prediction and label
-            targets = [target * len(labels) for target, labels in self._features_and_labels.labels.items()]
+            targets = [l for target, labels in self._features_and_labels.labels.items() for l in [target] * len(labels)]
             top_level = targets
 
             if inclusive_labels:

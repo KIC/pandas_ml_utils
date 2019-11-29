@@ -73,5 +73,10 @@ class MultiModelTest(unittest.TestCase):
         result = fit.training_summary.df
 
         """then"""
-        print(result.columns.tolist())
-        self.assertListEqual(result.columns.tolist(), [])
+        self.assertListEqual(result.columns.tolist(),
+                             [('1', 'prediction', 'is_above_1.0 #0'), ('1', 'prediction', 'is_above_1.0 #1'), ('1', 'prediction', 'is_above_1.0 #2'), ('1', 'prediction', 'is_above_1.0 #3'),
+                              ('2', 'prediction', 'is_above_1.2 #0'), ('2', 'prediction', 'is_above_1.2 #1'), ('2', 'prediction', 'is_above_1.2 #2'), ('2', 'prediction', 'is_above_1.2 #3'),
+                              ('1', 'label', 'is_above_1.0 #0'), ('1', 'label', 'is_above_1.0 #1'), ('1', 'label', 'is_above_1.0 #2'), ('1', 'label', 'is_above_1.0 #3'),
+                              ('2', 'label', 'is_above_1.2 #0'), ('2', 'label', 'is_above_1.2 #1'), ('2', 'label', 'is_above_1.2 #2'), ('2', 'label', 'is_above_1.2 #3'),
+                              ('1', 'loss', '1'), ('2', 'loss', '2'),
+                              ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
