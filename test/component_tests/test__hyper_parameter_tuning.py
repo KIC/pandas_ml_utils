@@ -19,10 +19,11 @@ class HyportParameterOptimizationTest(unittest.TestCase):
     def test_hyper_parameter(self):
         from hyperopt import hp
 
+        """given"""
         df = pd.read_csv(TEST_FILE, index_col='Date')
         df['label'] = df["spy_Close"] > df["spy_Open"]
 
-        # fit with find hyper parameter
+        """when fit with find hyper parameter"""
         fit = df.fit(
             pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
                           pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
@@ -34,6 +35,6 @@ class HyportParameterOptimizationTest(unittest.TestCase):
                                    '__max_evals': 4, '__rstate': np.random.RandomState(42)}
         )
 
-        # test best parameter
+        """then test best parameter"""
         self.assertEqual(fit.model.skit_model.get_params()['alpha'], 0.0001)
 

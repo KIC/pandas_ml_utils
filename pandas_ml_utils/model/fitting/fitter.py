@@ -87,6 +87,11 @@ def fit(df: pd.DataFrame,
 
 
 def __train_loop(model, cross_validation, x_train, y_train, index_train,  x_test, y_test, index_test):
+    # convert pandas indices to numpy arrays
+    index_train = np.array(index_train)
+    index_test = np.array(index_test)
+
+    # apply cross validation
     if cross_validation is not None and isinstance(cross_validation, Tuple) and callable(cross_validation[1]):
         losses = []
         for fold_epoch in range(cross_validation[0]):

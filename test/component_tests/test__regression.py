@@ -17,9 +17,10 @@ TEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data
 class RegressionTest(unittest.TestCase):
 
     def test_fit_regressor(self):
+        """given"""
         df = pd.read_csv(TEST_FILE, index_col='Date') / 50.
 
-        # fit
+        """when"""
         fit = df.fit(
             pdu.SkitModel(
                 MLPRegressor(activation='tanh', hidden_layer_sizes=(4, 3, 2, 1, 2, 3, 4), random_state=42),
@@ -40,8 +41,8 @@ class RegressionTest(unittest.TestCase):
 
         # regressed
         regressed = df.predict(fitted_model)
-        print(regressed.tail())
-        print(regressed.columns.tolist())
+
+        """then"""
         self.assertListEqual(regressed.columns.tolist(),
                              [('prediction', 'vix_Open'),
                               ('prediction', 'vix_High'),
@@ -55,9 +56,10 @@ class RegressionTest(unittest.TestCase):
         self.assertEqual(len(regressed), 6706)
 
     def test_fit_regressor_mutiple_target(self):
+        """given"""
         df = pd.read_csv(TEST_FILE, index_col='Date') / 50.
 
-        # fit
+        """when"""
         fit = df.fit(
             pdu.SkitModel(
                 MLPRegressor(activation='tanh', hidden_layer_sizes=(4, 3, 2, 1, 2, 3, 4), random_state=42),
@@ -78,8 +80,8 @@ class RegressionTest(unittest.TestCase):
 
         # regressed
         regressed = df.predict(fitted_model)
-        print(regressed.tail())
-        print(regressed.columns.tolist())
+
+        """then"""
         self.assertListEqual(regressed.columns.tolist(),
                              [('a', 'prediction', 'vix_Open'),
                               ('b', 'prediction', 'vix_High'), ('b', 'prediction', 'vix_Low'), ('b', 'prediction', 'vix_Close'),
