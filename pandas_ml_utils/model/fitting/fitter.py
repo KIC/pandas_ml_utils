@@ -12,7 +12,7 @@ import pandas as pd
 from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLabelExtractor
 from model.fitting.fit import Fit
 from summary.summary import Summary
-from train_test_data import make_training_data, make_forecast_data
+from model.fitting.train_test_data import make_training_data, make_forecast_data
 from utils.functions import log_with_time
 from model.models import Model
 

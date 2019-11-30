@@ -1,36 +1,32 @@
 import logging
+import os
 import unittest
 
 import numpy as np
 import pandas as pd
-from keras.layers import Dense, Activation, Flatten
-from keras.models import Sequential
-from keras.optimizers import Adam
-from rl.agents import SARSAAgent
-from rl.policy import MaxBoltzmannQPolicy
-from sklearn.model_selection import KFold
-from sklearn.neural_network import MLPClassifier, MLPRegressor
+from sklearn.neural_network import MLPClassifier
 
 import pandas_ml_utils as pdu
-from pandas_ml_utils.analysis.correlation_analysis import _sort_correlation
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+TEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "test.csv")
 
-class ComponentTest(unittest.TestCase):
+
+class ClassificationTest(unittest.TestCase):
 
     def test_fit_classifier_full(self):
-        df = pd.read_csv(f'{__name__}.csv', index_col='Date')
+        df = pd.read_csv(TEST_FILE, index_col='Date')
         df['label'] = df["spy_Close"] > df["spy_Open"]
 
         # fit
-        fit = df.fit_classifier(pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001,
-                                                            random_state=42),
-                                              pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
-                                                                    targets=("vix_Open", "spy_Volume"))),
-                                test_size=0.4,
-                                test_validate_split_seed=42)
+        fit = df.fit(
+            pdu.SkitModel(
+                MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
+                pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'], targets=("vix_Open", "spy_Volume"))),
+            test_size=0.4,
+            test_validate_split_seed=42)
 
         self.assertEqual(fit.model.features_and_labels.min_required_samples, 1)
         np.testing.assert_array_equal(fit.training_summary.get_confusion_matrix()['vix_Open'], np.array([[1067,  872], [1002, 1082]]))

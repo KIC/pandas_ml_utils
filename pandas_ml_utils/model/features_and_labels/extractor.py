@@ -124,7 +124,12 @@ class FeatureTargetLabelExtractor(object):
 
             # if we have a target and or loss defined add a level as well
             if self._features_and_labels.targets is not None:
-                top_level += list(self._features_and_labels.labels.keys())
+                for t in self._features_and_labels.labels.keys():
+                    for tgt in self._features_and_labels.targets(t, self.df[-1:]):
+                        if isinstance(tgt, pd.DataFrame):
+                            top_level += [t for _ in tgt.columns]
+                        else:
+                            top_level += [t]
 
             # add the new level as column to an intermediate data frame
             df_headers = df.columns.to_frame()

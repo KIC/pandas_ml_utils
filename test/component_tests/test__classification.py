@@ -116,3 +116,4 @@ class ClassificationTest(unittest.TestCase):
 
         self.assertListEqual(predict_df.columns.tolist(),
                              [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2')])
+

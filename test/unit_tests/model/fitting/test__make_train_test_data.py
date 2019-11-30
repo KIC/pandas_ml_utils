@@ -9,6 +9,7 @@ from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLab
 
 class TestTrainTestData(unittest.TestCase):
 
+
     def test_no_training_data(self):
 
         df = pd.DataFrame({"featureA": [1,2,3,4,5],
@@ -144,7 +145,7 @@ class TestTrainTestData(unittest.TestCase):
         self.assertEqual(hash(a), hash(b))
 
     def test_cache_feature_matrix(self):
-        from pandas_ml_utils.train_test_data import make_training_data, _make_features_with_cache
+        from model.fitting.train_test_data import make_training_data, _make_features_with_cache
 
         df = pd.DataFrame({"featureA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                            "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],

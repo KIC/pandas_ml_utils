@@ -10,7 +10,7 @@ from .model.features_and_labels.features_and_labels import FeaturesAndLabels
 # imports only used to augment pandas classes
 from .analysis.correlation_analysis import plot_correlation_matrix
 from .datafetching.fetch_yahoo import fetch_yahoo
-from model.fitting.fitter import fit, predict, backtest
+from .model.fitting.fitter import fit, predict, backtest
 from .analysis.selection import feature_selection
 from pandas.core.base import PandasObject
 import pandas as pd
