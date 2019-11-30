@@ -171,7 +171,7 @@ class SkitModel(Model):
         if not kwargs:
             return deepcopy(self)
         else:
-            new_model = SkitModel(type(self.skit_model)(**kwargs), self.features_and_labels, self.classification_summary_provider)
+            new_model = SkitModel(type(self.skit_model)(**kwargs), self.features_and_labels, self.summary_provider)
             new_model.kwargs = deepcopy(self.kwargs)
             return new_model
 

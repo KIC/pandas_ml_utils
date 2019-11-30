@@ -23,7 +23,7 @@ class HyportParameterOptimizationTest(unittest.TestCase):
         df['label'] = df["spy_Close"] > df["spy_Open"]
 
         # fit with find hyper parameter
-        fit = df.fit_classifier(
+        fit = df.fit(
             pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
                           pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
                                                 target_columns=["vix_Open"],
