@@ -15,7 +15,6 @@ from summary.summary import Summary
 from train_test_data import make_training_data, make_forecast_data
 from utils.functions import log_with_time
 from model.models import Model
-from constants import *
 
 _log = logging.getLogger(__name__)
 
@@ -152,17 +151,12 @@ def predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
     return features_and_labels.prediction_to_frame(model.predict(x), index=dff.index, inclusive_labels=False)
 
 
-def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.DataFrame], Summary] = Summary):
-    pass
+def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.DataFrame], Summary] = Summary) -> Summary:
+    features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels)
 
+    # make training and test data sets
+    x, _, _, _, index, _ = make_training_data(features_and_labels, 0)
 
-def _backtest(df: pd.DataFrame, model: Model) -> pd.DataFrame:
-    features_and_labels = model.features_and_labels
+    df_backtest = features_and_labels.prediction_to_frame(model.predict(x), index=index, inclusive_labels=True)
+    return (summary_provider or model.summary_provider)(df_backtest)
 
-    # make training and test data with no 0 test data fraction
-    x, _, y, _, index, _ = make_training_data(df, features_and_labels, 0, int)
-
-    # predict probabilities
-    df = features_and_labels.prediction_to_frame(model.predict(x), index=index, inclusive_labels=True)
-    # TODO later return Fit object using model.summary_provider so we can et rid of df.backtest_xxx
-    return df

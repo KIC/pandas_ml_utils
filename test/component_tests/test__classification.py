@@ -34,11 +34,16 @@ class ClassificationTest(unittest.TestCase):
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42)
         fit_summary_df = fit.training_summary.df
+        bt_summary_df = df.backtest(fit.model).df
         predict_df = df.predict(fit.model, tail=1)
 
         """then"""
         self.assertListEqual(fit_summary_df.columns.tolist(), [('prediction', 'is_above'), ('label', 'is_above'), ('loss', 'loss'), ('target', 'sma')])
         self.assertEqual(len(fit_summary_df), 4023)
+
+        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
+        self.assertEqual(len(bt_summary_df), 6706)
+
         self.assertListEqual(predict_df.columns.tolist(), [('prediction', 'is_above'), ('target', 'sma')])
 
     def test_multi_class_classification(self):
@@ -66,6 +71,7 @@ class ClassificationTest(unittest.TestCase):
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
         fit_summary_df = fit.training_summary.df
+        bt_summary_df = df.backtest(fit.model).df
         predict_df = df.predict(fit.model, tail=1)
 
         """then"""
@@ -74,6 +80,9 @@ class ClassificationTest(unittest.TestCase):
                              [('prediction', 'label #0'), ('prediction', 'label #1'), ('prediction', 'label #2'), ('prediction', 'label #3'),
                               ('label', 'label #0'), ('label', 'label #1'), ('label', 'label #2'), ('label', 'label #3'),
                               ('target', 'close <0.1'), ('target', 'close <0.05'), ('target', 'close >0'), ('target', 'close >0.05')])
+
+        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
+
         self.assertListEqual(predict_df.columns.tolist(),
                              [('prediction', 'label #0'), ('prediction', 'label #1'), ('prediction', 'label #2'), ('prediction', 'label #3'),
                               ('target', 'close <0.1'), ('target', 'close <0.05'), ('target', 'close >0'), ('target', 'close >0.05')])
@@ -95,11 +104,15 @@ class ClassificationTest(unittest.TestCase):
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42)
         fit_summary_df = fit.training_summary.df
+        bt_summary_df = df.backtest(fit.model).df
         predict_df = df.predict(fit.model, tail=1)
 
         """then"""
         self.assertListEqual(fit_summary_df.columns.tolist(),
                              [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2'),
                               ('a', 'label', 'is_above_1.0'), ('b', 'label', 'is_above_1.2')])
+
+        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
+
         self.assertListEqual(predict_df.columns.tolist(),
                              [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2')])
