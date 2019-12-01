@@ -13,12 +13,12 @@ from sklearn.metrics import f1_score
 _log = logging.getLogger(__name__)
 
 
-class ClassificationSummary(Summary):
-    def __init__(self, df: pd.DataFrame, probability_cutoff: float = 0.5):
+class BinaryClassificationSummary(Summary):
+    def __init__(self, df: pd.DataFrame):
         super().__init__()
         self.df = df
-        self.probability_cutoff = probability_cutoff
-        self.confusions = {target: ClassificationSummary._calculate_confusions(df[target]) for target in {*df.columns.get_level_values(0)}}
+        self.probability_cutoff = 0.5
+        self.confusions = BinaryClassificationSummary._calculate_confusions(df)
 
     @lru_cache(maxsize=None)
     def get_confusion_matrix(self):

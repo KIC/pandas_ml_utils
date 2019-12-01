@@ -10,11 +10,11 @@ import numpy as np
 import pandas as pd
 
 from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLabelExtractor
-from model.fitting.fit import Fit
-from summary.summary import Summary
-from model.fitting.train_test_data import make_training_data, make_forecast_data
-from utils.functions import log_with_time
-from model.models import Model
+from pandas_ml_utils.model.fitting.fit import Fit
+from pandas_ml_utils.summary.summary import Summary
+from pandas_ml_utils.model.fitting.train_test_data import make_training_data, make_forecast_data
+from pandas_ml_utils.utils.functions import log_with_time
+from pandas_ml_utils.model.models import Model
 
 _log = logging.getLogger(__name__)
 

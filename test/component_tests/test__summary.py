@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.neural_network import MLPClassifier
 
 import pandas_ml_utils as pdu
+from summary.binary_classification_summary import BinaryClassificationSummary
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -16,7 +17,7 @@ TEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data
 
 class ClassificationTest(unittest.TestCase):
 
-    def test_fit_classifier_full(self):
+    def test_binary_classification_sumary(self):
         df = pd.read_csv(TEST_FILE, index_col='Date')
         df['label'] = df["spy_Close"] > df["spy_Open"]
 
@@ -24,7 +25,8 @@ class ClassificationTest(unittest.TestCase):
         fit = df.fit(
             pdu.SkitModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
-                pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'], targets=("vix_Open", "spy_Volume"))),
+                pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'], targets=("vix_Open", "spy_Volume")),
+                BinaryClassificationSummary),
             test_size=0.4,
             test_validate_split_seed=42)
 

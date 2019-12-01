@@ -2,16 +2,16 @@
 __version__ = '0.0.16'
 
 # imports to provide functionality via root import like import pandas_ml_utils as pmu; pmu.XY
-from .pandas_utils_extension import *
-from .model.models import Model, SkitModel, KerasModel, MultiModel
-from .wrappers.lazy_dataframe import LazyDataFrame
-from .model.features_and_labels.features_and_labels import FeaturesAndLabels
+from pandas_ml_utils.pandas_utils_extension import *
+from pandas_ml_utils.model.models import Model, SkitModel, KerasModel, MultiModel
+from pandas_ml_utils.wrappers.lazy_dataframe import LazyDataFrame
+from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
 
 # imports only used to augment pandas classes
-from .analysis.correlation_analysis import plot_correlation_matrix
-from .datafetching.fetch_yahoo import fetch_yahoo
-from .model.fitting.fitter import fit, predict, backtest
-from .analysis.selection import feature_selection
+from pandas_ml_utils.analysis.correlation_analysis import plot_correlation_matrix
+from pandas_ml_utils.datafetching.fetch_yahoo import fetch_yahoo
+from pandas_ml_utils.model.fitting.fitter import fit, predict, backtest
+from pandas_ml_utils.analysis.selection import feature_selection
 from pandas.core.base import PandasObject
 import pandas as pd
 

@@ -9,8 +9,8 @@ from typing import List, Callable, Tuple, TYPE_CHECKING, Dict
 
 from sklearn.linear_model import LogisticRegression
 
-from summary.summary import Summary
-from model.features_and_labels.features_and_labels import FeaturesAndLabels
+from pandas_ml_utils.summary.summary import Summary
+from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
 
 _log = logging.getLogger(__name__)
 
