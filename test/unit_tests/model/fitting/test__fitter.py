@@ -4,10 +4,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.svm import LinearSVC
 
-from model.fitting.fitter import _fit, _backtest, _predict
+from pandas_ml_utils.model.fitting.fitter import fit, backtest, predict
 from pandas_ml_utils.model.models import *
 
 df = pd.DataFrame({"a": np.array([0.1, 0.01]), "b": np.array([True, False]), "c": np.array([False, True])})
+
 
 class TestFitter(TestCase):
 
@@ -22,7 +23,7 @@ class TestFitter(TestCase):
             SkitModel(RandomForestClassifier(), features_and_labels)]
 
         """when"""
-        fitts = [_fit(df, p, 0)[1][0] for p in providers]
+        fitts = [fit(df, p, 0)[1][0] for p in providers]
         fits_df_columns = [f.columns.tolist() for f in fitts]
 
         """then"""
@@ -47,8 +48,8 @@ class TestFitter(TestCase):
                                features_and_labels=fl) for fl in fls]
 
         """when"""
-        fitted_models = [_fit(df, p, 0)[0] for p in providers]
-        backtests = [_backtest(df, fm) for fm in fitted_models]
+        fitted_models = [fit(df, p, 0)[0] for p in providers]
+        backtests = [backtest(df, fm) for fm in fitted_models]
         backtest_columns = [b.columns.tolist() for b in backtests]
 
         """then"""
@@ -76,10 +77,10 @@ class TestFitter(TestCase):
 
 
         """when"""
-        fitted_models = [_fit(df, p, 0)[0] for p in providers]
+        fitted_models = [fit(df, p, 0)[0] for p in providers]
 
         """then"""
-        predictions = [_predict(df, fm) for fm in fitted_models]
+        predictions = [predict(df, fm) for fm in fitted_models]
         print(predictions[-1].columns.tolist())
         self.assertEqual(predictions[0].columns.tolist(), [('target', 'target', 'value'), ('target', 'prediction', 'value')])
         self.assertEqual(predictions[1].columns.tolist(), [('b', 'target', 'value'), ('b', 'prediction', 'value')])

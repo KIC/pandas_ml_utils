@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 
-from pandas_ml_utils.classification.classifier import _convert_probabilities
-from pandas_ml_utils.summary.binary_classification_summary import ClassificationSummary
+#from pandas_ml_utils.classification.classifier import _convert_probabilities
+#from pandas_ml_utils.summary.binary_classification_summary import ClassificationSummary
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -14,20 +14,20 @@ logger.setLevel(logging.DEBUG)
 target = [0.0, 0.0, 0.0, 0.0, 0.0]
 loss = np.array([1.0, 2.0, 4.0, 6.0, 8.0]) * -1
 
-df = _convert_probabilities(pd.DataFrame({
-    ("no fit", "target", "value"):          target,
-    ("no fit", "prediction", "value"):      [1.0, 0.0, 1.0, 1.0, 0.0],
-    ("no fit", "label", "value"):           [False, True, False, False, True],
-    ("no fit", "loss", "value"):            loss,
-    ("regular fit", "target", "value"):     target,
-    ("regular fit", "prediction", "value"): [1.0, 0.0, 1.0, 1.0, 0.0],
-    ("regular fit", "label", "value"):      [True, True, True, False, False],
-    ("regular fit", "loss", "value"):       loss,
-    ("perfect fit", "target", "value"):     target,
-    ("perfect fit", "prediction", "value"): [1.0, 0.0, 1.0, 1.0, 0.0],
-    ("perfect fit", "label", "value"):      [True, False, True, False, False],
-    ("perfect fit", "loss", "value"):       loss,
-}))
+#df = _convert_probabilities(pd.DataFrame({
+#    ("no fit", "target", "value"):          target,
+#    ("no fit", "prediction", "value"):      [1.0, 0.0, 1.0, 1.0, 0.0],
+#    ("no fit", "label", "value"):           [False, True, False, False, True],
+#    ("no fit", "loss", "value"):            loss,
+#    ("regular fit", "target", "value"):     target,
+#    ("regular fit", "prediction", "value"): [1.0, 0.0, 1.0, 1.0, 0.0],
+#    ("regular fit", "label", "value"):      [True, True, True, False, False],
+#    ("regular fit", "loss", "value"):       loss,
+#    ("perfect fit", "target", "value"):     target,
+#    ("perfect fit", "prediction", "value"): [1.0, 0.0, 1.0, 1.0, 0.0],
+#    ("perfect fit", "label", "value"):      [True, False, True, False, False],
+#    ("perfect fit", "loss", "value"):       loss,
+#}))
 
 
 class TestClassificationSummary(TestCase):

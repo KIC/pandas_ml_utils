@@ -23,7 +23,6 @@ class TestSaveLoad(TestCase):
         """given"""
         features_and_labels = pmu.FeaturesAndLabels(["a"], ["b"])
 
-
         def keras_model_provider(optimizer='adam'):
             model = Sequential()
             model.add(Dense(1, input_dim=1, activation='sigmoid'))
@@ -37,11 +36,11 @@ class TestSaveLoad(TestCase):
             pmu.SkitModel(LinearSVC(), features_and_labels),
             pmu.SkitModel(RandomForestClassifier(), features_and_labels),
             pmu.KerasModel(keras_model_provider, features_and_labels),
-            pmu.MultiModel(pmu.SkitModel(LogisticRegression(), features_and_labels))
+            pmu.MultiModel(pmu.SkitModel(LogisticRegression(), pmu.FeaturesAndLabels(["a"], {"b": ["b"]})))
         ]
 
         """when"""
-        fits = [df.fit_classifier(mp) for mp in providers]
+        fits = [df.fit(mp) for mp in providers]
         models = []
         for i, f in enumerate(fits):
             f.save_model(f'/tmp/pandas-ml-utils-unittest-test_model_{i}')
@@ -49,5 +48,6 @@ class TestSaveLoad(TestCase):
 
         """then"""
         for i, (fitted_model, restored_model) in enumerate(models):
-            pd.testing.assert_frame_equal(df.classify(fitted_model), df.classify(restored_model))
-            pd.testing.assert_frame_equal(df.backtest_classifier(fitted_model).df, df.backtest_classifier(restored_model).df)
+            print(f"test model ==> {i}")
+            pd.testing.assert_frame_equal(df.predict(fitted_model), df.predict(restored_model))
+            pd.testing.assert_frame_equal(df.backtest(fitted_model).df, df.backtest(restored_model).df)

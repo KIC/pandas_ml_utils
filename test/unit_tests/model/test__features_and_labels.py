@@ -1,7 +1,8 @@
 from unittest import TestCase
 
-from model.features_and_labels.features_and_labels import FeaturesAndLabels
+from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
 import talib
+
 
 class TestFeaturesAndLabels(TestCase):
 
@@ -37,28 +38,6 @@ class TestFeaturesAndLabels(TestCase):
         """then"""
         # shape is ((timesteps, features), (labels, )
         self.assertEqual(shape, ((4, 3), (2, )))
-
-    def test_goals(self):
-        """given"""
-        fl1 = FeaturesAndLabels(["a", "b", "c"], ["d", "e"], targets='a')
-        fl2 = FeaturesAndLabels(["a", "b", "c"], ["d", "e"], targets=('a', 'b'))
-        fl3 = FeaturesAndLabels(["a", "b", "c"], ["d", "e"], targets={'a': 'b'})
-        fl4 = FeaturesAndLabels(["a", "b", "c"], ["d", "e"], targets={'a': ('b', 'd')})
-        fl5 = FeaturesAndLabels(["a", "b", "c"], ["d", "e"], targets={'a': ('b', ['d'])})
-
-        """when"""
-        g1 = fl1.get_goals()
-        g2 = fl2.get_goals()
-        g3 = fl3.get_goals()
-        g4 = fl4.get_goals()
-        g5 = fl5.get_goals()
-
-        """then"""
-        self.assertEqual(g1, {'a': (None, ["d", "e"])})
-        self.assertEqual(g2, {'a': ('b', ["d", "e"])})
-        self.assertEqual(g3, {'a': ('b', ["d", "e"])})
-        self.assertEqual(g4, {'a': ('b', ["d"])})
-        self.assertEqual(g5, {'a': ('b', ["d"])})
 
     def test_min_required_samples(self):
         """when"""

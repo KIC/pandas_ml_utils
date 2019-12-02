@@ -214,7 +214,7 @@ class KerasModel(Model):
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,
                                self.features_and_labels,
-                               self.classification_summary_provider,
+                               self.summary_provider,
                                self.epochs,
                                deepcopy(self.callbacks),
                                **deepcopy(self.kwargs))

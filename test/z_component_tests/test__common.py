@@ -5,9 +5,9 @@ import unittest
 import pandas as pd
 
 import pandas_ml_utils as pdu
-from model.features_and_labels.extractor import FeatureTargetLabelExtractor
+from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.analysis.correlation_analysis import _sort_correlation
-from model.fitting.train_test_data import make_training_data
+from pandas_ml_utils.model.fitting.train_test_data import make_training_data
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
