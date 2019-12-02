@@ -10,6 +10,8 @@ from pandas_ml_utils.constants import *
 from pandas_ml_utils.summary.summary import Summary
 from sklearn.metrics import f1_score
 
+from pandas_ml_utils.utils.functions import unique
+
 _log = logging.getLogger(__name__)
 
 
@@ -23,14 +25,14 @@ class BinaryClassificationSummary(Summary):
         self.probability_cutoff = probability_cutoff
         self.confusions = BinaryClassificationSummary._calculate_confusions(self.df, probability_cutoff)
 
-    def get_confusion_matrix(self):
+    def get_confusion_matrix(self, total=True):
         confusion_mx = np.array([[[len(c) for c in r] for r in cm] for cm in self.confusions])
-        return confusion_mx.sum(axis=0)
+        return confusion_mx.sum(axis=0) if total else confusion_mx
 
-    def get_confusion_loss(self):
+    def get_confusion_loss(self, total=True):
         try:
             loss_mx = np.array([[[c[LOSS_COLUMN_NAME].iloc[:, 0].sum() for c in r] for r in cm] for cm in self.confusions])
-            return loss_mx.sum(axis=0)
+            return loss_mx.sum(axis=0) if total else loss_mx
         except:
             return np.array([[0, 0], [0, 0]])
 
@@ -42,7 +44,7 @@ class BinaryClassificationSummary(Summary):
         if df.columns.nlevels == 3:
             f1 = np.array([f1_score(df[target, LABEL_COLUMN_NAME].iloc[:, 0].values,
                                     df[target, PREDICTION_COLUMN_NAME].iloc[:, 0].values > pc)
-                           for target in set(df.columns.get_level_values(0))]).mean()
+                           for target in unique(df.columns.get_level_values(0))]).mean()
         else:
             f1 = f1_score(df[LABEL_COLUMN_NAME].iloc[:, 0].values,
                           df[PREDICTION_COLUMN_NAME].iloc[:, 0].values > pc)
@@ -66,12 +68,11 @@ class BinaryClassificationSummary(Summary):
 
         probability_cutoff = self.probability_cutoff
         pc = self.probability_cutoff
-        df = self.df.copy()
         plots = {}
 
-        for target in set(df.columns.get_level_values(0)) if df.columns.nlevels == 3 else [None]:
+        for target in unique(self.df.columns.get_level_values(0)) if self.df.columns.nlevels == 3 else [None]:
             # get target and frame
-            df = df[target] if target is not None else df
+            df = self.df[target] if target is not None else self.df
 
             # define grid
             fig = plt.figure(figsize=figsize)
@@ -108,7 +109,7 @@ class BinaryClassificationSummary(Summary):
         if df.columns.nlevels == 3:
             # multiple targets
             return [BinaryClassificationSummary._calculate_confusions(df[target], probability_cutoff)[0]
-                    for target in set(df.columns.get_level_values(0))]
+                    for target in unique(df.columns.get_level_values(0))]
         else:
             pc = probability_cutoff
             tp = df[(df[PREDICTION_COLUMN_NAME].iloc[:, 0] >  pc) & (df[LABEL_COLUMN_NAME].iloc[:, 0] >  pc)]
