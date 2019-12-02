@@ -40,39 +40,52 @@
         </table>
     </%def>
 
-    % for target in classification_summary.confusions.keys():
-        <h3><p>${target}</p></h3>
+    <h3><p>Confusion Matrix</p></h3>
+    <table class="full-width">
+        <thead>
+            <tr>
+                <th><p class="left">Confusion Matrix</p></th>
+                <th><p class="right">Confusion Loss</p></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><div class="left">${pretty_confusion_matrix(summary.get_confusion_matrix(), "{:.0f}")}</div></td>
+                <td><div class="right">${pretty_confusion_matrix(summary.get_confusion_loss(), "{:.2f}")}</div></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="right">
+                    <table>
+                        % for name, value in summary.get_metrics().items():
+                            <tr>
+                                <td>${interpretation[name]}</td>
+                                <td style="color: ${color[name][0 if value < 0.33 else 1 if value < 0.66 else 2]};">${f"{value:.2f}"}</td>
+                            </tr>
+                        % endfor
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+        <h3><p>Loss</p></h3>
         <table>
             <thead>
                 <tr>
-                    <th><p class="left">Confusion Matrix</p></th>
-                    <th><p class="right">Confusion Loss</p></th>
+                    <th><p class="left">Chart</p></th>
                 </tr>
             </thead>
             <tbody>
+                % for target, plot in summary.plot_classification().items():
                 <tr>
-                    <td><div class="left">${pretty_confusion_matrix(classification_summary.get_confusion_matrix()[target], "{:.0f}")}</div></td>
-                    <td><div class="right">${pretty_confusion_matrix(classification_summary.get_confusion_loss()[target], "{:.2f}")}</div></td>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <img src='data:image/png;base64,${fig_to_png_base64(classification_summary.plot_classification()[target])}' class="full-width"/>
+                    <td>
+                        <p>${target or ""}</p>
+                        <img src='data:image/png;base64,${fig_to_png_base64(plot)}' class="full-width"/>
                     </td>
                 </tr>
-                <tr>
-                    <td></td>
-                    <td class="right">
-                        <table>
-                            % for name, value in classification_summary.get_metrics()[target].items():
-                                <tr>
-                                    <td>${interpretation[name]}</td>
-                                    <td style="color: ${color[name][0 if value < 0.33 else 1 if value < 0.66 else 2]};">${f"{value:.2f}"}</td>
-                                </tr>
-                            % endfor
-                        </table>
-                    </td>
-                </tr>
+                % endfor
             </tbody>
         </table>
-    % endfor
 </div>

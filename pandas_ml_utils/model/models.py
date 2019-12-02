@@ -141,13 +141,13 @@ class SkitModel(Model):
         if getattr(self.skit_model, 'loss_', None):
             return self.skit_model.loss_
         else:
-            predictions = [self.predict(x)[p] for p in self.features_and_labels.get_goals().keys()]
+            prediction = self.predict(x)
             if type(self.skit_model) == LogisticRegression\
             or type(self.skit_model).__name__.endswith("Classifier")\
             or type(self.skit_model).__name__.endswith("SVC"):
                 from sklearn.metrics import log_loss
                 try:
-                    return np.mean([log_loss((p) > 0.5, y) for p in predictions])
+                    return log_loss(prediction > 0.5, y).mean()
                 except ValueError as e:
                     if "contains only one label" in str(e):
                         return -100
@@ -155,7 +155,7 @@ class SkitModel(Model):
                         raise e
             else:
                 from sklearn.metrics import mean_squared_error
-                return np.mean([mean_squared_error(p, y) for p in predictions])
+                return mean_squared_error(prediction, y).mean()
 
     def predict(self, x) -> np.ndarray:
         if callable(getattr(self.skit_model, 'predict_proba', None)):

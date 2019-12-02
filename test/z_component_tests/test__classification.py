@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.neural_network import MLPClassifier
 
 import pandas_ml_utils as pdu
+from pandas_ml_utils.constants import *
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -38,13 +39,13 @@ class ClassificationTest(unittest.TestCase):
         predict_df = df.predict(fit.model, tail=1)
 
         """then"""
-        self.assertListEqual(fit_summary_df.columns.tolist(), [('prediction', 'is_above'), ('label', 'is_above'), ('loss', 'loss'), ('target', 'sma')])
+        self.assertListEqual(fit_summary_df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'is_above'), (LABEL_COLUMN_NAME, 'is_above'), (LOSS_COLUMN_NAME, 'loss'), (TARGET_COLUMN_NAME, 'sma')])
         self.assertEqual(len(fit_summary_df), 4023)
 
         self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
         self.assertEqual(len(bt_summary_df), 6706)
 
-        self.assertListEqual(predict_df.columns.tolist(), [('prediction', 'is_above'), ('target', 'sma')])
+        self.assertListEqual(predict_df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'is_above'), (TARGET_COLUMN_NAME, 'sma')])
 
     def test_multi_class_classification(self):
         from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets
@@ -77,15 +78,15 @@ class ClassificationTest(unittest.TestCase):
         """then"""
         self.assertEqual(len(fit_summary_df), 4023)
         self.assertListEqual(fit_summary_df.columns.tolist(),
-                             [('prediction', 'label #0'), ('prediction', 'label #1'), ('prediction', 'label #2'), ('prediction', 'label #3'),
-                              ('label', 'label #0'), ('label', 'label #1'), ('label', 'label #2'), ('label', 'label #3'),
-                              ('target', 'close <0.1'), ('target', 'close <0.05'), ('target', 'close >0'), ('target', 'close >0.05')])
+                             [(PREDICTION_COLUMN_NAME, 'label #0'), (PREDICTION_COLUMN_NAME, 'label #1'), (PREDICTION_COLUMN_NAME, 'label #2'), (PREDICTION_COLUMN_NAME, 'label #3'),
+                              (LABEL_COLUMN_NAME, 'label #0'), (LABEL_COLUMN_NAME, 'label #1'), (LABEL_COLUMN_NAME, 'label #2'), (LABEL_COLUMN_NAME, 'label #3'),
+                              (TARGET_COLUMN_NAME, 'close <0.1'), (TARGET_COLUMN_NAME, 'close <0.05'), (TARGET_COLUMN_NAME, 'close >0'), (TARGET_COLUMN_NAME, 'close >0.05')])
 
         self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
 
         self.assertListEqual(predict_df.columns.tolist(),
-                             [('prediction', 'label #0'), ('prediction', 'label #1'), ('prediction', 'label #2'), ('prediction', 'label #3'),
-                              ('target', 'close <0.1'), ('target', 'close <0.05'), ('target', 'close >0'), ('target', 'close >0.05')])
+                             [(PREDICTION_COLUMN_NAME, 'label #0'), (PREDICTION_COLUMN_NAME, 'label #1'), (PREDICTION_COLUMN_NAME, 'label #2'), (PREDICTION_COLUMN_NAME, 'label #3'),
+                              (TARGET_COLUMN_NAME, 'close <0.1'), (TARGET_COLUMN_NAME, 'close <0.05'), (TARGET_COLUMN_NAME, 'close >0'), (TARGET_COLUMN_NAME, 'close >0.05')])
 
     def test_target_classification(self):
         import talib
@@ -109,11 +110,11 @@ class ClassificationTest(unittest.TestCase):
 
         """then"""
         self.assertListEqual(fit_summary_df.columns.tolist(),
-                             [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2'),
-                              ('a', 'label', 'is_above_1.0'), ('b', 'label', 'is_above_1.2')])
+                             [('a', PREDICTION_COLUMN_NAME, 'is_above_1.0'), ('b', PREDICTION_COLUMN_NAME, 'is_above_1.2'),
+                              ('a', LABEL_COLUMN_NAME, 'is_above_1.0'), ('b', LABEL_COLUMN_NAME, 'is_above_1.2')])
 
         self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
 
         self.assertListEqual(predict_df.columns.tolist(),
-                             [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2')])
+                             [('a', PREDICTION_COLUMN_NAME, 'is_above_1.0'), ('b', PREDICTION_COLUMN_NAME, 'is_above_1.2')])
 

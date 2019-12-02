@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Dict
+import os
 
 
 class Summary(object):
@@ -12,8 +12,13 @@ class Summary(object):
     def df(self):
         return self._df
 
-    def _repr_html_(self):
-        pass
+    def _html_template_file(self):
+        return f"{os.path.abspath(__file__)}.html"
 
-    def _html_(self, width: str = '100%'):
-        pass
+    def _repr_html_(self):
+        from mako.template import Template
+        from mako.lookup import TemplateLookup
+
+        template = Template(filename=self._html_template_file(), lookup=TemplateLookup(directories=['/']))
+        return template.render(summary=self)
+
