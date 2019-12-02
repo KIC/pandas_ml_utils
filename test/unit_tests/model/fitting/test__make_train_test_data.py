@@ -5,10 +5,10 @@ import pandas as pd
 
 import pandas_ml_utils as pdu
 from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLabelExtractor
+from pandas_ml_utils.model.fitting.train_test_data import make_training_data
 
 
 class TestTrainTestData(unittest.TestCase):
-
 
     def test_no_training_data(self):
 
@@ -17,8 +17,8 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": [1,2,3,4,5],
                            "labelB": [5,4,3,2,1]})
 
-        x_train, x_test, y_train, y_test, _, _ = df.make_training_data(
-            pdu.FeaturesAndLabels(["featureA", "featureB"], ["labelA"]),
+        x_train, x_test, y_train, y_test, _, _ = make_training_data(
+            FeatureTargetLabelExtractor(df, pdu.FeaturesAndLabels(["featureA", "featureB"], ["labelA"])),
             test_size=0)
 
         self.assertIsNone(x_test)
@@ -32,8 +32,8 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": [1,2,3,4,5],
                            "labelB": [5,4,3,2,1]})
 
-        x_train, x_test, y_train, y_test, _, _ = df.make_training_data(
-            pdu.FeaturesAndLabels(["featureA", "featureB"], ["labelA"]),
+        x_train, x_test, y_train, y_test, _, _ = make_training_data(
+            FeatureTargetLabelExtractor(df, pdu.FeaturesAndLabels(["featureA", "featureB"], ["labelA"])),
             test_size=0.5)
 
         np.testing.assert_array_almost_equal(x_test, np.array([[2, 4], [5, 1], [3, 3]]))
@@ -45,8 +45,8 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": [1,2,3,4,5],
                            "labelB": [5,4,3,2,1]})
 
-        x_train, x_test, y_train, y_test, _, _  = df.make_training_data(
-            pdu.FeaturesAndLabels(["featureA", "featureB"], ["labelA", "labelB"]),
+        x_train, x_test, y_train, y_test, _, _  = make_training_data(
+            FeatureTargetLabelExtractor(df, pdu.FeaturesAndLabels(["featureA", "featureB"], ["labelA", "labelB"])),
             test_size=0.5)
 
         np.testing.assert_array_almost_equal(x_test, np.array([[2, 4], [5, 1], [3, 3]]))
@@ -60,7 +60,7 @@ class TestTrainTestData(unittest.TestCase):
 
         fl = pdu.FeaturesAndLabels(["featureA", "featureB"], ["labelA"], feature_lags=[0, 1])
 
-        x_train, x_test, y_train, y_test, _, _ = df.make_training_data(fl, test_size=0.5)
+        x_train, x_test, y_train, y_test, _, _ = make_training_data(FeatureTargetLabelExtractor(df, fl), test_size=0.5)
 
         # test whole shape and labels
         np.testing.assert_array_almost_equal(x_test, np.array([[[3, 3], [2, 4]], [[5, 1], [4, 2]]]))
@@ -81,8 +81,8 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": [1,2,3,4,5],
                            "labelB": [5,4,3,2,1]})
 
-        x_train, x_test, y_train, y_test, _, _ = df.make_training_data(
-            pdu.FeaturesAndLabels(["featureA"], ["labelA"], feature_lags=[1, 2]),
+        x_train, x_test, y_train, y_test, _, _ = make_training_data(
+            FeatureTargetLabelExtractor(df, pdu.FeaturesAndLabels(["featureA"], ["labelA"], feature_lags=[1, 2])),
             test_size=0.5)
 
         np.testing.assert_array_almost_equal(x_test, np.array([[[2], [1]], [[3], [2]]]))
@@ -94,10 +94,12 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": [1,2,3,4,5,6,7,8,9,10],
                            "labelB": [5,4,3,2,1,0,1,2,3,4]})
 
-        x_train, x_test, y_train, y_test, _, _ = df.make_training_data(
-            pdu.FeaturesAndLabels(["featureA"], ["featureA"], feature_lags=[1, 2, 3, 4],
-                                  lag_smoothing={2: lambda df: df[["featureA"]] * 2,
-                                                 4: lambda df: df[["featureA"]] * 4}),
+        x_train, x_test, y_train, y_test, _, _ = make_training_data(
+            FeatureTargetLabelExtractor(df,
+                                        pdu.FeaturesAndLabels(["featureA"], ["labelA"],
+                                                              feature_lags=[1, 2, 3, 4],
+                                                              lag_smoothing={2: lambda df: df[["featureA"]] * 2,
+                                                                             4: lambda df: df[["featureA"]] * 4})),
             test_size=0.5)
 
         np.testing.assert_array_almost_equal(x_train[-1], [[7], [12], [10], [16]])
@@ -111,7 +113,6 @@ class TestTrainTestData(unittest.TestCase):
         fl = pdu.FeaturesAndLabels(["featureA"], ["labelB"], feature_lags=[0, 1],
                                    lag_smoothing={1: lambda df: df["featureA"].shift(2)})
 
-        FeatureTargetLabelExtractor(df, fl).features_df
         df, _, _ = FeatureTargetLabelExtractor(df, fl).features_labels
         len_features = 10 - 1 - 2
         len_none_lables = 1
@@ -120,13 +121,6 @@ class TestTrainTestData(unittest.TestCase):
         np.testing.assert_array_equal(fl.get_feature_names(), np.array( [['featureA_0'], ['featureA_1']]))
         self.assertAlmostEqual(df["featureA_1"].iloc[0], 1.0)
         self.assertAlmostEqual(df["featureA_1"].iloc[-1], 6.0)
-
-    def test_reshape_rnn_as_ar(self):
-        np.testing.assert_array_almost_equal(pdu.reshape_rnn_as_ar(np.array([[[1], [2]]], ndmin=3)),
-                                             np.array([[1, 2]], ndmin=2))
-
-        np.testing.assert_array_almost_equal(pdu.reshape_rnn_as_ar(np.array([[1, 2]], ndmin=2)),
-                                             np.array([[1, 2]], ndmin=2))
 
     def test_hashable_features_and_labels(self):
         a = pdu.FeaturesAndLabels(["featureA"], ["featureA"], feature_lags=[1, 2, 3, 4],
@@ -144,26 +138,6 @@ class TestTrainTestData(unittest.TestCase):
         self.assertEqual(a, b)
         self.assertEqual(hash(a), hash(b))
 
-    def test_cache_feature_matrix(self):
-        from model.fitting.train_test_data import make_training_data, _make_features_with_cache
-
-        df = pd.DataFrame({"featureA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                           "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                           "labelB": [5, 4, 3, 2, 1, 0, 1, 2, 3, None]})
-
-        ful = pdu.FeaturesAndLabels(["featureA"], ["featureA"], feature_lags=[1, 2, 3, 4],
-                                    lag_smoothing={2: lambda df: df[["featureA"]] * 2,
-                                                   4: lambda df: df[["featureA"]] * 4})
-
-        make_training_data(df, ful, cache=True)
-        make_training_data(df, ful, cache=True)
-
-        cache_info = _make_features_with_cache.cache_info()
-        print(cache_info)
-
-        self.assertEqual(cache_info.misses, 1)  # miss the first call
-        self.assertEqual(cache_info.hits, 1)    # fetch the first cached call
-
     def test_feature_scaling_3d(self):
         df = pd.DataFrame({"featureA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                            "featureC": [11, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -175,7 +149,7 @@ class TestTrainTestData(unittest.TestCase):
                                    feature_lags=[1, 2],
                                    feature_rescaling={("featureA", "featureC"): (-1, 1)})
 
-        x_train, x_test, y_train, y_test, _, _ = df.make_training_data(fl, test_size=0)
+        x_train, x_test, y_train, y_test, _, _ = make_training_data(FeatureTargetLabelExtractor(df, fl), test_size=0)
 
         print(x_train)
         self.assertEqual(x_train.argmax(), 5)
@@ -193,7 +167,7 @@ class TestTrainTestData(unittest.TestCase):
                                    ["labelA"],
                                    feature_rescaling={("featureA", "featureC"): (-1, 1)})
 
-        x_train, x_test, y_train, y_test, _, _ = df.make_training_data(fl, test_size=0)
+        x_train, x_test, y_train, y_test, _, _ = make_training_data(FeatureTargetLabelExtractor(df, fl), test_size=0)
 
         print(x_train)
         np.testing.assert_array_almost_equal(x_train[0], np.array([-1, 0.1, 1]))
@@ -217,7 +191,7 @@ class TestTrainTestData(unittest.TestCase):
                                    ["labelA"],
                                    feature_lags=[0,1,2,3,4])
 
-        x_train, x_test, y_train, y_test, _, _ = df.make_training_data(fl, test_size=0)
+        x_train, x_test, y_train, y_test, _, _ = make_training_data(FeatureTargetLabelExtractor(df, fl), test_size=0)
 
         self.assertEqual(len(x_train), len(df) - 4)
         np.testing.assert_array_equal(x_train[0,:,0], df["featureA"].values[[4,3,2,1,0]])

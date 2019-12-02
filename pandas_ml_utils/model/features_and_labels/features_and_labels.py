@@ -27,7 +27,7 @@ class FeaturesAndLabels(object):
                  loss: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  targets: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  feature_lags: Iterable[int] = None,
-                 feature_rescaling: Dict[Tuple[str], Tuple[int]] = None,
+                 feature_rescaling: Dict[Tuple[str], Tuple[int]] = None, # fiXme lets provide a rescaler ..
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
                  **kwargs):
         """
