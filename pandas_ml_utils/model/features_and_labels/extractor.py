@@ -203,7 +203,7 @@ class FeatureTargetLabelExtractor(object):
         # do rescaling
         if feature_rescaling is not None:
             for rescale_features, target_range in feature_rescaling.items():
-                columns = [[col for col in df.columns for feature in rescale_features if re.match(rf"^{feature}(_\d+)?$", col)]]
+                columns = [col for col in df.columns for feature in rescale_features if re.match(rf"^{feature}(_\d+)?$", col)]
                 df[columns] = df[columns].apply(lambda row: ReScaler((row.min(), row.max()), target_range)(row),
                                                 raw=True, result_type='broadcast')
 
