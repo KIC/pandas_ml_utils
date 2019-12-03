@@ -102,6 +102,8 @@ class FeatureTargetLabelExtractor(object):
                     if dft.name is None:
                         dft.name = target or TARGET_COLUMN_NAME
                     dft = dft.to_frame()
+                elif not isinstance(dft, (pd.Series, pd.DataFrame)):
+                    dft = pd.DataFrame({target or TARGET_COLUMN_NAME: dft}, index=df.index)
 
                 dft.columns = pd.MultiIndex.from_arrays([[TARGET_COLUMN_NAME] * len(dft.columns), dft.columns])
                 df = df.join(dft, how='inner')
