@@ -27,7 +27,7 @@ class FeaturesAndLabels(object):
                  loss: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  targets: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  feature_lags: Iterable[int] = None,
-                 feature_rescaling: Dict[Tuple[str], Tuple[int]] = None, # fiXme lets provide a rescaler ..
+                 feature_rescaling: Dict[Tuple[str, ...], Tuple[int, ...]] = None, # fiXme lets provide a rescaler ..
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
                  **kwargs):
         """
@@ -84,7 +84,7 @@ class FeaturesAndLabels(object):
         return self._loss
 
     @property
-    def shape(self) -> Tuple[Tuple[int], Tuple[int]]:
+    def shape(self) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
         """
         Returns the shape of features and labels how they get passed to the :class:`.Model`. If laging is used, then
         the features shape is in Keras RNN form.
@@ -94,7 +94,7 @@ class FeaturesAndLabels(object):
 
         return self.get_feature_names().shape, (self.len_labels(), )
 
-    def len_features(self) -> Tuple[int]:
+    def len_features(self) -> Tuple[int, ...]:
         """
         Returns the length of the defined features, the number of lags used and the total number of all features * lags
 

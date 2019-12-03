@@ -16,7 +16,7 @@ def feature_selection(df: pd.DataFrame,
                       minimum_features: int = 1,
                       lags: Iterable[int] = range(100),
                       show_plots: bool = True,
-                      figsize: Tuple[int] = (12, 10)):
+                      figsize: Tuple[int, int] = (12, 10)):
     """
     The *feature_selection* functionality helps you to analyze your features, filter out highly
     correlated once and focus on the most important features. This function also applies an

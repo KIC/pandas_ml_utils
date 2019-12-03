@@ -7,7 +7,7 @@ from sklearn.utils.validation import _num_samples
 
 class ReScaler(object):
 
-    def __init__(self, domain: Tuple[float], range: Tuple[float]):
+    def __init__(self, domain: Tuple[float, float], range: Tuple[float, float]):
         self.domain = domain
         self.range = range
         self.resacle = np.vectorize(self._rescale)
