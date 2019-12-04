@@ -284,70 +284,70 @@ class MultiModel(Model):
 
 
 ## THIS need to be fixed somewhen
-class OpenAiGymModel(Model):
-    from typing import TYPE_CHECKING
-    if TYPE_CHECKING:
-        from rl.core import Agent
-
-    def __init__(self,
-                 agent_provider: Callable[[Tuple, int], Agent],
-                 features_and_labels: FeaturesAndLabels,
-                 action_reward_functions: List[Callable[[np.ndarray], float]],
-                 reward_range: Tuple[int, int],
-                 oservation_range: Tuple[int, int] = None,
-                 episodes: int = 1000,
-                 **kwargs):
-        super().__init__(features_and_labels, **kwargs)
-        self.agent_provider = agent_provider
-        self.action_reward_functions = action_reward_functions
-        self.reward_range = reward_range
-        self.oservation_range = oservation_range
-        self.episodes = episodes
-        self.agent = agent_provider(features_and_labels.shape()[0], len(action_reward_functions))
-
-        # some history
-        self.keras_train_history = None
-        self.keras_test_history = None
-        self.history = ()
-
-    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
-        mm = (min([x.min(), x_val.min()]), max([x.max(), x_val.max()])) if self.oservation_range is None else self.oservation_range
-        training_gym = RowWiseGym((df_index_train, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
-        test_gym = RowWiseGym((df_index_test, x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
-
-        self.keras_train_history = self.agent.fit(training_gym, nb_steps=len(x) * self.episodes)
-        #self.keras_test_history = self.agent.test(test_gym, nb_episodes=1) # clarification needed what test actually does: https://github.com/keras-rl/keras-rl/issues/342
-        test_gym = self._forward_gym(test_gym)
-
-        self.history = (training_gym.get_history(), test_gym.get_history())
-
-    def back_test(self, index, x, y):
-        mm = (x.min(), x.max()) if self.oservation_range is None else self.oservation_range
-        gym = RowWiseGym((index, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
-        return self._forward_gym(gym).get_history()
-
-    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
-        return [self.agent.forward(x[r]) for r in range(len(x))]
-
-    def __call__(self, *args, **kwargs):
-        if kwargs:
-            raise ValueError("hyper parameter tunig currently not supported for RL")
-
-        return OpenAiGymModel(self.agent_provider,
-                              self.features_and_labels,
-                              self.action_reward_functions,
-                              self.reward_range,
-                              self.episodes,
-                              **deepcopy(self.kwargs))
-
-    def _forward_gym(self, gym):
-        done = False
-        state = gym.reset()
-        while not done:
-            state, reward, done, _ = gym.step(self.agent.forward(state))
-
-        return gym
-
-class StableBaselineModel(Model):
-    # add stable baseline models https://stable-baselines.readthedocs.io/en/master/guide/algos.html
-    pass
+#class OpenAiGymModel(Model):
+#    from typing import TYPE_CHECKING
+#    if TYPE_CHECKING:
+#        from rl.core import Agent
+#
+#    def __init__(self,
+#                 agent_provider: Callable[[Tuple, int], Agent],
+#                 features_and_labels: FeaturesAndLabels,
+#                 action_reward_functions: List[Callable[[np.ndarray], float]],
+#                 reward_range: Tuple[int, int],
+#                 oservation_range: Tuple[int, int] = None,
+#                 episodes: int = 1000,
+#                 **kwargs):
+#        super().__init__(features_and_labels, **kwargs)
+#        self.agent_provider = agent_provider
+#        self.action_reward_functions = action_reward_functions
+#        self.reward_range = reward_range
+#        self.oservation_range = oservation_range
+#        self.episodes = episodes
+#        self.agent = agent_provider(features_and_labels.shape()[0], len(action_reward_functions))
+#
+#        # some history
+#        self.keras_train_history = None
+#        self.keras_test_history = None
+#        self.history = ()
+#
+#    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
+#        mm = (min([x.min(), x_val.min()]), max([x.max(), x_val.max()])) if self.oservation_range is None else self.oservation_range
+#        training_gym = RowWiseGym((df_index_train, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
+#        test_gym = RowWiseGym((df_index_test, x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
+#
+#        self.keras_train_history = self.agent.fit(training_gym, nb_steps=len(x) * self.episodes)
+#        #self.keras_test_history = self.agent.test(test_gym, nb_episodes=1) # clarification needed what test actually does: https://github.com/keras-rl/keras-rl/issues/342
+#        test_gym = self._forward_gym(test_gym)
+#
+#        self.history = (training_gym.get_history(), test_gym.get_history())
+#
+#    def back_test(self, index, x, y):
+#        mm = (x.min(), x.max()) if self.oservation_range is None else self.oservation_range
+#        gym = RowWiseGym((index, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
+#        return self._forward_gym(gym).get_history()
+#
+#    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
+#        return [self.agent.forward(x[r]) for r in range(len(x))]
+#
+#    def __call__(self, *args, **kwargs):
+#        if kwargs:
+#            raise ValueError("hyper parameter tunig currently not supported for RL")
+#
+#        return OpenAiGymModel(self.agent_provider,
+#                              self.features_and_labels,
+#                              self.action_reward_functions,
+#                              self.reward_range,
+#                              self.episodes,
+#                              **deepcopy(self.kwargs))
+#
+#    def _forward_gym(self, gym):
+#        done = False
+#        state = gym.reset()
+#        while not done:
+#            state, reward, done, _ = gym.step(self.agent.forward(state))
+#
+#        return gym
+#
+#class StableBaselineModel(Model):
+#    # add stable baseline models https://stable-baselines.readthedocs.io/en/master/guide/algos.html
+#    pass
