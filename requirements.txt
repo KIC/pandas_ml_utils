@@ -2,12 +2,14 @@
 sortedcontainers
 scikit-learn
 statsmodels
+tensorflow
 matplotlib
 cachetools
 yfinance
 hyperopt
 keras-rl
 seaborn
+TA-Lib
 pandas
 keras
 dill
