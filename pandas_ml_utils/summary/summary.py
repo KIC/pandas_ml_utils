@@ -3,6 +3,12 @@ import os
 
 
 class Summary(object):
+    """
+    Summary objects a used to visually present the results of a `df.fit` fitted model or a `df.backtest`
+    All implementations of `Summary` need to:
+     * pass a `pd.DataFrame` to `super().__init()__`
+     * implement `_repr_html_()`
+    """
 
     def __init__(self, df: pd.DataFrame, **kwargs):
         self._df = df

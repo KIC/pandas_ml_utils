@@ -18,10 +18,10 @@ _log = logging.getLogger(__name__)
 class Model(object):
     """
     Represents a statistical or ML model and holds the necessary information how to interpret the columns of a
-    pandas *DataFrame* ( :class:`.FeaturesAndLabels` ). Currently available implementations are
-    * SkitModel - provide any skit learn classifier or regressor
-    * KerasModel - provide a function returning a compiled keras model
-    * MultiModel - provide a model which will copied (and fitted) for each provided target
+    pandas *DataFrame* ( :class:`.FeaturesAndLabels` ). Currently available implementations are:
+     * SkitModel - provide any skit learn classifier or regressor
+     * KerasModel - provide a function returning a compiled keras model
+     * MultiModel - provide a model which will copied (and fitted) for each provided target
     """
 
     @staticmethod
@@ -30,7 +30,7 @@ class Model(object):
         Loads a previously saved model from disk. By default `dill <https://pypi.org/project/dill/>`_ is used to
         serialize / deserialize a model.
 
-        :param filename: filename of the seriaized model
+        :param filename: filename of the serialized model
         :return: returns a deserialized model
         """
         with open(filename, 'rb') as file:
@@ -45,9 +45,14 @@ class Model(object):
                  summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
                  **kwargs):
         """
-        lalala ...
+        All implementations of `Model` need to pass two arguments to `super().__init()__`.
 
-        :param features_and_labels:
+        :param features_and_labels: the :class:`.FeaturesAndLabels` object defining all the features,
+                                    feature engineerings and labels
+        :param summary_provider: a summary provider in the most simple case just holds a `pd.DataFrame` containing all
+                                 the labels and all the predictions and optionally loss and target values. Since
+                                 constructors as callables as well it is usually enoug tho just pass the type i.e.
+                                 `summary_provider=BinaryClassificationSummary`
         :param kwargs:
         """
         self._features_and_labels = features_and_labels

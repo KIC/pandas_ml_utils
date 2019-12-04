@@ -51,7 +51,7 @@ model directly to the DataFrame.
    - :code:`df.predict(model)`
 
   
-Where a model is composed of a ML :class:`.Model` and a :class:`.FeaturesAndLabels` object. Every `fit_` returns a 
-:class:`.Fit` which provides a :class:`.Summary` and a :code:`.save_model('./models/super.model')` method. Models can
+Where a model is composed of a ML :class:`.Model` and a :class:`.FeaturesAndLabels` object. The `fit` method returns a 
+:class:`pandas_ml_utils.model.fitting.fit.Fit` which provides a :class:`.Summary` and a :code:`.save_model('./models/super.model')` method. Models can
 be loaded back via :code:`Model.load('./models/super.model')`.
 """

@@ -8,7 +8,8 @@ from pandas_ml_utils.summary.summary import Summary
 
 class Fit(object):
     """
-    After a model is fitted it gets embedded into this class along with some :class:`.Summary` statistics
+    After a model is fitted it gets embedded into this class along with some :class:`.Summary` statistics.
+    In the case of `Fit` is displayed in a notebook the _repr_html of the Fit and Summary objects are called.
     """
 
     def __init__(self,

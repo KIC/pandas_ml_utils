@@ -125,16 +125,17 @@ Logistic Regression. It is also possible to search through a set of hyper parame
 import pandas as pd
 import pandas_ml_utils as pmu
 from sklearn.linear_model import LogisticRegression
+from pandas_ml_utils.summary.binary_classification_summary import BinaryClassificationSummary
 
 df = pd.read_csv('burritos.csv')
 df["with_fires"] = df["Fries"].apply(lambda x: str(x).lower() == "x")
 df["price"] = df["Cost"] * -1
 df = df[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "with_fires", "price"]].dropna()
-fit = df.fit_classifier(pmu.SkitModel(LogisticRegression(solver='lbfgs'),
-                                      pmu.FeaturesAndLabels(["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling",
-                                                             "Uniformity", "Salsa", "Synergy", "Wrap", "overall"],
-                                                            ["with_fires"],
-                                                            targets=("price", "price"))))
+fit = df.fitpmu.SkitModel(LogisticRegression(solver='lbfgs'),
+                          pmu.FeaturesAndLabels(["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling",
+                                                  "Uniformity", "Salsa", "Synergy", "Wrap", "overall"],
+                                                 ["with_fires"]),
+                          BinaryClassificationSummary)
 
 fit
 ```
@@ -155,7 +156,7 @@ fit.save_model("/tmp/burrito.model")
 df = pd.read_csv('burritos.csv')
 df["price"] = df["Cost"] * -1
 df = df[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "price"]].dropna()
-df.classify(pmu.Model.load("/tmp/burrito.model")).tail()
+df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 ```
 
 <div>
@@ -228,6 +229,10 @@ df.classify(pmu.Model.load("/tmp/burrito.model")).tail()
 * add whatever you need for yourself and share it with us 
 
 ## Change Log
+### 0.0.16
+* there is now only one `fit` and only one `backtest` and `predict` method
+* Summary class has to be provided as part of the model i.e. BinaryClassificationSummary
+
 ### 0.0.12
 * added sphinx documentation
 * added multi model as regular model which has quite a big impact

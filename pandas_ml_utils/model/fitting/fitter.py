@@ -39,7 +39,7 @@ def fit(df: pd.DataFrame,
     :param cross_validation: tuple of number of epochs for each fold provider and a cross validation provider
     :param test_validate_split_seed: seed if train, test split needs to be reproduceable
     :param hyper_parameter_space: space of hyper parameters passed as kwargs to your model provider
-    :return: returns a :class:`.Fit` object
+    :return: returns a :class:`pandas_ml_utils.model.fitting.fit.Fit` object
     """
 
     trails = None

@@ -24,8 +24,9 @@ class TestFitter(TestCase):
             SkitModel(RandomForestClassifier(), features_and_labels)]
 
         """when"""
-        fitts = [fit(df, p, 0).training_summary.df for p in providers]
-        fits_df_columns = [f.columns.tolist() for f in fitts]
+        fits = [fit(df, p, 0) for p in providers]
+        summaries = [f.training_summary.df for f in fits]
+        fits_df_columns = [f.columns.tolist() for f in summaries]
 
         """then"""
         expected_columns = [(PREDICTION_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'b'), (TARGET_COLUMN_NAME, "b")]
@@ -33,10 +34,13 @@ class TestFitter(TestCase):
         self.assertListEqual(fits_df_columns[1], expected_columns)
         self.assertListEqual(fits_df_columns[2], expected_columns)
         self.assertListEqual(fits_df_columns[3], expected_columns)
-        np.testing.assert_array_equal(fitts[0][TARGET_COLUMN_NAME, "b"].values, df["b"].values)
-        np.testing.assert_array_equal(fitts[1][TARGET_COLUMN_NAME, "b"].values, df["b"].values)
-        np.testing.assert_array_equal(fitts[2][TARGET_COLUMN_NAME, "b"].values, df["b"].values)
-        np.testing.assert_array_equal(fitts[3][TARGET_COLUMN_NAME, "b"].values, df["b"].values)
+        np.testing.assert_array_equal(summaries[0][TARGET_COLUMN_NAME, "b"].values, df["b"].values)
+        np.testing.assert_array_equal(summaries[1][TARGET_COLUMN_NAME, "b"].values, df["b"].values)
+        np.testing.assert_array_equal(summaries[2][TARGET_COLUMN_NAME, "b"].values, df["b"].values)
+        np.testing.assert_array_equal(summaries[3][TARGET_COLUMN_NAME, "b"].values, df["b"].values)
+
+        """and has html representation"""
+        self.assertEqual(len(fits[0]._repr_html_()), 2095)
 
     def test__backtest(self):
         """given"""
