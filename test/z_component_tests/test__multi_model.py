@@ -8,6 +8,7 @@ from sklearn.neural_network import MLPClassifier
 
 import pandas_ml_utils as pdu
 from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets
+from test.utils import SMA
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -23,11 +24,9 @@ class MultiModelTest(unittest.TestCase):
                           lambda: pdu.MultiModel(pdu.MultiModel(pdu.SkitModel(MLPClassifier(), pdu.FeaturesAndLabels([],{})))))
 
     def test_multi_model_binary_classifications(self):
-        import talib
-
         """given"""
         df = pd.read_csv(TEST_FILE, index_col='Date')
-        df["sma"] = talib.SMA(df["spy_Close"])
+        df["sma"] = SMA(df["spy_Close"])
         df["is_above_1.0"] = (df["spy_Close"] / df["sma"]) > 1
         df["is_above_1.2"] = (df["spy_Close"] / df["sma"]) > 1.2
 
@@ -59,11 +58,9 @@ class MultiModelTest(unittest.TestCase):
                               ('a', 'target', 'sma a'), ('b', 'target', 'sma b')])
 
     def test_multi_model_multi_class_classifications(self):
-        import talib
-
         """given"""
         df = pd.read_csv(TEST_FILE, index_col='Date')
-        df["sma"] = talib.SMA(df["spy_Close"])
+        df["sma"] = SMA(df["spy_Close"])
         df["is_above_1.0"] = (df["spy_Close"] / df["sma"]) + 1
         df["is_above_1.2"] = (df["spy_Close"] / df["sma"]) + 2
 

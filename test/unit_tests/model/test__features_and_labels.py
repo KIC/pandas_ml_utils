@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
-import talib
+from test.utils import SMA
 
 
 class TestFeaturesAndLabels(TestCase):
@@ -45,7 +45,7 @@ class TestFeaturesAndLabels(TestCase):
                                 feature_lags=[1])
         fl2 = FeaturesAndLabels(["a", "b", "c"], ["d", "e"],
                                 feature_lags=[1],
-                                lag_smoothing={1: lambda df: talib.SMA(df[df.columns[0]], timeperiod=2)})
+                                lag_smoothing={1: lambda df: SMA(df[df.columns[0]], timeperiod=2)})
 
         """then"""
         # original | lagged | smoothed

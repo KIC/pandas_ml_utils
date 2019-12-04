@@ -9,7 +9,6 @@ yfinance
 hyperopt
 keras-rl
 seaborn
-TA-Lib
 pandas
 keras
 dill
