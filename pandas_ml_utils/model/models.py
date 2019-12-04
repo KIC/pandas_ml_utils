@@ -4,14 +4,13 @@ from copy import deepcopy
 
 import dill as pickle
 import numpy as np
+import pandas as pd
 from typing import List, Callable, Tuple, TYPE_CHECKING, Dict
 
 from sklearn.linear_model import LogisticRegression
 
-from .features_and_Labels import FeaturesAndLabels
-from ..train_test_data import reshape_rnn_as_ar
-from ..reinforcement.gym import RowWiseGym
-from ..extern.loss_functions import mse
+from pandas_ml_utils.summary.summary import Summary
+from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
 
 _log = logging.getLogger(__name__)
 
@@ -19,10 +18,10 @@ _log = logging.getLogger(__name__)
 class Model(object):
     """
     Represents a statistical or ML model and holds the necessary information how to interpret the columns of a
-    pandas *DataFrame* ( :class:`.FeaturesAndLabels` ). Currently available implementations are
-    * SkitModel - provide any skit learn classifier or regressor
-    * KerasModel - provide a function returning a compiled keras model
-    * MultiModel - provide a model which will copied (and fitted) for each provided target
+    pandas *DataFrame* ( :class:`.FeaturesAndLabels` ). Currently available implementations are:
+     * SkitModel - provide any skit learn classifier or regressor
+     * KerasModel - provide a function returning a compiled keras model
+     * MultiModel - provide a model which will copied (and fitted) for each provided target
     """
 
     @staticmethod
@@ -31,7 +30,7 @@ class Model(object):
         Loads a previously saved model from disk. By default `dill <https://pypi.org/project/dill/>`_ is used to
         serialize / deserialize a model.
 
-        :param filename: filename of the seriaized model
+        :param filename: filename of the serialized model
         :return: returns a deserialized model
         """
         with open(filename, 'rb') as file:
@@ -41,15 +40,32 @@ class Model(object):
             else:
                 raise ValueError("Deserialized pickle was not a Model!")
 
-    def __init__(self, features_and_labels: FeaturesAndLabels, **kwargs):
+    def __init__(self,
+                 features_and_labels: FeaturesAndLabels,
+                 summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
+                 **kwargs):
         """
-        lalala ...
+        All implementations of `Model` need to pass two arguments to `super().__init()__`.
 
-        :param features_and_labels:
+        :param features_and_labels: the :class:`.FeaturesAndLabels` object defining all the features,
+                                    feature engineerings and labels
+        :param summary_provider: a summary provider in the most simple case just holds a `pd.DataFrame` containing all
+                                 the labels and all the predictions and optionally loss and target values. Since
+                                 constructors as callables as well it is usually enoug tho just pass the type i.e.
+                                 `summary_provider=BinaryClassificationSummary`
         :param kwargs:
         """
-        self.features_and_labels = features_and_labels
+        self._features_and_labels = features_and_labels
+        self._summary_provider = summary_provider
         self.kwargs = kwargs
+
+    @property
+    def features_and_labels(self):
+        return self._features_and_labels
+
+    @property
+    def summary_provider(self):
+        return self._summary_provider
 
     def __getitem__(self, item):
         """
@@ -85,7 +101,7 @@ class Model(object):
         """
         pass
 
-    def predict(self, x: np.ndarray) -> Dict[str, np.ndarray]:
+    def predict(self, x: np.ndarray) -> np.ndarray:
         """
         prediction of the model for each target
 
@@ -93,16 +109,6 @@ class Model(object):
         :return: prediction of the model for each target
         """
 
-        return {target: self._predict(x, target) for target in self.features_and_labels.get_goals().keys()}
-
-    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
-        """
-        prediction of the model for one target
-
-        :param x: x
-        :param target: target
-        :return: prediction of the model for one target
-        """
         pass
 
     def __call__(self, *args, **kwargs):
@@ -122,8 +128,12 @@ class Model(object):
 
 class SkitModel(Model):
 
-    def __init__(self, skit_model, features_and_labels: FeaturesAndLabels, **kwargs):
-        super().__init__(features_and_labels, **kwargs)
+    def __init__(self,
+                 skit_model,
+                 features_and_labels: FeaturesAndLabels,
+                 summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
+                 **kwargs):
+        super().__init__(features_and_labels, summary_provider, **kwargs)
         self.skit_model = skit_model
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
@@ -131,18 +141,18 @@ class SkitModel(Model):
         y = y.ravel() if len(y.shape) > 1 and y.shape[1] == 1 else y
 
         # remember fitted model
-        self.skit_model = self.skit_model.fit(reshape_rnn_as_ar(x), y)
+        self.skit_model = self.skit_model.fit(SkitModel.reshape_rnn_as_ar(x), y)
 
         if getattr(self.skit_model, 'loss_', None):
             return self.skit_model.loss_
         else:
-            predictions = [self.predict(x)[p] for p in self.features_and_labels.get_goals().keys()]
+            prediction = self.predict(x)
             if type(self.skit_model) == LogisticRegression\
             or type(self.skit_model).__name__.endswith("Classifier")\
             or type(self.skit_model).__name__.endswith("SVC"):
                 from sklearn.metrics import log_loss
                 try:
-                    return np.mean([log_loss((p) > 0.5, y) for p in predictions])
+                    return log_loss(prediction > 0.5, y).mean()
                 except ValueError as e:
                     if "contains only one label" in str(e):
                         return -100
@@ -150,13 +160,14 @@ class SkitModel(Model):
                         raise e
             else:
                 from sklearn.metrics import mean_squared_error
-                return np.mean([mean_squared_error(p, y) for p in predictions])
+                return mean_squared_error(prediction, y).mean()
 
-    def _predict(self, x, target) -> np.ndarray:
+    def predict(self, x) -> np.ndarray:
         if callable(getattr(self.skit_model, 'predict_proba', None)):
-            return self.skit_model.predict_proba(reshape_rnn_as_ar(x))[:, 1]
+            y_hat = self.skit_model.predict_proba(SkitModel.reshape_rnn_as_ar(x))
+            return y_hat[:, 1] if len(self.features_and_labels.labels) == 1 and y_hat.shape[1] == 2 else y_hat
         else:
-            return self.skit_model.predict(reshape_rnn_as_ar(x))
+            return self.skit_model.predict(SkitModel.reshape_rnn_as_ar(x))
 
     def __str__(self):
         return f'{__name__}({repr(self.skit_model)}, {self.features_and_labels})'
@@ -165,9 +176,17 @@ class SkitModel(Model):
         if not kwargs:
             return deepcopy(self)
         else:
-            new_model = SkitModel(type(self.skit_model)(**kwargs), self.features_and_labels)
+            new_model = SkitModel(type(self.skit_model)(**kwargs), self.features_and_labels, self.summary_provider)
             new_model.kwargs = deepcopy(self.kwargs)
             return new_model
+
+    @staticmethod
+    def reshape_rnn_as_ar(arr3d):
+        if len(arr3d.shape) < 3:
+            print("Data was not in RNN shape")
+            return arr3d
+        else:
+            return arr3d.reshape(arr3d.shape[0], arr3d.shape[1] * arr3d.shape[2])
 
 
 class KerasModel(Model):
@@ -179,10 +198,11 @@ class KerasModel(Model):
     def __init__(self,
                  keras_compiled_model_provider: Callable[[], KModel],
                  features_and_labels: FeaturesAndLabels,
+                 summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
                  epochs: int = 100,
                  callbacks: List[Callable] = [],
                  **kwargs):
-        super().__init__(features_and_labels, **kwargs)
+        super().__init__(features_and_labels, summary_provider, **kwargs)
         self.keras_model_provider = keras_compiled_model_provider
         self.keras_model = keras_compiled_model_provider()
         self.epochs = epochs
@@ -193,12 +213,13 @@ class KerasModel(Model):
         self.history = self.keras_model.fit(x, y, epochs=self.epochs, validation_data=(x_val, y_val), callbacks=self.callbacks)
         return min(self.history.history['loss'])
 
-    def _predict(self, x, target):
+    def predict(self, x):
         return self.keras_model.predict(x)
 
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,
                                self.features_and_labels,
+                               self.summary_provider,
                                self.epochs,
                                deepcopy(self.callbacks),
                                **deepcopy(self.kwargs))
@@ -211,21 +232,29 @@ class KerasModel(Model):
 
 class MultiModel(Model):
 
-    def __init__(self, model_provider: Model, alpha: float = 0.5):
-        super().__init__(model_provider.features_and_labels)
+    def __init__(self,
+                 model_provider: Model,
+                 summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
+                 alpha: float = 0.5):
+        super().__init__(model_provider.features_and_labels, summary_provider)
+
+        if isinstance(model_provider, MultiModel):
+            raise ValueError("Nesting Multi Models is not supported, you might use a flat structure of all your models")
+
         self.model_provider = model_provider
-        self.models = {target: model_provider() for target in self.features_and_labels.get_goals().keys()}
+        self.models = {target: model_provider() for target in self.features_and_labels.labels.keys()}
         self.alpha = alpha
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
-        goals = self.features_and_labels.get_goals()
         losses = []
-        for target, (_, labels) in goals.items():
-            index = [self.features_and_labels.labels.index(label) for label in labels]
+        pos = 0
+        for target, labels in self.features_and_labels.labels.items():
+            index = range(pos, pos + len(labels))
             target_y = y[:,index]
             target_y_val = y_val[:,index]
             _log.info(f"fit model for target {target}")
             losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, df_index_train, df_index_test))
+            pos += len(labels)
 
         losses = np.array(losses)
         a = self.alpha
@@ -233,11 +262,19 @@ class MultiModel(Model):
         # return weighted loss between mean and max loss
         return (losses.mean() * (1 - a) + a * losses.max()) if len(losses) > 0 else None
 
-    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
-        return self.models[target]._predict(x, target)
+    def predict(self, x: np.ndarray) -> np.ndarray:
+        def predict_as_column_matrix(target):
+            prediction = self.models[target].predict(x)
+            if len(prediction.shape) <= 1:
+                return prediction.reshape((-1, 1))
+            else:
+                return prediction
+
+        return np.concatenate([predict_as_column_matrix(target) for target in self.features_and_labels.labels.keys()],
+                              axis=1)
 
     def __call__(self, *args, **kwargs):
-        new_multi_model = MultiModel(self.model_provider, self.alpha)
+        new_multi_model = MultiModel(self.model_provider, self.summary_provider, self.alpha)
 
         if kwargs:
             new_multi_model.models = {target: self.model_provider(**kwargs) for target in self.features_and_labels.get_goals().keys()}
@@ -245,70 +282,72 @@ class MultiModel(Model):
         return new_multi_model
 
 
-class OpenAiGymModel(Model):
-    from typing import TYPE_CHECKING
-    if TYPE_CHECKING:
-        from rl.core import Agent
 
-    def __init__(self,
-                 agent_provider: Callable[[Tuple, int], Agent],
-                 features_and_labels: FeaturesAndLabels,
-                 action_reward_functions: List[Callable[[np.ndarray], float]],
-                 reward_range: Tuple[int, int],
-                 oservation_range: Tuple[int, int] = None,
-                 episodes: int = 1000,
-                 **kwargs):
-        super().__init__(features_and_labels, **kwargs)
-        self.agent_provider = agent_provider
-        self.action_reward_functions = action_reward_functions
-        self.reward_range = reward_range
-        self.oservation_range = oservation_range
-        self.episodes = episodes
-        self.agent = agent_provider(features_and_labels.shape()[0], len(action_reward_functions))
-
-        # some history
-        self.keras_train_history = None
-        self.keras_test_history = None
-        self.history = ()
-
-    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
-        mm = (min([x.min(), x_val.min()]), max([x.max(), x_val.max()])) if self.oservation_range is None else self.oservation_range
-        training_gym = RowWiseGym((df_index_train, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
-        test_gym = RowWiseGym((df_index_test, x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
-
-        self.keras_train_history = self.agent.fit(training_gym, nb_steps=len(x) * self.episodes)
-        #self.keras_test_history = self.agent.test(test_gym, nb_episodes=1) # clarification needed what test actually does: https://github.com/keras-rl/keras-rl/issues/342
-        test_gym = self._forward_gym(test_gym)
-
-        self.history = (training_gym.get_history(), test_gym.get_history())
-
-    def back_test(self, index, x, y):
-        mm = (x.min(), x.max()) if self.oservation_range is None else self.oservation_range
-        gym = RowWiseGym((index, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
-        return self._forward_gym(gym).get_history()
-
-    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
-        return [self.agent.forward(x[r]) for r in range(len(x))]
-
-    def __call__(self, *args, **kwargs):
-        if kwargs:
-            raise ValueError("hyper parameter tunig currently not supported for RL")
-
-        return OpenAiGymModel(self.agent_provider,
-                              self.features_and_labels,
-                              self.action_reward_functions,
-                              self.reward_range,
-                              self.episodes,
-                              **deepcopy(self.kwargs))
-
-    def _forward_gym(self, gym):
-        done = False
-        state = gym.reset()
-        while not done:
-            state, reward, done, _ = gym.step(self.agent.forward(state))
-
-        return gym
-
-class StableBaselineModel(Model):
-    # add stable baseline models https://stable-baselines.readthedocs.io/en/master/guide/algos.html
-    pass
+## THIS need to be fixed somewhen
+#class OpenAiGymModel(Model):
+#    from typing import TYPE_CHECKING
+#    if TYPE_CHECKING:
+#        from rl.core import Agent
+#
+#    def __init__(self,
+#                 agent_provider: Callable[[Tuple, int], Agent],
+#                 features_and_labels: FeaturesAndLabels,
+#                 action_reward_functions: List[Callable[[np.ndarray], float]],
+#                 reward_range: Tuple[int, int],
+#                 oservation_range: Tuple[int, int] = None,
+#                 episodes: int = 1000,
+#                 **kwargs):
+#        super().__init__(features_and_labels, **kwargs)
+#        self.agent_provider = agent_provider
+#        self.action_reward_functions = action_reward_functions
+#        self.reward_range = reward_range
+#        self.oservation_range = oservation_range
+#        self.episodes = episodes
+#        self.agent = agent_provider(features_and_labels.shape()[0], len(action_reward_functions))
+#
+#        # some history
+#        self.keras_train_history = None
+#        self.keras_test_history = None
+#        self.history = ()
+#
+#    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
+#        mm = (min([x.min(), x_val.min()]), max([x.max(), x_val.max()])) if self.oservation_range is None else self.oservation_range
+#        training_gym = RowWiseGym((df_index_train, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
+#        test_gym = RowWiseGym((df_index_test, x_val, y_val), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
+#
+#        self.keras_train_history = self.agent.fit(training_gym, nb_steps=len(x) * self.episodes)
+#        #self.keras_test_history = self.agent.test(test_gym, nb_episodes=1) # clarification needed what test actually does: https://github.com/keras-rl/keras-rl/issues/342
+#        test_gym = self._forward_gym(test_gym)
+#
+#        self.history = (training_gym.get_history(), test_gym.get_history())
+#
+#    def back_test(self, index, x, y):
+#        mm = (x.min(), x.max()) if self.oservation_range is None else self.oservation_range
+#        gym = RowWiseGym((index, x, y), self.features_and_labels, self.action_reward_functions, self.reward_range, mm)
+#        return self._forward_gym(gym).get_history()
+#
+#    def _predict(self, x: np.ndarray, target: str) -> np.ndarray:
+#        return [self.agent.forward(x[r]) for r in range(len(x))]
+#
+#    def __call__(self, *args, **kwargs):
+#        if kwargs:
+#            raise ValueError("hyper parameter tunig currently not supported for RL")
+#
+#        return OpenAiGymModel(self.agent_provider,
+#                              self.features_and_labels,
+#                              self.action_reward_functions,
+#                              self.reward_range,
+#                              self.episodes,
+#                              **deepcopy(self.kwargs))
+#
+#    def _forward_gym(self, gym):
+#        done = False
+#        state = gym.reset()
+#        while not done:
+#            state, reward, done, _ = gym.step(self.agent.forward(state))
+#
+#        return gym
+#
+#class StableBaselineModel(Model):
+#    # add stable baseline models https://stable-baselines.readthedocs.io/en/master/guide/algos.html
+#    pass

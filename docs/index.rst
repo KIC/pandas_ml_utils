@@ -34,7 +34,7 @@ General Concept
    :members:
    :noindex:
 
-Check the `component tests <https://github.com/KIC/pandas_ml_utils/blob/master/test/component_test.py>`_
+Check the `component tests <https://github.com/KIC/pandas_ml_utils/blob/master/test/z_component_tests/>`_
 for some more concrete examples.
 
 
