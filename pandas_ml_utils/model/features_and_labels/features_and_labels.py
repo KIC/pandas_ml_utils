@@ -93,8 +93,10 @@ class FeaturesAndLabels(object):
 
         :return: a tuple of (features.shape, labels.shape)
         """
-
-        return self.get_feature_names().shape, (self.len_labels(), )
+        if self.feature_lags is not None:
+            return (len(self.feature_lags), len(self.features)), (self.len_labels(), )
+        else:
+            return (len(self.features), ), (self.len_labels(), )
 
     def len_features(self) -> Tuple[int, ...]:
         """
@@ -120,12 +122,7 @@ class FeaturesAndLabels(object):
 
         :return: numpy array of strings in the shape of the features
         """
-        if self.feature_lags is not None:
-            return np.array([[f'{feat}_{lag}'
-                              for feat in self.features]
-                             for lag in self.feature_lags], ndmin=2)
-        else:
-            return np.array(self.features)
+        return np.array(self.features)
 
     def __getitem__(self, item):
         if isinstance(item, tuple) and len(item) == 2:

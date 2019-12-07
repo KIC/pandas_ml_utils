@@ -3,7 +3,7 @@ import pytest
 import subprocess
 from unittest import TestCase
 
-path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs")
+path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "docs")
 
 
 class TestMakeDocs(TestCase):

@@ -165,7 +165,7 @@ class FeatureTargetLabelExtractor(object):
 
         # features eventually are in RNN shape which is [row, time_step, feature]
         x = df_features.values if self._features_and_labels.feature_lags is None else \
-            np.array([df[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1) # FIXME we might use multilevel index instead
+            np.array([df_features[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
 
         # labels are straight forward but eventually need to be type corrected
         y = df_labels.values.astype(self._features_and_labels.label_type)
@@ -190,7 +190,10 @@ class FeatureTargetLabelExtractor(object):
         df = self.df[features].dropna().copy()
 
         # generate feature matrix
-        if feature_lags is not None:
+        if feature_lags is None:
+            dff = df
+        else:
+            dff = pd.DataFrame({}, index=df.index)
             # return RNN shaped 3D arrays
             for feature in features:
                 feature_series = df[feature]
@@ -207,33 +210,36 @@ class FeatureTargetLabelExtractor(object):
                         feature_series = smoothers.popitem(0)[1]
 
                     # assign the lagged (eventually smoothed) feature to the features frame
-                    df[f'{feature}_{lag}'] = feature_series.shift(lag)
+                    dff[(feature, lag)] = feature_series.shift(lag)
+
+            # fix tuple column index to actually be a multi index
+            dff.columns = pd.MultiIndex.from_tuples(dff.columns)
 
             # drop all rows which got nan now
-            df = df.dropna()
+            dff = dff.dropna()
 
         # do rescaling
         if feature_rescaling is not None:
             for rescale_features, target_range in feature_rescaling.items():
-                columns = [col for col in df.columns for feature in rescale_features if re.match(rf"^{feature}(_\d+)?$", col)]
-                df[columns] = df[columns].apply(lambda row: ReScaler((row.min(), row.max()), target_range)(row),
-                                                raw=True, result_type='broadcast')
+                # tuple need to be converted to list!
+                rescale_features = [f for f in rescale_features]
+
+                # multi index has problems in the direct assignent so we need to copy back column by column
+                tmp = dff[rescale_features].apply(lambda row: ReScaler((row.min(), row.max()), target_range)(row),
+                                                  raw=True, result_type='broadcast')
+                for col in tmp.columns:
+                    dff[col] = tmp[col]
 
         _log.info(f" make features ... done in {pc() - start_pc: .2f} sec!")
-        return df
+        return dff
 
     @property
     def feature_names(self) -> np.ndarray:
-        if self._features_and_labels.feature_lags is not None:
-            return np.array([[f'{feat}_{lag}'
-                              for feat in self._features_and_labels.features]
-                             for lag in self._features_and_labels.feature_lags], ndmin=2)
-        else:
-            return np.array(self._features_and_labels.features)
+        return np.array(self._features_and_labels.features)
 
     @property
     def labels_df(self) -> pd.DataFrame:
-        # LATER here we can do all sorts of tricks and encodings ...
+        # here we can do all sorts of tricks and encodings ...
         df = self._encoder(self.df[self._labels]).dropna().copy()
         return df
 

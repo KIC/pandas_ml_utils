@@ -71,10 +71,6 @@ class TestTrainTestData(unittest.TestCase):
         # all rows, all lags one feature -> feature[1] needs lag of +1
         np.testing.assert_array_almost_equal(x_test[:,:,1], np.array([[3, 4], [1, 2]]))
 
-        # test names
-        self.assertListEqual(fl.get_feature_names().tolist(), [['featureA_0', 'featureB_0'],
-                                                               ['featureA_1', 'featureB_1']])
-
     def test_make_single_lagged_training_data(self):
         df = pd.DataFrame({"featureA": [1,2,3,4,5],
                            "featureB": [5,4,3,2,1],
@@ -118,9 +114,9 @@ class TestTrainTestData(unittest.TestCase):
         len_none_lables = 1
 
         self.assertEqual(len(df), len_features - len_none_lables)
-        np.testing.assert_array_equal(fl.get_feature_names(), np.array( [['featureA_0'], ['featureA_1']]))
-        self.assertAlmostEqual(df["featureA_1"].iloc[0], 1.0)
-        self.assertAlmostEqual(df["featureA_1"].iloc[-1], 6.0)
+        np.testing.assert_array_equal(fl.get_feature_names(), np.array(['featureA']))
+        self.assertAlmostEqual(df["featureA", 1].iloc[0], 1.0)
+        self.assertAlmostEqual(df["featureA", 1].iloc[-1], 6.0)
 
     def test_hashable_features_and_labels(self):
         a = pdu.FeaturesAndLabels(["featureA"], ["featureA"], feature_lags=[1, 2, 3, 4],
