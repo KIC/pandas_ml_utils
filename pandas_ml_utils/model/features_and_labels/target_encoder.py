@@ -14,6 +14,9 @@ class TargetLabelEncoder(object):
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
         pass
 
+    def decode(self, df: pd.DataFrame) -> pd.DataFrame:
+        pass
+
     def __len__(self):
         1
 
@@ -30,6 +33,9 @@ class IdentityEncoder(TargetLabelEncoder):
 
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
         return df[self.target_labels]
+
+    def decode(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df
 
     def __len__(self):
         return len(self.target_labels)
@@ -51,6 +57,10 @@ class MultipleTargetEncodingWrapper(TargetLabelEncoder):
             df_labels = df_labels.join(enc.encode(df), how='inner')
 
         return df_labels
+
+    def decode(self, df: pd.DataFrame) -> pd.DataFrame:
+        # FIXME
+        pass
 
     def __len__(self):
         sum([len(enc) for enc in self.target_labels.values()])
@@ -94,6 +104,10 @@ class OneHotEncodedTargets(TargetLabelEncoder):
         one_hot_categories = pd.DataFrame({f'{col} #{i}': v for i, v in enumerate(one_hot_matrix)}, index=df.index)
 
         return one_hot_categories
+
+    def decode(self, df: pd.DataFrame) -> pd.DataFrame:
+        # FIXME
+        pass
 
     def __len__(self):
         return len(self.buckets)

@@ -50,8 +50,10 @@ class FeatureTargetLabelExtractor(object):
         self._encoder = encoder
 
     def prediction_to_frame(self, prediction: np.ndarray, index: pd.Index = None, inclusive_labels: bool = False) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
+        # TODO this is a pretty complicated function which needs to be broke up in better understandable pieces
         index = self.df.index if index is None else index
 
+        # TODO we eventually need to decode the prediction
         if isinstance(self._features_and_labels.labels, dict):
             df = pd.DataFrame({}, index=index)
             pos = 0
@@ -152,18 +154,28 @@ class FeatureTargetLabelExtractor(object):
 
     @property
     def features_labels(self) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
+        # engineer features and labels
         df_features = self.features_df
-        df_labels = self.labels_df.loc[df_features.index]
-        df = self.features_df.join(df_labels).dropna()
+        df_labels = self.labels_df
+        df = self.features_df.join(df_labels, how='inner').dropna()
+
+        # select only joining index values
+        df_features = df_features.loc[df.index]
+        df_labels = df_labels.loc[df.index]
 
         # features eventually are in RNN shape which is [row, time_step, feature]
-        x = df[self.feature_names].values if self._features_and_labels.feature_lags is None else \
-            np.array([df[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1)
+        x = df_features.values if self._features_and_labels.feature_lags is None else \
+            np.array([df[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1) # FIXME we might use multilevel index instead
 
         # labels are straight forward but eventually need to be type corrected
         y = df_labels.values.astype(self._features_and_labels.label_type)
 
         _log.info(f"  features shape: {x.shape}, labels shape: {y.shape}")
+
+        # sanity check
+        if not len(x) == len(y) == len(df):
+            raise ValueError(f"unbalanced length of features and labels {len(x), len(y), len(df)}")
+
         return df, x, y
 
     @property
