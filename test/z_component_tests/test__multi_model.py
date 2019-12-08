@@ -17,6 +17,7 @@ TEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data
 
 
 class MultiModelTest(unittest.TestCase):
+    maxDiff = None
 
     def test_invalid_multi_model(self):
         """expect"""
@@ -80,18 +81,19 @@ class MultiModelTest(unittest.TestCase):
         predict_df = df.predict(fit.model, tail=1)
 
         """then"""
+        print(fit_summary_df.columns.tolist())
         self.assertListEqual(fit_summary_df.columns.tolist(),
-                             [('1', 'prediction', 'is_above_1.0 #0'), ('1', 'prediction', 'is_above_1.0 #1'), ('1', 'prediction', 'is_above_1.0 #2'), ('1', 'prediction', 'is_above_1.0 #3'),
-                              ('2', 'prediction', 'is_above_1.2 #0'), ('2', 'prediction', 'is_above_1.2 #1'), ('2', 'prediction', 'is_above_1.2 #2'), ('2', 'prediction', 'is_above_1.2 #3'),
-                              ('1', 'label', 'is_above_1.0 #0'), ('1', 'label', 'is_above_1.0 #1'), ('1', 'label', 'is_above_1.0 #2'), ('1', 'label', 'is_above_1.0 #3'),
-                              ('2', 'label', 'is_above_1.2 #0'), ('2', 'label', 'is_above_1.2 #1'), ('2', 'label', 'is_above_1.2 #2'), ('2', 'label', 'is_above_1.2 #3'),
+                             [('1', 'prediction', '(-inf, 0.95]'), ('1', 'prediction', '(0.95, 1.0]'), ('1', 'prediction', '(1.0, 1.05]'), ('1', 'prediction', '(1.05, inf]'),
+                              ('2', 'prediction', '(-inf, 1.95]'), ('2', 'prediction', '(1.95, 2.0]'), ('2', 'prediction', '(2.0, 2.05]'), ('2', 'prediction', '(2.05, inf]'),
+                              ('1', 'label', '(-inf, 0.95]'), ('1', 'label', '(0.95, 1.0]'), ('1', 'label', '(1.0, 1.05]'), ('1', 'label', '(1.05, inf]'),
+                              ('2', 'label', '(-inf, 1.95]'), ('2', 'label', '(1.95, 2.0]'), ('2', 'label', '(2.0, 2.05]'), ('2', 'label', '(2.05, inf]'),
                               ('1', 'loss', '1'), ('2', 'loss', '2'),
                               ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
 
         self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
 
         self.assertListEqual(predict_df.columns.tolist(),
-                             [('1', 'prediction', 'is_above_1.0 #0'), ('1', 'prediction', 'is_above_1.0 #1'), ('1', 'prediction', 'is_above_1.0 #2'), ('1', 'prediction', 'is_above_1.0 #3'),
-                              ('2', 'prediction', 'is_above_1.2 #0'), ('2', 'prediction', 'is_above_1.2 #1'), ('2', 'prediction', 'is_above_1.2 #2'), ('2', 'prediction', 'is_above_1.2 #3'),
+                             [('1', 'prediction', '(-inf, 0.95]'), ('1', 'prediction', '(0.95, 1.0]'), ('1', 'prediction', '(1.0, 1.05]'), ('1', 'prediction', '(1.05, inf]'),
+                              ('2', 'prediction', '(-inf, 1.95]'), ('2', 'prediction', '(1.95, 2.0]'), ('2', 'prediction', '(2.0, 2.05]'), ('2', 'prediction', '(2.05, inf]'),
                               ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
 

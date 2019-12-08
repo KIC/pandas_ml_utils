@@ -109,6 +109,7 @@ class OneHotEncodedTargets(TargetLabelEncoder):
 
     @property
     def encoded_labels_columns(self) -> List[str]:
+        #return [str(11) if isinstance(cat, pd._libs.interval.Interval) else str(cat) for cat in self.buckets]
         return [str(cat) for cat in self.buckets]
 
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:

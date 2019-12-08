@@ -76,14 +76,14 @@ class ClassificationTest(unittest.TestCase):
         """then"""
         self.assertEqual(len(fit_summary_df), 4023)
         self.assertListEqual(fit_summary_df.columns.tolist(),
-                             [(PREDICTION_COLUMN_NAME, 'label #0'), (PREDICTION_COLUMN_NAME, 'label #1'), (PREDICTION_COLUMN_NAME, 'label #2'), (PREDICTION_COLUMN_NAME, 'label #3'),
-                              (LABEL_COLUMN_NAME, 'label #0'), (LABEL_COLUMN_NAME, 'label #1'), (LABEL_COLUMN_NAME, 'label #2'), (LABEL_COLUMN_NAME, 'label #3'),
+                             [(PREDICTION_COLUMN_NAME, '(-inf, -0.05]'), (PREDICTION_COLUMN_NAME, '(-0.05, 0.0]'), (PREDICTION_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (PREDICTION_COLUMN_NAME,  '(0.05000000000000002, inf]'),
+                              (LABEL_COLUMN_NAME, '(-inf, -0.05]'), (LABEL_COLUMN_NAME, '(-0.05, 0.0]'), (LABEL_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (LABEL_COLUMN_NAME,  '(0.05000000000000002, inf]'),
                               (TARGET_COLUMN_NAME, 'close <0.1'), (TARGET_COLUMN_NAME, 'close <0.05'), (TARGET_COLUMN_NAME, 'close >0'), (TARGET_COLUMN_NAME, 'close >0.05')])
 
         self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
 
         self.assertListEqual(predict_df.columns.tolist(),
-                             [(PREDICTION_COLUMN_NAME, 'label #0'), (PREDICTION_COLUMN_NAME, 'label #1'), (PREDICTION_COLUMN_NAME, 'label #2'), (PREDICTION_COLUMN_NAME, 'label #3'),
+                             [(PREDICTION_COLUMN_NAME, '(-inf, -0.05]'), (PREDICTION_COLUMN_NAME, '(-0.05, 0.0]'), (PREDICTION_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (PREDICTION_COLUMN_NAME,  '(0.05000000000000002, inf]'),
                               (TARGET_COLUMN_NAME, 'close <0.1'), (TARGET_COLUMN_NAME, 'close <0.05'), (TARGET_COLUMN_NAME, 'close >0'), (TARGET_COLUMN_NAME, 'close >0.05')])
 
     def test_target_classification(self):
