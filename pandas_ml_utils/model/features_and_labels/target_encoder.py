@@ -11,6 +11,10 @@ class TargetLabelEncoder(object):
     def labels_source_columns(self) -> List[str]:
         pass
 
+    @property
+    def encoded_labels_columns(self) -> List[str]:
+        pass
+
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
         pass
 
@@ -29,6 +33,10 @@ class IdentityEncoder(TargetLabelEncoder):
 
     @property
     def labels_source_columns(self) -> List[str]:
+        return self.target_labels
+
+    @property
+    def encoded_labels_columns(self) -> List[str]:
         return self.target_labels
 
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -50,6 +58,10 @@ class MultipleTargetEncodingWrapper(TargetLabelEncoder):
     @property
     def labels_source_columns(self) -> List[str]:
         return [l for enc in self.target_labels.values() for l in enc.labels_source_columns]
+
+    @property
+    def encoded_labels_columns(self) -> List[str]:
+        pass
 
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
         df_labels = pd.DataFrame({}, index=df.index)
@@ -94,6 +106,10 @@ class OneHotEncodedTargets(TargetLabelEncoder):
     @property
     def labels_source_columns(self) -> List[str]:
         return [self.label]
+
+    @property
+    def encoded_labels_columns(self) -> List[str]:
+        return [str(cat) for cat in self.buckets]
 
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
         col = self.label

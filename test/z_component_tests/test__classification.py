@@ -18,6 +18,7 @@ TEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data
 
 
 class ClassificationTest(unittest.TestCase):
+    maxDiff = None
 
     def test_binary_classification(self):
         """given"""

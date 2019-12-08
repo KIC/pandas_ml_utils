@@ -3,7 +3,7 @@ from unittest import TestCase
 import pandas as pd
 import numpy as np
 
-from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLabelExtractor
+from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
 
 DF = pd.DataFrame({"a": [1,2,3,4,5],

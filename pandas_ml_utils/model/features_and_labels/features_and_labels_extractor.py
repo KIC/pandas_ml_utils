@@ -1,7 +1,7 @@
 import logging
 import re
 from time import perf_counter as pc
-from typing import Tuple, Dict, Union
+from typing import Tuple, Dict, Union, List
 
 import numpy as np
 import pandas as pd
@@ -50,95 +50,29 @@ class FeatureTargetLabelExtractor(object):
         self._encoder = encoder
 
     def prediction_to_frame(self, prediction: np.ndarray, index: pd.Index = None, inclusive_labels: bool = False) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
-        # TODO this is a pretty complicated function which needs to be broke up in better understandable pieces
+        # assign index
         index = self.df.index if index is None else index
 
-        # TODO we eventually need to decode the prediction
-        if isinstance(self._features_and_labels.labels, dict):
-            df = pd.DataFrame({}, index=index)
-            pos = 0
-            for target, labels in self._features_and_labels.labels.items():
-                if isinstance(labels, TargetLabelEncoder):
-                    columns = [f'{labels.labels_source_columns[0]} #{i}' for i in range(len(labels))] \
-                               if len(labels.labels_source_columns) == 1 and len(labels) > 1 else labels.labels_source_columns
-                else:
-                    columns = labels
+        # eventually fix the shape of the prediction
+        if len(prediction.shape) == 1:
+            prediction = prediction.reshape(len(prediction), 1)
 
-                df = df.join(pd.DataFrame({label_col: prediction[:, i + pos] for i, label_col in enumerate(columns)}, index=index))
-                pos += len(labels)
-        elif len(self._labels) > 1:
-            df = pd.DataFrame({l: prediction[:, i] for i, l in enumerate(self._labels)}, index=index)
-        elif len(self._labels) == 1 and len( prediction.shape) > 1 and prediction.shape[1] > 1:
-            df = pd.DataFrame({f'{self._labels[0]} #{i}': prediction[:, i] for i in range(prediction.shape[1])}, index=index)
-        else:
-            df = pd.DataFrame({self._labels[0]: prediction[:, 0] if len(prediction.shape) > 1 else prediction}, index=index)
-
-        # assign multi level index to the predictions frame
-        df.columns = pd.MultiIndex.from_arrays([[PREDICTION_COLUMN_NAME] * len(df.columns), df.columns])
+        # prediction_columns # TODO we eventually need to decode the prediction as well as new column
+        df = pd.DataFrame(prediction, index=index, columns=pd.MultiIndex.from_tuples(self.label_names(PREDICTION_COLUMN_NAME)))
 
         # add labels if requested
         if inclusive_labels:
-            labels = self._features_and_labels.labels
             dfl = self.labels_df
-            dfl.columns = pd.MultiIndex.from_arrays([[LABEL_COLUMN_NAME] * len(dfl.columns), dfl.columns])
+            dfl.columns = pd.MultiIndex.from_tuples(self.label_names(LABEL_COLUMN_NAME))
             df = df.join(dfl, how='inner')
 
-            # and add loss if provided
-            if self._features_and_labels.loss is not None:
-                for target in (labels.keys() if isinstance(labels, dict) else [None]):
-                    dfl = self._features_and_labels.loss(target, self.df.loc[df.index])
-                    if isinstance(dfl, pd.Series):
-                        if dfl.name is None:
-                            dfl.name = target or LOSS_COLUMN_NAME
-                        dfl = dfl.to_frame()
-
-                    dfl.columns = pd.MultiIndex.from_arrays([[LOSS_COLUMN_NAME] * len(dfl.columns), dfl.columns])
-                    df = df.join(dfl, how='inner')
+            # add loss if provided
+            loss_df = self.loss_df
+            df = df.join(loss_df.loc[df.index], how='inner') if loss_df is not None else df
 
         # add target if provided
-        if self._features_and_labels.targets is not None:
-            labels = self._features_and_labels.labels
-            for i, target in enumerate(labels.keys() if isinstance(labels, dict) else [None]):
-                dft = self._features_and_labels.targets(target, self.df.loc[df.index])
-                if isinstance(dft, pd.Series):
-                    if dft.name is None:
-                        dft.name = target or TARGET_COLUMN_NAME
-                    dft = dft.to_frame()
-                elif not isinstance(dft, (pd.Series, pd.DataFrame)):
-                    dft = pd.DataFrame({target or TARGET_COLUMN_NAME: dft}, index=df.index)
-
-                dft.columns = pd.MultiIndex.from_arrays([[TARGET_COLUMN_NAME] * len(dft.columns), dft.columns])
-                df = df.join(dft, how='inner')
-
-        #
-        # if multiple targets were passed we need to add an extra level on top of the multi index
-        #
-
-        if isinstance(self._features_and_labels.labels, dict):
-            # len(labels)'s columns of "prediction" and "label" go under the top level "target" index
-            # i.e. if len(labels) == 2 for 2 targets we have: a,a, b,b , a,a, b,b for prediction and label
-            targets = [l for target, labels in self._features_and_labels.labels.items() for l in [target] * len(labels)]
-            top_level = targets
-
-            if inclusive_labels:
-                top_level += targets
-
-                if self._features_and_labels.loss is not None:
-                    top_level += list(self._features_and_labels.labels.keys())
-
-            # if we have a target and or loss defined add a level as well
-            if self._features_and_labels.targets is not None:
-                for t in self._features_and_labels.labels.keys():
-                    for tgt in self._features_and_labels.targets(t, self.df[-1:]):
-                        if isinstance(tgt, pd.DataFrame):
-                            top_level += [t for _ in tgt.columns]
-                        else:
-                            top_level += [t]
-
-            # add the new level as column to an intermediate data frame
-            df_headers = df.columns.to_frame()
-            df_headers.insert(0, "target", top_level)
-            df.columns = pd.MultiIndex.from_frame(df_headers)
+        target_df = self.target_df
+        df = df.join(target_df.loc[df.index], how='inner') if target_df is not None else df
 
         # finally we can return our nice and shiny df
         return df
@@ -169,7 +103,6 @@ class FeatureTargetLabelExtractor(object):
 
         # labels are straight forward but eventually need to be type corrected
         y = df_labels.values.astype(self._features_and_labels.label_type)
-
         _log.info(f"  features shape: {x.shape}, labels shape: {y.shape}")
 
         # sanity check
@@ -237,10 +170,72 @@ class FeatureTargetLabelExtractor(object):
     def feature_names(self) -> np.ndarray:
         return np.array(self._features_and_labels.features)
 
+    def label_names(self, level_above=None) -> List[Union[Tuple[str, ...],str]]:
+        labels = self._features_and_labels.labels.encoded_labels_columns \
+            if isinstance( self._features_and_labels.labels, TargetLabelEncoder) else self._features_and_labels.labels
+
+        if isinstance(labels, dict):
+            label_columns = []
+            for target, target_labels in labels.items():
+                for label in (target_labels.encoded_labels_columns if isinstance(target_labels, TargetLabelEncoder) else target_labels):
+                    label_columns.append((target, label) if level_above is None else (target, level_above, label))
+
+            return label_columns
+        else:
+            return labels if level_above is None else [(level_above, col) for col in labels]
+
     @property
     def labels_df(self) -> pd.DataFrame:
         # here we can do all sorts of tricks and encodings ...
         df = self._encoder(self.df[self._labels]).dropna().copy()
+        return df
+
+    @property
+    def loss_df(self):
+        df = None
+
+        if self._features_and_labels.loss is not None:
+            labels = self._features_and_labels.labels
+            for target in (labels.keys() if isinstance(labels, dict) else [None]):
+                dfl = self._features_and_labels.loss(target, self.df)
+                if isinstance(dfl, pd.Series):
+                    if dfl.name is None:
+                        dfl.name = target or LOSS_COLUMN_NAME
+                    dfl = dfl.to_frame()
+
+                dfl.columns = [(LOSS_COLUMN_NAME, col) if target is None else (target, LOSS_COLUMN_NAME, col)
+                               for col in dfl.columns]
+
+                df = dfl if df is None else df.join(dfl)
+
+            # multi level index
+            df.columns = pd.MultiIndex.from_tuples(df.columns)
+
+        return df
+
+    @property
+    def target_df(self):
+        df = None
+
+        if self._features_and_labels.targets is not None:
+            labels = self._features_and_labels.labels
+            for i, target in enumerate(labels.keys() if isinstance(labels, dict) else [None]):
+                dft = self._features_and_labels.targets(target, self.df)
+                if isinstance(dft, pd.Series):
+                    if dft.name is None:
+                        dft.name = target or TARGET_COLUMN_NAME
+                    dft = dft.to_frame()
+                elif not isinstance(dft, (pd.Series, pd.DataFrame)):
+                    dft = pd.DataFrame({target or TARGET_COLUMN_NAME: dft}, index=self.df.index)
+
+                dft.columns = [(TARGET_COLUMN_NAME, col) if target is None else (target, TARGET_COLUMN_NAME, col)
+                               for col in dft.columns]
+
+                df = dft if df is None else df.join(dft)
+
+            # multi level index
+            df.columns = pd.MultiIndex.from_tuples(df.columns)
+
         return df
 
     def __str__(self):

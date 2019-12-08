@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 import pandas_ml_utils as pdu
-from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLabelExtractor
+from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.model.fitting.train_test_data import make_training_data
 
 
