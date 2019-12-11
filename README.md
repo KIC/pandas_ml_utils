@@ -229,7 +229,10 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 * add whatever you need for yourself and share it with us 
 
 ## Change Log
-### 0.0.16
+### 0.0.18
+* refactored the data frame logic in the feature and label extractor for using multi level index
+
+### 0.0.16, 0.0.17
 * there is now only one `fit` and only one `backtest` and `predict` method
 * Summary class has to be provided as part of the model i.e. BinaryClassificationSummary
 
