@@ -263,13 +263,22 @@ class MultiModel(Model):
         return (losses.mean() * (1 - a) + a * losses.max()) if len(losses) > 0 else None
 
     def predict(self, x: np.ndarray) -> np.ndarray:
+        # intermediate function to concatenate individual predictions
         def predict_as_column_matrix(target):
             prediction = self.models[target].predict(x)
-            if len(prediction.shape) <= 1:
-                return prediction.reshape((-1, 1))
-            else:
-                return prediction
 
+            # eventually fix shape to have 2 dimensions
+            if len(prediction.shape) <= 1:
+                prediction = prediction.reshape((-1, 1))
+
+            # fix dimensions if prediction length is 2 and expected length is 1
+            if prediction.shape[1] == 2 and len(self.features_and_labels.labels[target]) == 1:
+                prediction = prediction[:, 1].reshape((-1, 1))
+
+            # return prediction with expected shape
+            return prediction
+
+        # return all the concatenated predictions
         return np.concatenate([predict_as_column_matrix(target) for target in self.features_and_labels.labels.keys()],
                               axis=1)
 
