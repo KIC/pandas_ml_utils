@@ -18,6 +18,7 @@ TEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data
 
 
 class ClassificationTest(unittest.TestCase):
+    maxDiff = None
 
     def test_binary_classification(self):
         """given"""
@@ -75,14 +76,14 @@ class ClassificationTest(unittest.TestCase):
         """then"""
         self.assertEqual(len(fit_summary_df), 4023)
         self.assertListEqual(fit_summary_df.columns.tolist(),
-                             [(PREDICTION_COLUMN_NAME, 'label #0'), (PREDICTION_COLUMN_NAME, 'label #1'), (PREDICTION_COLUMN_NAME, 'label #2'), (PREDICTION_COLUMN_NAME, 'label #3'),
-                              (LABEL_COLUMN_NAME, 'label #0'), (LABEL_COLUMN_NAME, 'label #1'), (LABEL_COLUMN_NAME, 'label #2'), (LABEL_COLUMN_NAME, 'label #3'),
+                             [(PREDICTION_COLUMN_NAME, '(-inf, -0.05]'), (PREDICTION_COLUMN_NAME, '(-0.05, 0.0]'), (PREDICTION_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (PREDICTION_COLUMN_NAME,  '(0.05000000000000002, inf]'),
+                              (LABEL_COLUMN_NAME, '(-inf, -0.05]'), (LABEL_COLUMN_NAME, '(-0.05, 0.0]'), (LABEL_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (LABEL_COLUMN_NAME,  '(0.05000000000000002, inf]'),
                               (TARGET_COLUMN_NAME, 'close <0.1'), (TARGET_COLUMN_NAME, 'close <0.05'), (TARGET_COLUMN_NAME, 'close >0'), (TARGET_COLUMN_NAME, 'close >0.05')])
 
         self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
 
         self.assertListEqual(predict_df.columns.tolist(),
-                             [(PREDICTION_COLUMN_NAME, 'label #0'), (PREDICTION_COLUMN_NAME, 'label #1'), (PREDICTION_COLUMN_NAME, 'label #2'), (PREDICTION_COLUMN_NAME, 'label #3'),
+                             [(PREDICTION_COLUMN_NAME, '(-inf, -0.05]'), (PREDICTION_COLUMN_NAME, '(-0.05, 0.0]'), (PREDICTION_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (PREDICTION_COLUMN_NAME,  '(0.05000000000000002, inf]'),
                               (TARGET_COLUMN_NAME, 'close <0.1'), (TARGET_COLUMN_NAME, 'close <0.05'), (TARGET_COLUMN_NAME, 'close >0'), (TARGET_COLUMN_NAME, 'close >0.05')])
 
     def test_target_classification(self):
@@ -113,3 +114,32 @@ class ClassificationTest(unittest.TestCase):
         self.assertListEqual(predict_df.columns.tolist(),
                              [('a', PREDICTION_COLUMN_NAME, 'is_above_1.0'), ('b', PREDICTION_COLUMN_NAME, 'is_above_1.2')])
 
+    def test_lagged_classification(self):
+        """given"""
+        df = pd.read_csv(TEST_FILE, index_col='Date')
+        df["sma"] = SMA(df["spy_Close"])
+        df["is_above"] = (df["spy_Close"] / df["sma"]) > 1
+
+        model = pdu.SkitModel(
+            MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
+            pdu.FeaturesAndLabels(features=['vix_Close'],
+                                  feature_lags=[0, 1, 2],
+                                  labels=["is_above"]))
+
+
+        """when"""
+        fit = df.fit(model, test_size=0.4, test_validate_split_seed=42)
+        fit_summary_df = fit.training_summary.df
+        bt_summary_df = df.backtest(fit.model).df
+        predict_df = df.predict(fit.model, tail=1)
+
+        """then"""
+        self.assertListEqual(fit_summary_df.columns.tolist(),
+                             [(PREDICTION_COLUMN_NAME, 'is_above'), (LABEL_COLUMN_NAME, 'is_above')])
+        self.assertEqual(len(fit_summary_df), 4022)
+
+        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
+        self.assertEqual(len(bt_summary_df), 6704)
+
+        self.assertListEqual(predict_df.columns.tolist(),
+                             [(PREDICTION_COLUMN_NAME, 'is_above')])

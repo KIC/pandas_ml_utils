@@ -5,7 +5,7 @@ import logging
 from time import perf_counter as pc
 from typing import Tuple
 
-from pandas_ml_utils.model.features_and_labels.extractor import FeatureTargetLabelExtractor
+from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.utils.functions import log_with_time
 
 _log = logging.getLogger(__name__)

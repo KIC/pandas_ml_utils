@@ -11,7 +11,14 @@ class TargetLabelEncoder(object):
     def labels_source_columns(self) -> List[str]:
         pass
 
+    @property
+    def encoded_labels_columns(self) -> List[str]:
+        pass
+
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
+        pass
+
+    def decode(self, df: pd.DataFrame) -> pd.DataFrame:
         pass
 
     def __len__(self):
@@ -28,8 +35,15 @@ class IdentityEncoder(TargetLabelEncoder):
     def labels_source_columns(self) -> List[str]:
         return self.target_labels
 
+    @property
+    def encoded_labels_columns(self) -> List[str]:
+        return self.target_labels
+
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
         return df[self.target_labels]
+
+    def decode(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df
 
     def __len__(self):
         return len(self.target_labels)
@@ -45,12 +59,20 @@ class MultipleTargetEncodingWrapper(TargetLabelEncoder):
     def labels_source_columns(self) -> List[str]:
         return [l for enc in self.target_labels.values() for l in enc.labels_source_columns]
 
+    @property
+    def encoded_labels_columns(self) -> List[str]:
+        pass
+
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
         df_labels = pd.DataFrame({}, index=df.index)
         for target, enc in self.target_labels.items():
             df_labels = df_labels.join(enc.encode(df), how='inner')
 
         return df_labels
+
+    def decode(self, df: pd.DataFrame) -> pd.DataFrame:
+        # FIXME
+        pass
 
     def __len__(self):
         sum([len(enc) for enc in self.target_labels.values()])
@@ -85,6 +107,11 @@ class OneHotEncodedTargets(TargetLabelEncoder):
     def labels_source_columns(self) -> List[str]:
         return [self.label]
 
+    @property
+    def encoded_labels_columns(self) -> List[str]:
+        #return [str(11) if isinstance(cat, pd._libs.interval.Interval) else str(cat) for cat in self.buckets]
+        return [str(cat) for cat in self.buckets]
+
     def encode(self, df: pd.DataFrame) -> pd.DataFrame:
         col = self.label
         buckets = pd.cut(df[col], self.buckets)
@@ -94,6 +121,10 @@ class OneHotEncodedTargets(TargetLabelEncoder):
         one_hot_categories = pd.DataFrame({f'{col} #{i}': v for i, v in enumerate(one_hot_matrix)}, index=df.index)
 
         return one_hot_categories
+
+    def decode(self, df: pd.DataFrame) -> pd.DataFrame:
+        # FIXME
+        pass
 
     def __len__(self):
         return len(self.buckets)
