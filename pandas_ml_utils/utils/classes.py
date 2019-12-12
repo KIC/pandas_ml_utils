@@ -25,18 +25,3 @@ class ReScaler(object):
     def __call__(self, *args, **kwargs):
         return self.resacle(args[0])
 
-
-class KFoldBoostRareEvents(KFold):
-
-    def __init__(self, n_splits='warn', shuffle=False, random_state=None):
-        super().__init__(n_splits, shuffle, random_state)
-
-    def split(self, X, y=None, groups=None):
-        n_samples = _num_samples(X)
-        indices = np.arange(n_samples)
-        rare_event_indices = indices[y >= 0.999]
-
-        for f, (train_idx, test_idx) in enumerate(super().split(X, y, groups)):
-            yield np.hstack([train_idx, rare_event_indices]), np.hstack([test_idx, rare_event_indices])
-
-
