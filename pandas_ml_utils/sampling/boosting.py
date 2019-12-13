@@ -39,7 +39,9 @@ class KEquallyWeightEvents(object):
         # randomize each bucket and split each randomized bucket into n_splits
         sample_indices_per_label = {l: np.random.permutation(x_indices[indices == l]) for l in range(len(labels))}
         for l, b in sample_indices_per_label.items():
-            sample_indices_per_label[l] = np.hstack([b, np.random.choice(b, required_samples - len(b))])
+            # if we do not have enough samples we need to allow replace
+            replace = (required_samples - len(b)) >= len(b)
+            sample_indices_per_label[l] = np.hstack([b, np.random.choice(b, required_samples - len(b), replace=replace)])
 
         # resample all events
         resampled_indices = np.hstack(sample_indices_per_label.values())

@@ -35,7 +35,7 @@ class TestBoosting(TestCase):
         """then"""
         for f, (train_idx, test_idx) in enumerate(x_folds):
             print(f'\n{f}:\n{x[train_idx]}\n{x[test_idx]}')
-            print(np.unique(x[train_idx], return_counts=True))
+            self.assertTrue((np.unique(x[train_idx], return_counts=True)[1] == 6).all())
 
         for f, (train_idx, test_idx) in enumerate(y_folds):
-            print(np.unique(np.array([np.argmax(_y) for _y in y[train_idx]]), return_counts=True))
+            self.assertTrue((np.unique(x[train_idx], return_counts=True)[1] == 6).all())
