@@ -222,7 +222,7 @@ class KerasModel(Model):
         self.history = None
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
-        fit_history = self.keras_model.fit(x, y, epochs=self.epochs, validation_data=(x_val, y_val), callbacks=self.callbacks)
+        fit_history = self.keras_model.fit(x, y, epochs=self.epochs, validation_data=(x_val, y_val), callbacks=self.callbacks, **self.kwargs)
 
         if self.history is None:
             self.history = fit_history.history
