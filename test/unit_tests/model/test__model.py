@@ -67,7 +67,7 @@ class TestModel(TestCase):
             return model
 
         """when"""
-        model_provider = KerasModel(keras_model_provider, features_and_labels, callbacks=[BaseLogger()], foo='bar')
+        model_provider = KerasModel(keras_model_provider, features_and_labels, callbacks=[BaseLogger()], verbose=0)
         model1 = model_provider()
         model2 = model_provider(optimizer='rmsprop')
 
