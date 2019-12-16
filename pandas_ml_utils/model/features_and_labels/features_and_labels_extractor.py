@@ -80,8 +80,7 @@ class FeatureTargetLabelExtractor(object):
     @property
     def features(self) -> Tuple[pd.DataFrame, np.ndarray]:
         df = self.features_df
-        x = df[self.feature_names].values if self._features_and_labels.feature_lags is None else \
-            np.array([df[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1)
+        x = self._fix_shape(df)
 
         _log.info(f"features shape: {x.shape}")
         return df, x
@@ -98,8 +97,7 @@ class FeatureTargetLabelExtractor(object):
         df_labels = df_labels.loc[df.index]
 
         # features eventually are in RNN shape which is [row, time_step, feature]
-        x = df_features.values if self._features_and_labels.feature_lags is None else \
-            np.array([df_features[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
+        x = self._fix_shape(df_features)
 
         # labels are straight forward but eventually need to be type corrected
         y = df_labels.values.astype(self._features_and_labels.label_type)
@@ -237,6 +235,11 @@ class FeatureTargetLabelExtractor(object):
             df.columns = pd.MultiIndex.from_tuples(df.columns)
 
         return df
+
+    def _fix_shape(self, df_features):
+        # features eventually are in RNN shape which is [row, time_step, feature]
+        return df_features.values if self._features_and_labels.feature_lags is None else \
+            np.array([df_features[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
 
     def __str__(self):
         return f'min required data = {self._features_and_labels.min_required_samples}'

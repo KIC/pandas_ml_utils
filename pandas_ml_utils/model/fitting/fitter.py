@@ -153,7 +153,8 @@ def predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
 
     features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels)
     dff, x = make_forecast_data(features_and_labels)
-    return features_and_labels.prediction_to_frame(model.predict(x), index=dff.index, inclusive_labels=False)
+    y_hat = model.predict(x)
+    return features_and_labels.prediction_to_frame(y_hat, index=dff.index, inclusive_labels=False)
 
 
 def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.DataFrame], Summary] = Summary) -> Summary:
@@ -161,7 +162,8 @@ def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.Data
 
     # make training and test data sets
     x, _, _, _, index, _ = make_training_data(features_and_labels, 0)
+    y_hat = model.predict(x)
 
-    df_backtest = features_and_labels.prediction_to_frame(model.predict(x), index=index, inclusive_labels=True)
+    df_backtest = features_and_labels.prediction_to_frame(y_hat, index=index, inclusive_labels=True)
     return (summary_provider or model.summary_provider)(df_backtest)
 

@@ -67,6 +67,9 @@ class Model(object):
     def summary_provider(self):
         return self._summary_provider
 
+    def plot_loss(self):
+        pass
+
     def __getitem__(self, item):
         """
         returns arguments which are stored in the kwargs filed. By providing a tuple, a default in case of missing
@@ -169,6 +172,15 @@ class SkitModel(Model):
         else:
             return self.skit_model.predict(SkitModel.reshape_rnn_as_ar(x))
 
+    def plot_loss(self):
+        loss_curve = getattr(self.skit_model, 'loss_curve_', None)
+
+        if loss_curve is not None:
+            import matplotlib.pyplot as plt
+            plt.plot(loss_curve)
+        else:
+            print("no loss curve found")
+
     def __str__(self):
         return f'{__name__}({repr(self.skit_model)}, {self.features_and_labels})'
 
@@ -210,11 +222,24 @@ class KerasModel(Model):
         self.history = None
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
-        self.history = self.keras_model.fit(x, y, epochs=self.epochs, validation_data=(x_val, y_val), callbacks=self.callbacks)
-        return min(self.history.history['loss'])
+        fit_history = self.keras_model.fit(x, y, epochs=self.epochs, validation_data=(x_val, y_val), callbacks=self.callbacks, **self.kwargs)
+
+        if self.history is None:
+            self.history = fit_history.history
+        else:
+            for metric, values in self.history.items():
+                self.history[metric] = self.history[metric] + fit_history.history[metric]
+
+        return min(fit_history.history['loss'])
 
     def predict(self, x):
         return self.keras_model.predict(x)
+
+    def plot_loss(self):
+        import matplotlib.pyplot as plt
+
+        plt.plot(self.history['val_loss'])
+        plt.plot(self.history['loss'])
 
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,
