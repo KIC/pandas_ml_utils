@@ -1,14 +1,12 @@
 from unittest import TestCase
 
-from keras.callbacks import BaseLogger
-from keras.layers import Dense
-from keras.models import Sequential
-from keras.optimizers import Adam, RMSprop
+import os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 
+from pandas_ml_utils import LazyDataFrame
 from pandas_ml_utils.model.models import *
 
 features_and_labels = FeaturesAndLabels([], [])
@@ -59,6 +57,13 @@ class TestModel(TestCase):
         self.assertEqual(model2.skit_model.activation, 'logistic')
 
     def test_keras_model(self):
+        """prepare environment to be non cuda"""
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+        from keras.callbacks import BaseLogger
+        from keras.layers import Dense
+        from keras.models import Sequential
+        from keras.optimizers import Adam, RMSprop
+
         """given"""
         def keras_model_provider(optimizer='adam'):
             model = Sequential()

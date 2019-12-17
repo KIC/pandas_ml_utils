@@ -39,7 +39,11 @@ class LazyDataFrame(object):
             self.df[key] = value
 
     def __getattr__(self, item):
-        return self.to_dataframe().__getattr__(item)
+        if isinstance(item, str) and item.startswith("__") and item.endswith("__"):
+            # do not allow private private items
+            raise AttributeError(f'{type(self)} has not attr {item}')
+        else:
+            return self.to_dataframe().__getattr__(item)
 
     def __contains__(self, key):
         return key in self.df or key in self.kwargs
@@ -49,6 +53,9 @@ class LazyDataFrame(object):
 
     def __eq__(self, other):
         return self.hash == other.hash if isinstance(other, LazyDataFrame) else False
+
+    def __str__(self):
+        return f'{self.hash}, {self.kwargs.keys()}'
 
     def __deepcopy__(self, memodict={}):
         return LazyDataFrame(self.df, **self.kwargs)
