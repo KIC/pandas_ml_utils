@@ -50,6 +50,9 @@ class LazyDataFrame(object):
     def __eq__(self, other):
         return self.hash == other.hash if isinstance(other, LazyDataFrame) else False
 
+    def __deepcopy__(self, memodict={}):
+        return LazyDataFrame(self.df, **self.kwargs)
+
     def with_dataframe(self, df: pd.DataFrame):
         return LazyDataFrame(df, **self.kwargs)
 
