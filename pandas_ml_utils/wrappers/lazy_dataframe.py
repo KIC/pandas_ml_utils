@@ -50,6 +50,9 @@ class LazyDataFrame(object):
     def __eq__(self, other):
         return self.hash == other.hash if isinstance(other, LazyDataFrame) else False
 
+    def with_dataframe(self, df: pd.DataFrame):
+        return LazyDataFrame(df, **self.kwargs)
+
     def to_dataframe(self):
         df = self.df.copy()
         for key, calculation in self.kwargs.items():
