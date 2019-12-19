@@ -1,5 +1,6 @@
 import logging
 import re
+from functools import lru_cache
 from time import perf_counter as pc
 from typing import Tuple, Dict, Union, List
 
@@ -43,13 +44,17 @@ class FeatureTargetLabelExtractor(object):
                 t: l if isinstance(l, TargetLabelEncoder) else IdentityEncoder(l) for t, l in labels.items()
             }).encode
 
-        self.df = df
+        self.df = features_and_labels.pre_processor(df, features_and_labels.kwargs)
         self._features_and_labels = features_and_labels
         self._labels = label_columns
         self._targets = targets
         self._encoder = encoder
 
     def prediction_to_frame(self, prediction: np.ndarray, index: pd.Index = None, inclusive_labels: bool = False) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
+        # sanity check
+        if not isinstance(prediction, np.ndarray):
+            raise ValueError(f"got unexpected prediction: {type(prediction)}\n{prediction}")
+
         # assign index
         index = self.df.index if index is None else index
 
@@ -86,6 +91,10 @@ class FeatureTargetLabelExtractor(object):
         return df, x
 
     @property
+    def min_required_samples(self):
+        return len(self.df) - len(self.features_df) + 1
+
+    @property
     def features_labels(self) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
         # engineer features and labels
         df_features = self.features_df
@@ -110,6 +119,7 @@ class FeatureTargetLabelExtractor(object):
         return df, x, y
 
     @property
+    @lru_cache(maxsize=1)
     def features_df(self) -> pd.DataFrame:
         start_pc = log_with_time(lambda: _log.debug(" make features ..."))
         pre_processor = self._features_and_labels.pre_processor
@@ -120,7 +130,7 @@ class FeatureTargetLabelExtractor(object):
         feature_rescaling = self._features_and_labels.feature_rescaling
 
         # drop nan's and copy frame
-        df = pre_processor(self.df[features], kwargs).dropna().copy()
+        df = pre_processor(self.df, kwargs)[features].dropna().copy()
 
         # generate feature matrix
         if feature_lags is None:
@@ -240,8 +250,13 @@ class FeatureTargetLabelExtractor(object):
 
     def _fix_shape(self, df_features):
         # features eventually are in RNN shape which is [row, time_step, feature]
-        return df_features.values if self._features_and_labels.feature_lags is None else \
+        feature_arr = df_features.values if self._features_and_labels.feature_lags is None else \
             np.array([df_features[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
 
+        if len(feature_arr) <= 0:
+            _log.warning("empty feature array!")
+
+        return feature_arr
+
     def __str__(self):
-        return f'min required data = {self._features_and_labels.min_required_samples}'
+        return f'min required data = {self.min_required_samples}'

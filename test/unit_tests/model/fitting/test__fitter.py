@@ -118,4 +118,4 @@ class TestFitter(TestCase):
 
         """then"""
         self.assertListEqual(predictions.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'b')])
-        self.assertEqual(fl.min_required_samples, 3)
+        self.assertEqual(fitted.model.features_and_labels.min_required_samples, 3)

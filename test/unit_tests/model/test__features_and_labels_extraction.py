@@ -33,13 +33,25 @@ class TestFeaturesAndLabelsExtraction(TestCase):
 
     def test_pre_processor(self):
         """given"""
-        fl = FeaturesAndLabels(["a"], ["b"], pre_processor=lambda _df, names: _df.rename(columns=names), a="lala")
-        fl2 = fl.with_kwargs(a="lolo")
+        fl = FeaturesAndLabels(["lala"], ["b"], pre_processor=lambda _df, names: _df.rename(columns=names), a="lala")
 
         """when"""
         df, _, _ = FeatureTargetLabelExtractor(DF, fl).features_labels
-        df2, _, _ = FeatureTargetLabelExtractor(DF, fl2).features_labels
 
         """then"""
         self.assertListEqual(df.columns.tolist(), ['lala', 'b'])
-        self.assertListEqual(df2.columns.tolist(), ['lolo', 'b'])
+
+    def test_wither(self):
+        """given"""
+        fl = FeaturesAndLabels(["lala"], ["b"],
+                               feature_lags=[0, 1],
+                               pre_processor=lambda _df, names: _df.rename(columns=names), a="lala")
+
+        """when"""
+        fl = fl.with_kwargs(a="lolo", b="lala")
+
+        """then"""
+        self.assertListEqual(fl.feature_lags, [0, 1])
+        self.assertEqual(fl.kwargs["a"], "lolo")
+        self.assertEqual(fl.kwargs["b"], "lala")
+

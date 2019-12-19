@@ -83,6 +83,10 @@ def fit(df: pd.DataFrame,
     df_train = features_and_labels.prediction_to_frame(model.predict(x_train), index=index_train, inclusive_labels=True)
     df_test = features_and_labels.prediction_to_frame(model.predict(x_test), index=index_test, inclusive_labels=True) if x_test is not None else None
 
+    # update minimum required samples
+    model.features_and_labels._min_required_samples = features_and_labels.min_required_samples
+
+    # return the fit
     return Fit(model, model.summary_provider(df_train), model.summary_provider(df_test), trails)
 
 
@@ -153,6 +157,7 @@ def predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
 
     features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels)
     dff, x = make_forecast_data(features_and_labels)
+
     y_hat = model.predict(x)
     return features_and_labels.prediction_to_frame(y_hat, index=dff.index, inclusive_labels=False)
 

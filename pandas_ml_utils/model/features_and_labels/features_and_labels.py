@@ -1,11 +1,12 @@
 import inspect
 import logging
-from typing import List, Callable, Iterable, Dict, Type, Tuple, Union, Any
-from numbers import Number
-from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
-from pandas_ml_utils.model.features_and_labels.sample_size_estimator import _simulate_smoothing
-import pandas as pd
+from copy import deepcopy
+from typing import List, Callable, Iterable, Dict, Type, Tuple, Union
+
 import numpy as np
+import pandas as pd
+
+from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
 
 _log = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ class FeaturesAndLabels(object):
         self.lag_smoothing = lag_smoothing
         self.len_feature_lags = sum(1 for _ in self.feature_lags) if self.feature_lags is not None else 1
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
-        self.min_required_samples = (max(feature_lags) + _simulate_smoothing(features, lag_smoothing)) if self.feature_lags is not None else 1
+        self._min_required_samples = None
         self.pre_processor = pre_processor
         self.kwargs = kwargs
         _log.info(f'number of features, lags and total: {self.len_features()}')
@@ -89,6 +90,10 @@ class FeaturesAndLabels(object):
     @property
     def loss(self):
         return self._loss
+
+    @property
+    def min_required_samples(self):
+        return self._min_required_samples
 
     @property
     def shape(self) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
@@ -130,17 +135,9 @@ class FeaturesAndLabels(object):
         return np.array(self.features)
 
     def with_kwargs(self, **kwargs):
-        return FeaturesAndLabels(
-            self.features,
-            self.labels,
-            self.label_type,
-            self.loss,
-            self.targets,
-            self.feature_lags,
-            self.feature_rescaling,
-            self.lag_smoothing,
-            self.pre_processor,
-            **{**self.kwargs, **kwargs})
+        copy = deepcopy(self)
+        copy.kwargs = {**self.kwargs, **kwargs}
+        return copy
 
     def __getitem__(self, item):
         if isinstance(item, tuple) and len(item) == 2:
