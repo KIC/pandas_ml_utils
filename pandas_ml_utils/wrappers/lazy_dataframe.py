@@ -1,6 +1,9 @@
 import uuid
-import pandas as pd
 from typing import Callable, Union
+
+import pandas as pd
+
+from pandas_ml_utils.model.fitting.fitter import fit, predict, backtest
 
 
 class LazyDataFrame(object):
@@ -9,6 +12,26 @@ class LazyDataFrame(object):
         self.hash = uuid.uuid4()
         self.df: pd.DataFrame = df
         self.kwargs = kwargs
+
+    @property
+    def columns(self):
+        return self.df.columns.tolist() + list(self.kwargs.keys())
+
+    @property
+    def index(self):
+        return self.df.index
+
+    def fit(self, *args, **kwargs):
+        return fit(self, *args, **kwargs)
+
+    def backtest(self, *args, **kwargs):
+        return backtest(self, *args, **kwargs)
+
+    def predict(self, *args, **kwargs):
+        return predict(self, *args, **kwargs)
+
+    def __len__(self):
+        return len(self.df)
 
     def __getitem__(self, item: str):
         if isinstance(item, list):

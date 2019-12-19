@@ -62,7 +62,7 @@ class FeatureTargetLabelExtractor(object):
         if len(prediction.shape) == 1:
             prediction = prediction.reshape(len(prediction), 1)
 
-        # prediction_columns # TODO we eventually need to decode the prediction as well as new column
+        # prediction_columns
         df = pd.DataFrame(prediction, index=index, columns=pd.MultiIndex.from_tuples(self.label_names(PREDICTION_COLUMN_NAME)))
 
         # add labels if requested
