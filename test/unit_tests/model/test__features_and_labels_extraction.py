@@ -31,4 +31,12 @@ class TestFeaturesAndLabelsExtraction(TestCase):
                                                           [[4], [3], [2]],
                                                           [[5], [4], [3]]]))
 
+    def test_pre_processor(self):
+        """given"""
+        fl = FeaturesAndLabels(["a"], ["b"], pre_processor=lambda _df: _df.rename(columns={"a": "lala"}))
 
+        """when"""
+        df, f, l = FeatureTargetLabelExtractor(DF, fl).features_labels
+
+        """then"""
+        self.assertListEqual(df.columns.tolist(), ['lala', 'b'])

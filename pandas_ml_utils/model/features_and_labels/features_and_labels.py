@@ -29,6 +29,7 @@ class FeaturesAndLabels(object):
                  feature_lags: Iterable[int] = None,
                  feature_rescaling: Dict[Tuple[str, ...], Tuple[int, ...]] = None, # fiXme lets provide a rescaler ..
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
+                 pre_processor: Callable[[pd.DataFrame], pd.DataFrame] = lambda x: x,
                  **kwargs):
         """
         :param features: a list of column names which are used as features for your model
@@ -53,6 +54,9 @@ class FeaturesAndLabels(object):
         :param lag_smoothing: very long lags in an AR model can be a bit fuzzy, it is possible to smooth lags i.e. by
                               using moving averages. the key is the lag length at which a smoothing function starts to
                               be applied
+        :param pre_processor: provide a callable returning an eventually augmented data frame from a given source data
+                              frame. This is useful if you have i.e. data cleaning tasks. This way you can apply the
+                              model directly on the raw data.
         :param kwargs: maybe you want to pass some extra parameters to a model
         """
         self._features = features
@@ -66,6 +70,7 @@ class FeaturesAndLabels(object):
         self.len_feature_lags = sum(1 for _ in self.feature_lags) if self.feature_lags is not None else 1
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
         self.min_required_samples = (max(feature_lags) + _simulate_smoothing(features, lag_smoothing)) if self.feature_lags is not None else 1
+        self.pre_processor = pre_processor
         self.kwargs = kwargs
         _log.info(f'number of features, lags and total: {self.len_features()}')
 
