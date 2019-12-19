@@ -29,7 +29,7 @@ class FeaturesAndLabels(object):
                  feature_lags: Iterable[int] = None,
                  feature_rescaling: Dict[Tuple[str, ...], Tuple[int, ...]] = None, # fiXme lets provide a rescaler ..
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
-                 pre_processor: Callable[[pd.DataFrame], pd.DataFrame] = lambda x: x,
+                 pre_processor: Callable[[pd.DataFrame, Dict], pd.DataFrame] = lambda x, _: x,
                  **kwargs):
         """
         :param features: a list of column names which are used as features for your model
@@ -55,8 +55,8 @@ class FeaturesAndLabels(object):
                               using moving averages. the key is the lag length at which a smoothing function starts to
                               be applied
         :param pre_processor: provide a callable returning an eventually augmented data frame from a given source data
-                              frame. This is useful if you have i.e. data cleaning tasks. This way you can apply the
-                              model directly on the raw data.
+                              frame and self.kwargs. This is useful if you have i.e. data cleaning tasks. This way you
+                              can apply the model directly on the raw data.
         :param kwargs: maybe you want to pass some extra parameters to a model
         """
         self._features = features
@@ -128,6 +128,19 @@ class FeaturesAndLabels(object):
         :return: numpy array of strings in the shape of the features
         """
         return np.array(self.features)
+
+    def with_kwargs(self, **kwargs):
+        return FeaturesAndLabels(
+            self.features,
+            self.labels,
+            self.label_type,
+            self.loss,
+            self.targets,
+            self.feature_lags,
+            self.feature_rescaling,
+            self.lag_smoothing,
+            self.pre_processor,
+            **{**self.kwargs, **kwargs})
 
     def __getitem__(self, item):
         if isinstance(item, tuple) and len(item) == 2:

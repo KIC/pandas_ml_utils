@@ -113,13 +113,14 @@ class FeatureTargetLabelExtractor(object):
     def features_df(self) -> pd.DataFrame:
         start_pc = log_with_time(lambda: _log.debug(" make features ..."))
         pre_processor = self._features_and_labels.pre_processor
+        kwargs = self._features_and_labels.kwargs
         feature_lags = self._features_and_labels.feature_lags
         features = self._features_and_labels.features
         lag_smoothing = self._features_and_labels.lag_smoothing
         feature_rescaling = self._features_and_labels.feature_rescaling
 
         # drop nan's and copy frame
-        df = pre_processor(self.df[features]).dropna().copy()
+        df = pre_processor(self.df[features], kwargs).dropna().copy()
 
         # generate feature matrix
         if feature_lags is None:
