@@ -1,8 +1,6 @@
 from typing import Tuple
 
 import numpy as np
-from sklearn.model_selection import KFold
-from sklearn.utils.validation import _num_samples
 
 
 class ReScaler(object):
@@ -10,7 +8,7 @@ class ReScaler(object):
     def __init__(self, domain: Tuple[float, float], range: Tuple[float, float]):
         self.domain = domain
         self.range = range
-        self.resacle = np.vectorize(self._rescale)
+        self.rescale = np.vectorize(self._rescale)
 
     def _interpolate(self, x: float):
         return self.range[0] * (1 - x) + self.range[1] * x
@@ -23,5 +21,5 @@ class ReScaler(object):
         return self._interpolate(self._uninterpolate(x))
 
     def __call__(self, *args, **kwargs):
-        return self.resacle(args[0])
+        return self.rescale(args[0])
 
