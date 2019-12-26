@@ -23,6 +23,13 @@ class TestFetchYahoo(TestCase):
         df = pd.fetch_yahoo(spy="spy", vix="^vix", multi_index=True)
 
         """then"""
+        self.assertListEqual(df.columns.tolist(), [('spy', 'Open'), ('spy', 'High'), ('spy', 'Low'), ('spy', 'Close'), ('spy', 'Volume'), ('spy', 'Dividends'), ('spy', 'Stock Splits'), ('vix', 'Open'), ('vix', 'High'), ('vix', 'Low'), ('vix', 'Close'), ('vix', 'Volume'), ('vix', 'Dividends'), ('vix', 'Stock Splits')])
+
+    def test__with_multiindex_args(self):
+        """when"""
+        df = pd.fetch_yahoo("spy", "^vix", multi_index=True)
+
+        """then"""
         self.assertListEqual(df.columns.tolist(), [('spy', 'Open'), ('spy', 'High'), ('spy', 'Low'), ('spy', 'Close'), ('spy', 'Volume'), ('spy', 'Dividends'), ('spy', 'Stock Splits'), ('^vix', 'Open'), ('^vix', 'High'), ('^vix', 'Low'), ('^vix', 'Close'), ('^vix', 'Volume'), ('^vix', 'Dividends'), ('^vix', 'Stock Splits')])
 
     def test__single(self):
@@ -31,7 +38,3 @@ class TestFetchYahoo(TestCase):
 
         """then"""
         self.assertListEqual(df.columns.tolist(), ['Open', 'High', 'Low', 'Close', 'Volume', 'Dividends', 'Stock Splits'])
-
-    def test__illegal(self):
-        """expect"""
-        self.assertRaises(ValueError, lambda: pd.fetch_yahoo("spy", "vix"))

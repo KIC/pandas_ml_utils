@@ -6,20 +6,24 @@ import pandas as pd
 
 from ..pandas_utils_extension import inner_join
 
+
 @cachetools.func.ttl_cache(maxsize=1, ttl=10 * 60)
 def fetch_yahoo(*args: str, period: str = 'max', multi_index: bool = False, **kwargs: str):
     df = None
+
     if len(args) == 1:
         df = __download_yahoo_data(args[0], period)
-    elif len(args) > 1:
-        raise ValueError("only one symbol can be passed as *arg use **kwargs instead")
     else:
+        # convert args to kwargs
+        if len(args) > 0:
+            kwargs = {**{arg: arg for arg in args}, **kwargs}
+
         for k, v in kwargs.items():
             px = f'{k}_'
             df_ = __download_yahoo_data(v, period)
 
             if multi_index:
-                df_.columns = pd.MultiIndex.from_product([[v], df_.columns])
+                df_.columns = pd.MultiIndex.from_product([[k], df_.columns])
 
                 if df is None:
                     df = df_
