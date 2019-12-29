@@ -36,8 +36,8 @@ class MultiModelTest(unittest.TestCase):
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
                 pdu.FeaturesAndLabels(features=['vix_Close'],
                                       labels={"a": ["is_above_1.0"], "b": ["is_above_1.2"]},
-                                      targets=lambda t, frame: frame["sma"].rename(f"sma {t}"),
-                                      loss=lambda _, frame: frame["spy_Close"] - frame["sma"])))
+                                      targets=lambda frame, t: frame["sma"].rename(f"sma {t}"),
+                                      loss=lambda frame: frame["spy_Close"] - frame["sma"])))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
@@ -71,8 +71,8 @@ class MultiModelTest(unittest.TestCase):
                 pdu.FeaturesAndLabels(features=['vix_Close'],
                                       labels={"1": OneHotEncodedTargets("is_above_1.0", np.linspace(-0.1, 0.1, 5, endpoint=True) + 1),
                                               "2": OneHotEncodedTargets("is_above_1.2", np.linspace(-0.1, 0.1, 5, endpoint=True) + 2)},
-                                      targets=lambda t, frame: (frame["sma"] + int(t)).rename(f"sma {t}"),
-                                      loss=lambda _, frame: frame["spy_Close"] - frame["sma"])))
+                                      targets=lambda frame, t: (frame["sma"] + int(t)).rename(f"sma {t}"),
+                                      loss=lambda frame: frame["spy_Close"] - frame["sma"])))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)

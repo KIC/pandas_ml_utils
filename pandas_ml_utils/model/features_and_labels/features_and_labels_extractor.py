@@ -13,7 +13,7 @@ from pandas_ml_utils.model.features_and_labels.features_and_labels import Featur
 from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder, \
     MultipleTargetEncodingWrapper, IdentityEncoder
 from pandas_ml_utils.utils.classes import ReScaler
-from pandas_ml_utils.utils.functions import log_with_time
+from pandas_ml_utils.utils.functions import log_with_time, call_callable_dyamic_args
 
 _log = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class FeatureTargetLabelExtractor(object):
                 t: l if isinstance(l, TargetLabelEncoder) else IdentityEncoder(l) for t, l in labels.items()
             }).encode
 
-        self.df = features_and_labels.pre_processor(df, features_and_labels.kwargs)
+        self.df = call_callable_dyamic_args(features_and_labels.pre_processor, df, features_and_labels.kwargs, features_and_labels)
         self._features_and_labels = features_and_labels
         self._labels = label_columns
         self._targets = targets
@@ -205,7 +205,8 @@ class FeatureTargetLabelExtractor(object):
         if self._features_and_labels.loss is not None:
             labels = self._features_and_labels.labels
             for target in (labels.keys() if isinstance(labels, dict) else [None]):
-                dfl = self._features_and_labels.loss(target, self.df)
+                dfl = call_callable_dyamic_args(self._features_and_labels.loss,
+                                                self.df, target, self._features_and_labels)
                 if isinstance(dfl, pd.Series):
                     if dfl.name is None:
                         dfl.name = target or LOSS_COLUMN_NAME
@@ -228,7 +229,9 @@ class FeatureTargetLabelExtractor(object):
         if self._features_and_labels.targets is not None:
             labels = self._features_and_labels.labels
             for i, target in enumerate(labels.keys() if isinstance(labels, dict) else [None]):
-                dft = self._features_and_labels.targets(target, self.df)
+                dft = call_callable_dyamic_args(self._features_and_labels.targets,
+                                                self.df, target, self._features_and_labels)
+
                 if isinstance(dft, pd.Series):
                     if dft.name is None:
                         dft.name = target or TARGET_COLUMN_NAME

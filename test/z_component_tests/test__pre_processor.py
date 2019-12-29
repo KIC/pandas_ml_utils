@@ -27,7 +27,7 @@ class PreprocessorTest(unittest.TestCase):
             pdu.SkitModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
                 pdu.FeaturesAndLabels(features=['feature'], labels=['label'],
-                                      loss=lambda _, df: df["spy_Close"] - df["spy_Open"],
+                                      loss=lambda df: df["spy_Close"] - df["spy_Open"],
                                       pre_processor=lambda _df, _: pdu.LazyDataFrame(
                                           _df,
                                           feature=lambda f: f["vix_Close"].rolling(2).mean(),

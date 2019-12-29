@@ -15,7 +15,7 @@ class TestFitter(TestCase):
 
     def test__fit(self):
         """given"""
-        features_and_labels = FeaturesAndLabels(["a"], ["b"], targets=lambda _, f: f["b"])
+        features_and_labels = FeaturesAndLabels(["a"], ["b"], targets=lambda f: f["b"])
         providers = [
             SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
                       features_and_labels, foo='bar'),
@@ -45,11 +45,11 @@ class TestFitter(TestCase):
     def test__backtest(self):
         """given"""
         fls = [FeaturesAndLabels(["a"], ["b"]),
-               FeaturesAndLabels(["a"], ["b"], targets=lambda _, f: f["b"]),
-               FeaturesAndLabels(["a"], ["b", "c"], targets=lambda _, f: -1),
+               FeaturesAndLabels(["a"], ["b"], targets=lambda f: f["b"]),
+               FeaturesAndLabels(["a"], ["b", "c"], targets=lambda f: -1),
                FeaturesAndLabels(["a"], {"b": ["b"], "a": ["c"]},
-                                 targets=lambda t, f: pd.Series(-1 if t == "b" else -2, index=f.index, name=t),
-                                 loss=lambda t, f: pd.Series(-1, index=f.index, name=t))
+                                 targets=lambda f, t: pd.Series(-1 if t == "b" else -2, index=f.index, name=t),
+                                 loss=lambda f, t: pd.Series(-1, index=f.index, name=t))
                ]
 
         providers = [SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
@@ -78,11 +78,11 @@ class TestFitter(TestCase):
     def test__predict(self):
         """given"""
         fls = [FeaturesAndLabels(["a"], ["b"]),
-               FeaturesAndLabels(["a"], ["b"], targets=lambda _, f: f["b"]),
-               FeaturesAndLabels(["a"], ["b", "c"], targets=lambda _, f: -1),
+               FeaturesAndLabels(["a"], ["b"], targets=lambda f: f["b"]),
+               FeaturesAndLabels(["a"], ["b", "c"], targets=lambda f: -1),
                FeaturesAndLabels(["a"], {"b": ["b"], "a": ["c"]},
-                                 targets=lambda t, f: pd.Series(-1 if t == "b" else -2, index=f.index, name=t),
-                                 loss=lambda t, f: pd.Series(-1, index=f.index, name=t))
+                                 targets=lambda f, t: pd.Series(-1 if t == "b" else -2, index=f.index, name=t),
+                                 loss=lambda f, t: pd.Series(-1, index=f.index, name=t))
                ]
 
         providers = [SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),

@@ -27,7 +27,7 @@ class RegressionTest(unittest.TestCase):
                 pdu.FeaturesAndLabels(
                     features=['spy_Open', 'spy_High', 'spy_Low', 'spy_Close'],
                     labels=['vix_Open', 'vix_High', 'vix_Low', 'vix_Close'],
-                    targets=lambda _, frame: frame[['vix_Open', 'vix_High', 'vix_Low', 'vix_Close']].add_prefix("tgt_")
+                    targets=lambda frame: frame[['vix_Open', 'vix_High', 'vix_Low', 'vix_Close']].add_prefix("tgt_")
                 )
             ),
             test_size=0.4,
@@ -66,7 +66,7 @@ class RegressionTest(unittest.TestCase):
                 pdu.FeaturesAndLabels(
                     features=['spy_Open', 'spy_High', 'spy_Low', 'spy_Close'],
                     labels={"a": ['vix_Open'], "b": ['vix_High', 'vix_Low', 'vix_Close']},
-                    targets=lambda t, frame: frame[['vix_High', 'vix_Low']].add_prefix(f"{t}_")
+                    targets=lambda frame, t: frame[['vix_High', 'vix_Low']].add_prefix(f"{t}_")
                 )
             ),
             test_size=0.4,

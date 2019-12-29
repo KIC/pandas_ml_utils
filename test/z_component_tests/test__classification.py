@@ -30,8 +30,8 @@ class ClassificationTest(unittest.TestCase):
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
             pdu.FeaturesAndLabels(features=['vix_Close'],
                                   labels=["is_above"],
-                                  targets=lambda _, frame: frame["sma"],
-                                  loss=lambda _, frame: frame["spy_Close"] - frame["sma"]))
+                                  targets=lambda frame: frame["sma"],
+                                  loss=lambda frame: frame["spy_Close"] - frame["sma"]))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42)
@@ -54,7 +54,7 @@ class ClassificationTest(unittest.TestCase):
         df["sma"] = SMA(df["spy_Close"])
         df["label"] = df["spy_Close"] / df["sma"] -1
 
-        def make_targets(t, frame):
+        def make_targets(frame):
             space = np.array([-1, -0.05, 0.5, 1])
             res = frame.apply(lambda x: x["sma"] - space, axis=1,
                               result_type='expand')
