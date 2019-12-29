@@ -40,13 +40,14 @@ class FeaturesAndLabels(object):
                        want to classify whether a stock price is bleow or above average and you want to provide what
                        the average was.
         :param label_type: whether to treat a label as int, float, bool
-        :param loss: Let's say you want to classify whether a printer is jamming the next page or not. Halting and
-                     servicing the printer costs 5'000 while a jam costs 15'000. Your target will be 0 or empty but
-                     your loss will be -5000 for all your type II errors and -15'000 for all your type I errors in
-                     case of miss-classification. Another example would be if you want to classify whether a stock
-                     price is above (buy) the current price or not (do nothing). Your target is the today's price
-                     and your loss is tomorrows price minus today's price.
-        :param targets: expects a callable which receives a target (or None) and the source data frame and should
+        :param loss: expects a callable which receives the source data frame and a target (or None) and should
+                     return a series or data frame. Let's say you want to classify whether a printer is jamming the
+                     next page or not. Halting and servicing the printer costs 5'000 while a jam costs 15'000.
+                     Your target will be 0 or empty but your loss will be -5000 for all your type II errors and -15'000
+                     for all your type I errors in case of miss-classification. Another example would be if you want to
+                     classify whether a stock price is above (buy) the current price or not (do nothing).
+                     Your target is the today's price and your loss is tomorrows price minus today's price.
+        :param targets: expects a callable which receives the source data frame and a target (or None) and should
                         return a series or data frame. In case of multiple targets the series names need to be unique!
         :param feature_lags: an iterable of integers specifying the lags of an AR model i.e. [1] for AR(1)
                              if the un-lagged feature is needed as well provide also lag of 0 like range(1)
