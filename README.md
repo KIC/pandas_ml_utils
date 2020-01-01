@@ -229,6 +229,12 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 * add whatever you need for yourself and share it with us 
 
 ## Change Log
+### 0.0.21
+* added engineered source frame to backtest
+* introduced pre-processing of data frame in features and labels
+* changed the lambda parameters of target and loss providers (can be 1, 2 or 3 parameter lambda)
+* bugfixes in laza dataframe
+ 
 ### 0.0.18
 * refactored the data frame logic in the feature and label extractor for using multi level index
 

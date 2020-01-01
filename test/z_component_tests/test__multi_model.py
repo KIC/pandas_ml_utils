@@ -52,11 +52,11 @@ class MultiModelTest(unittest.TestCase):
                               ('a', 'loss', 'a'), ('b', 'loss', 'b'),
                               ('a', 'target', 'sma a'), ('b', 'target', 'sma b')])
 
-        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
-
         self.assertListEqual(predict_df.columns.tolist(),
                              [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2'),
                               ('a', 'target', 'sma a'), ('b', 'target', 'sma b')])
+
+        self.assertEqual(bt_summary_df.shape, (6706, 20))
 
     def test_multi_model_multi_class_classifications(self):
         """given"""
@@ -90,10 +90,10 @@ class MultiModelTest(unittest.TestCase):
                               ('1', 'loss', '1'), ('2', 'loss', '2'),
                               ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
 
-        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
-
         self.assertListEqual(predict_df.columns.tolist(),
                              [('1', 'prediction', '(-inf, 0.95]'), ('1', 'prediction', '(0.95, 1.0]'), ('1', 'prediction', '(1.0, 1.05]'), ('1', 'prediction', '(1.05, inf]'),
                               ('2', 'prediction', '(-inf, 1.95]'), ('2', 'prediction', '(1.95, 2.0]'), ('2', 'prediction', '(2.0, 2.05]'), ('2', 'prediction', '(2.05, inf]'),
                               ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
+
+        self.assertEqual(bt_summary_df.shape, (6706, 32))
 

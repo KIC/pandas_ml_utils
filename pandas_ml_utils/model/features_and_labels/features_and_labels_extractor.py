@@ -50,7 +50,11 @@ class FeatureTargetLabelExtractor(object):
         self._targets = targets
         self._encoder = encoder
 
-    def prediction_to_frame(self, prediction: np.ndarray, index: pd.Index = None, inclusive_labels: bool = False) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
+    def prediction_to_frame(self,
+                            prediction: np.ndarray,
+                            index: pd.Index = None,
+                            inclusive_labels: bool = False,
+                            inclusive_source: bool = False) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
         # sanity check
         if not isinstance(prediction, np.ndarray):
             raise ValueError(f"got unexpected prediction: {type(prediction)}\n{prediction}")
@@ -78,6 +82,10 @@ class FeatureTargetLabelExtractor(object):
         # add target if provided
         target_df = self.target_df
         df = df.join(target_df.loc[df.index], how='inner') if target_df is not None else df
+
+        # also add source if requested
+        if inclusive_source:
+            df = df.join(self.source_df, how='inner')
 
         # finally we can return our nice and shiny df
         return df
@@ -196,6 +204,12 @@ class FeatureTargetLabelExtractor(object):
     def labels_df(self) -> pd.DataFrame:
         # here we can do all sorts of tricks and encodings ...
         df = self._encoder(self.df[self._labels]).dropna().copy()
+        return df
+
+    @property
+    def source_df(self):
+        df = self.df.copy()
+        df.columns = pd.MultiIndex.from_product([[SOURCE_COLUMN_NAME], df.columns])
         return df
 
     @property

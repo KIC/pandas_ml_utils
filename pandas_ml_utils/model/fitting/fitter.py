@@ -169,6 +169,10 @@ def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.Data
     x, _, _, _, index, _ = make_training_data(features_and_labels, 0)
     y_hat = model.predict(x)
 
-    df_backtest = features_and_labels.prediction_to_frame(y_hat, index=index, inclusive_labels=True)
+    df_backtest = features_and_labels.prediction_to_frame(y_hat, index=index, inclusive_labels=True, inclusive_source=True)
     return (summary_provider or model.summary_provider)(df_backtest)
+
+
+def features_and_label_extractor(df: pd.DataFrame, model: Model) -> FeatureTargetLabelExtractor:
+    return FeatureTargetLabelExtractor(df, model.features_and_labels)
 

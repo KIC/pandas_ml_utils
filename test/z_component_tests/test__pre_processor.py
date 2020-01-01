@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import pandas as pd
 from sklearn.neural_network import MLPClassifier
-
+from pandas_ml_utils.constants import *
 import pandas_ml_utils as pdu
 from pandas_ml_utils.summary.binary_classification_summary import BinaryClassificationSummary
 from pandas_ml_utils.utils.functions import fig_to_png_base64
@@ -39,13 +39,13 @@ class PreprocessorTest(unittest.TestCase):
         p = df.predict(fit.model, 2)
 
         """then fit"""
-        self.assertListEqual(fit.test_summary.df.columns.tolist(), [('prediction', 'label'), ('label', 'label'), ('loss', 'loss')])
+        self.assertListEqual(fit.test_summary.df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'label'), (LABEL_COLUMN_NAME, 'label'), (LOSS_COLUMN_NAME, 'loss')])
 
         """ and backtest"""
-        self.assertListEqual(bt.df.columns.tolist(), [('prediction', 'label'), ('label', 'label'), ('loss', 'loss')])
+        self.assertListEqual(bt.df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'label'), (LABEL_COLUMN_NAME, 'label'), (LOSS_COLUMN_NAME, 'loss'), *[(SOURCE_COLUMN_NAME, c) for c in df.columns], (SOURCE_COLUMN_NAME, "feature"), (SOURCE_COLUMN_NAME, "label")])
         self.assertEqual(bt.df.index[-1], "2019-09-13")
 
         """ and prediction"""
-        self.assertListEqual(p.columns.tolist(), [('prediction', 'label')])
+        self.assertListEqual(p.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'label')])
         self.assertEqual(p.index[-1], "2019-09-16")
         self.assertEqual(len(p), 2)

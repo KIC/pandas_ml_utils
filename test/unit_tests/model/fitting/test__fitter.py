@@ -61,11 +61,11 @@ class TestFitter(TestCase):
         backtest_columns = [b.df.columns.tolist() for b in backtests]
 
         """then"""
-        # print(backtest_columns[3])
-        self.assertEqual(backtest_columns[0], [(PREDICTION_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'b')])
-        self.assertEqual(backtest_columns[1], [(PREDICTION_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'b'), (TARGET_COLUMN_NAME, 'b')])
-        self.assertEqual(backtest_columns[2], [(PREDICTION_COLUMN_NAME, 'b'), (PREDICTION_COLUMN_NAME, 'c'), (LABEL_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'c'), (TARGET_COLUMN_NAME, TARGET_COLUMN_NAME)])
-        self.assertEqual(backtest_columns[3], [('b', PREDICTION_COLUMN_NAME, 'b'), ('a', PREDICTION_COLUMN_NAME, 'c'), ('b', LABEL_COLUMN_NAME, 'b'), ('a', LABEL_COLUMN_NAME, 'c'), ('b', LOSS_COLUMN_NAME, 'b'), ('a', LOSS_COLUMN_NAME, 'a'), ('b', TARGET_COLUMN_NAME, 'b'), ('a', TARGET_COLUMN_NAME, 'a')])
+        source_columns = (SOURCE_COLUMN_NAME, 'a'), (SOURCE_COLUMN_NAME, 'b'), (SOURCE_COLUMN_NAME, 'c')
+        self.assertEqual(backtest_columns[0], [(PREDICTION_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'b'), *source_columns])
+        self.assertEqual(backtest_columns[1], [(PREDICTION_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'b'), (TARGET_COLUMN_NAME, 'b'), *source_columns])
+        self.assertEqual(backtest_columns[2], [(PREDICTION_COLUMN_NAME, 'b'), (PREDICTION_COLUMN_NAME, 'c'), (LABEL_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'c'), (TARGET_COLUMN_NAME, TARGET_COLUMN_NAME), *source_columns])
+        self.assertEqual(backtest_columns[3], [('b', PREDICTION_COLUMN_NAME, 'b'), ('a', PREDICTION_COLUMN_NAME, 'c'), ('b', LABEL_COLUMN_NAME, 'b'), ('a', LABEL_COLUMN_NAME, 'c'), ('b', LOSS_COLUMN_NAME, 'b'), ('a', LOSS_COLUMN_NAME, 'a'), ('b', TARGET_COLUMN_NAME, 'b'), ('a', TARGET_COLUMN_NAME, 'a'), *source_columns])
         np.testing.assert_array_almost_equal(backtests[3].df["b", PREDICTION_COLUMN_NAME, "b"].values, np.array([-1.51, -1.52]), 2)
         np.testing.assert_array_almost_equal(backtests[3].df["a", PREDICTION_COLUMN_NAME, "c"].values, np.array([0.56, 0.56]), 2)
         np.testing.assert_array_equal(backtests[3].df["b", LABEL_COLUMN_NAME, "b"].values, df["b"].values)

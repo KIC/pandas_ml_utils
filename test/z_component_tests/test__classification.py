@@ -43,8 +43,7 @@ class ClassificationTest(unittest.TestCase):
         self.assertListEqual(fit_summary_df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'is_above'), (LABEL_COLUMN_NAME, 'is_above'), (LOSS_COLUMN_NAME, 'loss'), (TARGET_COLUMN_NAME, 'sma')])
         self.assertEqual(len(fit_summary_df), 4023)
 
-        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
-        self.assertEqual(len(bt_summary_df), 6706)
+        self.assertEqual(bt_summary_df.shape, (6706, 15))
 
         self.assertListEqual(predict_df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'is_above'), (TARGET_COLUMN_NAME, 'sma')])
 
@@ -80,11 +79,11 @@ class ClassificationTest(unittest.TestCase):
                               (LABEL_COLUMN_NAME, '(-inf, -0.05]'), (LABEL_COLUMN_NAME, '(-0.05, 0.0]'), (LABEL_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (LABEL_COLUMN_NAME,  '(0.05000000000000002, inf]'),
                               (TARGET_COLUMN_NAME, 'close <0.1'), (TARGET_COLUMN_NAME, 'close <0.05'), (TARGET_COLUMN_NAME, 'close >0'), (TARGET_COLUMN_NAME, 'close >0.05')])
 
-        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
-
         self.assertListEqual(predict_df.columns.tolist(),
                              [(PREDICTION_COLUMN_NAME, '(-inf, -0.05]'), (PREDICTION_COLUMN_NAME, '(-0.05, 0.0]'), (PREDICTION_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (PREDICTION_COLUMN_NAME,  '(0.05000000000000002, inf]'),
                               (TARGET_COLUMN_NAME, 'close <0.1'), (TARGET_COLUMN_NAME, 'close <0.05'), (TARGET_COLUMN_NAME, 'close >0'), (TARGET_COLUMN_NAME, 'close >0.05')])
+
+        self.assertEqual(bt_summary_df.shape, (6706, 23))
 
     def test_target_classification(self):
         """given"""
@@ -109,10 +108,10 @@ class ClassificationTest(unittest.TestCase):
                              [('a', PREDICTION_COLUMN_NAME, 'is_above_1.0'), ('b', PREDICTION_COLUMN_NAME, 'is_above_1.2'),
                               ('a', LABEL_COLUMN_NAME, 'is_above_1.0'), ('b', LABEL_COLUMN_NAME, 'is_above_1.2')])
 
-        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
-
         self.assertListEqual(predict_df.columns.tolist(),
                              [('a', PREDICTION_COLUMN_NAME, 'is_above_1.0'), ('b', PREDICTION_COLUMN_NAME, 'is_above_1.2')])
+
+        self.assertEqual(bt_summary_df.shape, (6706, 16))
 
     def test_lagged_classification(self):
         """given"""
@@ -138,8 +137,7 @@ class ClassificationTest(unittest.TestCase):
                              [(PREDICTION_COLUMN_NAME, 'is_above'), (LABEL_COLUMN_NAME, 'is_above')])
         self.assertEqual(len(fit_summary_df), 4022)
 
-        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
-        self.assertEqual(len(bt_summary_df), 6704)
-
         self.assertListEqual(predict_df.columns.tolist(),
                              [(PREDICTION_COLUMN_NAME, 'is_above')])
+
+        self.assertEqual(bt_summary_df.shape, (6704, 13))
