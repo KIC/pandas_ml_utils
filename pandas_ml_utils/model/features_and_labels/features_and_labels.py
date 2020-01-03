@@ -1,11 +1,12 @@
 import inspect
 import logging
-from typing import List, Callable, Iterable, Dict, Type, Tuple, Union, Any
-from numbers import Number
-from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
-from pandas_ml_utils.model.features_and_labels.sample_size_estimator import _simulate_smoothing
-import pandas as pd
+from copy import deepcopy
+from typing import List, Callable, Iterable, Dict, Type, Tuple, Union
+
 import numpy as np
+import pandas as pd
+
+from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
 
 _log = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class FeaturesAndLabels(object):
                  feature_lags: Iterable[int] = None,
                  feature_rescaling: Dict[Tuple[str, ...], Tuple[int, ...]] = None, # fiXme lets provide a rescaler ..
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
+                 pre_processor: Callable[[pd.DataFrame, Dict], pd.DataFrame] = lambda x, _: x,
                  **kwargs):
         """
         :param features: a list of column names which are used as features for your model
@@ -38,13 +40,14 @@ class FeaturesAndLabels(object):
                        want to classify whether a stock price is bleow or above average and you want to provide what
                        the average was.
         :param label_type: whether to treat a label as int, float, bool
-        :param loss: Let's say you want to classify whether a printer is jamming the next page or not. Halting and
-                     servicing the printer costs 5'000 while a jam costs 15'000. Your target will be 0 or empty but
-                     your loss will be -5000 for all your type II errors and -15'000 for all your type I errors in
-                     case of miss-classification. Another example would be if you want to classify whether a stock
-                     price is above (buy) the current price or not (do nothing). Your target is the today's price
-                     and your loss is tomorrows price minus today's price.
-        :param targets: expects a callable which receives a target (or None) and the source data frame and should
+        :param loss: expects a callable which receives the source data frame and a target (or None) and should
+                     return a series or data frame. Let's say you want to classify whether a printer is jamming the
+                     next page or not. Halting and servicing the printer costs 5'000 while a jam costs 15'000.
+                     Your target will be 0 or empty but your loss will be -5000 for all your type II errors and -15'000
+                     for all your type I errors in case of miss-classification. Another example would be if you want to
+                     classify whether a stock price is above (buy) the current price or not (do nothing).
+                     Your target is the today's price and your loss is tomorrows price minus today's price.
+        :param targets: expects a callable which receives the source data frame and a target (or None) and should
                         return a series or data frame. In case of multiple targets the series names need to be unique!
         :param feature_lags: an iterable of integers specifying the lags of an AR model i.e. [1] for AR(1)
                              if the un-lagged feature is needed as well provide also lag of 0 like range(1)
@@ -53,6 +56,9 @@ class FeaturesAndLabels(object):
         :param lag_smoothing: very long lags in an AR model can be a bit fuzzy, it is possible to smooth lags i.e. by
                               using moving averages. the key is the lag length at which a smoothing function starts to
                               be applied
+        :param pre_processor: provide a callable returning an eventually augmented data frame from a given source data
+                              frame and self.kwargs. This is useful if you have i.e. data cleaning tasks. This way you
+                              can apply the model directly on the raw data.
         :param kwargs: maybe you want to pass some extra parameters to a model
         """
         self._features = features
@@ -65,7 +71,8 @@ class FeaturesAndLabels(object):
         self.lag_smoothing = lag_smoothing
         self.len_feature_lags = sum(1 for _ in self.feature_lags) if self.feature_lags is not None else 1
         self.expanded_feature_length = len(features) * self.len_feature_lags if feature_lags is not None else len(features)
-        self.min_required_samples = (max(feature_lags) + _simulate_smoothing(features, lag_smoothing)) if self.feature_lags is not None else 1
+        self._min_required_samples = None
+        self.pre_processor = pre_processor
         self.kwargs = kwargs
         _log.info(f'number of features, lags and total: {self.len_features()}')
 
@@ -84,6 +91,10 @@ class FeaturesAndLabels(object):
     @property
     def loss(self):
         return self._loss
+
+    @property
+    def min_required_samples(self):
+        return self._min_required_samples
 
     @property
     def shape(self) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
@@ -123,6 +134,11 @@ class FeaturesAndLabels(object):
         :return: numpy array of strings in the shape of the features
         """
         return np.array(self.features)
+
+    def with_kwargs(self, **kwargs):
+        copy = deepcopy(self)
+        copy.kwargs = {**self.kwargs, **kwargs}
+        return copy
 
     def __getitem__(self, item):
         if isinstance(item, tuple) and len(item) == 2:

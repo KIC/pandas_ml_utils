@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import inspect
 import logging
 from copy import deepcopy
 
@@ -222,7 +224,9 @@ class KerasModel(Model):
         self.history = None
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
-        fit_history = self.keras_model.fit(x, y, epochs=self.epochs, validation_data=(x_val, y_val), callbacks=self.callbacks, **self.kwargs)
+        possible_fitter_args = inspect.getfullargspec(self.keras_model.fit).args
+        fitter_args = {arg: self.kwargs[arg] for arg in self.kwargs.keys() if arg in possible_fitter_args}
+        fit_history = self.keras_model.fit(x, y, epochs=self.epochs, validation_data=(x_val, y_val), callbacks=self.callbacks, **fitter_args)
 
         if self.history is None:
             self.history = fit_history.history

@@ -10,6 +10,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 
 import pandas_ml_utils as pmu
+from pandas_ml_utils import LazyDataFrame
 
 df = pd.DataFrame({"a": [0.5592344, 0.60739384, 0.19994533, 0.56642537, 0.50965677,
                          0.168989, 0.94080671, 0.76651769, 0.8403563, 0.4003567,
@@ -51,3 +52,19 @@ class TestSaveLoad(TestCase):
             print(f"test model ==> {i}")
             pd.testing.assert_frame_equal(df.predict(fitted_model), df.predict(restored_model))
             pd.testing.assert_frame_equal(df.backtest(fitted_model).df, df.backtest(restored_model).df)
+
+    def test_model_with_LazyDataFrame_copy(self):
+        """given"""
+        model = pmu.SkitModel(
+            MLPClassifier(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
+            pmu.FeaturesAndLabels([], []), foo='bar', ldf=LazyDataFrame(None, foo=lambda _f: 'bar'))
+
+        """when"""
+        model.save(f'/tmp/pandas-ml-utils-unittest-test_model_LDF')
+        model2 = pmu.Model.load(f'/tmp/pandas-ml-utils-unittest-test_model_LDF')
+
+        """then"""
+        self.assertEqual(model.kwargs["ldf"], model2.kwargs["ldf"])
+        self.assertEqual(model.kwargs["ldf"].kwargs['foo'](None), 'bar')
+        self.assertEqual(model2.kwargs["ldf"].kwargs['foo'](None), 'bar')
+

@@ -26,7 +26,7 @@ along the lines.
                               pmu.FeaturesAndLabels(["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling",
                                                      "Uniformity", "Salsa", "Synergy", "Wrap", "overall"],
                                                     ["with_fires"],
-                                                    loss=lambda _, f: f["price"]),
+                                                    loss=lambda f: f["price"]),
                               BinaryClassificationSummary))
 
    fit

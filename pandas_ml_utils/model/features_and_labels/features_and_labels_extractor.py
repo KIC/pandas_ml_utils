@@ -1,5 +1,6 @@
 import logging
 import re
+from functools import lru_cache
 from time import perf_counter as pc
 from typing import Tuple, Dict, Union, List
 
@@ -12,7 +13,7 @@ from pandas_ml_utils.model.features_and_labels.features_and_labels import Featur
 from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder, \
     MultipleTargetEncodingWrapper, IdentityEncoder
 from pandas_ml_utils.utils.classes import ReScaler
-from pandas_ml_utils.utils.functions import log_with_time
+from pandas_ml_utils.utils.functions import log_with_time, call_callable_dyamic_args
 
 _log = logging.getLogger(__name__)
 
@@ -43,13 +44,21 @@ class FeatureTargetLabelExtractor(object):
                 t: l if isinstance(l, TargetLabelEncoder) else IdentityEncoder(l) for t, l in labels.items()
             }).encode
 
-        self.df = df
+        self.df = call_callable_dyamic_args(features_and_labels.pre_processor, df, features_and_labels.kwargs, features_and_labels)
         self._features_and_labels = features_and_labels
         self._labels = label_columns
         self._targets = targets
         self._encoder = encoder
 
-    def prediction_to_frame(self, prediction: np.ndarray, index: pd.Index = None, inclusive_labels: bool = False) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
+    def prediction_to_frame(self,
+                            prediction: np.ndarray,
+                            index: pd.Index = None,
+                            inclusive_labels: bool = False,
+                            inclusive_source: bool = False) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
+        # sanity check
+        if not isinstance(prediction, np.ndarray):
+            raise ValueError(f"got unexpected prediction: {type(prediction)}\n{prediction}")
+
         # assign index
         index = self.df.index if index is None else index
 
@@ -57,7 +66,7 @@ class FeatureTargetLabelExtractor(object):
         if len(prediction.shape) == 1:
             prediction = prediction.reshape(len(prediction), 1)
 
-        # prediction_columns # TODO we eventually need to decode the prediction as well as new column
+        # prediction_columns
         df = pd.DataFrame(prediction, index=index, columns=pd.MultiIndex.from_tuples(self.label_names(PREDICTION_COLUMN_NAME)))
 
         # add labels if requested
@@ -74,6 +83,10 @@ class FeatureTargetLabelExtractor(object):
         target_df = self.target_df
         df = df.join(target_df.loc[df.index], how='inner') if target_df is not None else df
 
+        # also add source if requested
+        if inclusive_source:
+            df = df.join(self.source_df, how='inner')
+
         # finally we can return our nice and shiny df
         return df
 
@@ -84,6 +97,10 @@ class FeatureTargetLabelExtractor(object):
 
         _log.info(f"features shape: {x.shape}")
         return df, x
+
+    @property
+    def min_required_samples(self):
+        return len(self.df) - len(self.features_df) + 1
 
     @property
     def features_labels(self) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
@@ -110,6 +127,7 @@ class FeatureTargetLabelExtractor(object):
         return df, x, y
 
     @property
+    @lru_cache(maxsize=1)
     def features_df(self) -> pd.DataFrame:
         start_pc = log_with_time(lambda: _log.debug(" make features ..."))
         feature_lags = self._features_and_labels.feature_lags
@@ -189,13 +207,20 @@ class FeatureTargetLabelExtractor(object):
         return df
 
     @property
+    def source_df(self):
+        df = self.df.copy()
+        df.columns = pd.MultiIndex.from_product([[SOURCE_COLUMN_NAME], df.columns])
+        return df
+
+    @property
     def loss_df(self):
         df = None
 
         if self._features_and_labels.loss is not None:
             labels = self._features_and_labels.labels
             for target in (labels.keys() if isinstance(labels, dict) else [None]):
-                dfl = self._features_and_labels.loss(target, self.df)
+                dfl = call_callable_dyamic_args(self._features_and_labels.loss,
+                                                self.df, target, self._features_and_labels)
                 if isinstance(dfl, pd.Series):
                     if dfl.name is None:
                         dfl.name = target or LOSS_COLUMN_NAME
@@ -218,7 +243,9 @@ class FeatureTargetLabelExtractor(object):
         if self._features_and_labels.targets is not None:
             labels = self._features_and_labels.labels
             for i, target in enumerate(labels.keys() if isinstance(labels, dict) else [None]):
-                dft = self._features_and_labels.targets(target, self.df)
+                dft = call_callable_dyamic_args(self._features_and_labels.targets,
+                                                self.df, target, self._features_and_labels)
+
                 if isinstance(dft, pd.Series):
                     if dft.name is None:
                         dft.name = target or TARGET_COLUMN_NAME
@@ -238,8 +265,13 @@ class FeatureTargetLabelExtractor(object):
 
     def _fix_shape(self, df_features):
         # features eventually are in RNN shape which is [row, time_step, feature]
-        return df_features.values if self._features_and_labels.feature_lags is None else \
+        feature_arr = df_features.values if self._features_and_labels.feature_lags is None else \
             np.array([df_features[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
 
+        if len(feature_arr) <= 0:
+            _log.warning("empty feature array!")
+
+        return feature_arr
+
     def __str__(self):
-        return f'min required data = {self._features_and_labels.min_required_samples}'
+        return f'min required data = {self.min_required_samples}'

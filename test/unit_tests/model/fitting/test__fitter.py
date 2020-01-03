@@ -15,7 +15,7 @@ class TestFitter(TestCase):
 
     def test__fit(self):
         """given"""
-        features_and_labels = FeaturesAndLabels(["a"], ["b"], targets=lambda _, f: f["b"])
+        features_and_labels = FeaturesAndLabels(["a"], ["b"], targets=lambda f: f["b"])
         providers = [
             SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
                       features_and_labels, foo='bar'),
@@ -45,11 +45,11 @@ class TestFitter(TestCase):
     def test__backtest(self):
         """given"""
         fls = [FeaturesAndLabels(["a"], ["b"]),
-               FeaturesAndLabels(["a"], ["b"], targets=lambda _, f: f["b"]),
-               FeaturesAndLabels(["a"], ["b", "c"], targets=lambda _, f: -1),
+               FeaturesAndLabels(["a"], ["b"], targets=lambda f: f["b"]),
+               FeaturesAndLabels(["a"], ["b", "c"], targets=lambda f: -1),
                FeaturesAndLabels(["a"], {"b": ["b"], "a": ["c"]},
-                                 targets=lambda t, f: pd.Series(-1 if t == "b" else -2, index=f.index, name=t),
-                                 loss=lambda t, f: pd.Series(-1, index=f.index, name=t))
+                                 targets=lambda f, t: pd.Series(-1 if t == "b" else -2, index=f.index, name=t),
+                                 loss=lambda f, t: pd.Series(-1, index=f.index, name=t))
                ]
 
         providers = [SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
@@ -61,11 +61,11 @@ class TestFitter(TestCase):
         backtest_columns = [b.df.columns.tolist() for b in backtests]
 
         """then"""
-        # print(backtest_columns[3])
-        self.assertEqual(backtest_columns[0], [(PREDICTION_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'b')])
-        self.assertEqual(backtest_columns[1], [(PREDICTION_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'b'), (TARGET_COLUMN_NAME, 'b')])
-        self.assertEqual(backtest_columns[2], [(PREDICTION_COLUMN_NAME, 'b'), (PREDICTION_COLUMN_NAME, 'c'), (LABEL_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'c'), (TARGET_COLUMN_NAME, TARGET_COLUMN_NAME)])
-        self.assertEqual(backtest_columns[3], [('b', PREDICTION_COLUMN_NAME, 'b'), ('a', PREDICTION_COLUMN_NAME, 'c'), ('b', LABEL_COLUMN_NAME, 'b'), ('a', LABEL_COLUMN_NAME, 'c'), ('b', LOSS_COLUMN_NAME, 'b'), ('a', LOSS_COLUMN_NAME, 'a'), ('b', TARGET_COLUMN_NAME, 'b'), ('a', TARGET_COLUMN_NAME, 'a')])
+        source_columns = (SOURCE_COLUMN_NAME, 'a'), (SOURCE_COLUMN_NAME, 'b'), (SOURCE_COLUMN_NAME, 'c')
+        self.assertEqual(backtest_columns[0], [(PREDICTION_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'b'), *source_columns])
+        self.assertEqual(backtest_columns[1], [(PREDICTION_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'b'), (TARGET_COLUMN_NAME, 'b'), *source_columns])
+        self.assertEqual(backtest_columns[2], [(PREDICTION_COLUMN_NAME, 'b'), (PREDICTION_COLUMN_NAME, 'c'), (LABEL_COLUMN_NAME, 'b'), (LABEL_COLUMN_NAME, 'c'), (TARGET_COLUMN_NAME, TARGET_COLUMN_NAME), *source_columns])
+        self.assertEqual(backtest_columns[3], [('b', PREDICTION_COLUMN_NAME, 'b'), ('a', PREDICTION_COLUMN_NAME, 'c'), ('b', LABEL_COLUMN_NAME, 'b'), ('a', LABEL_COLUMN_NAME, 'c'), ('b', LOSS_COLUMN_NAME, 'b'), ('a', LOSS_COLUMN_NAME, 'a'), ('b', TARGET_COLUMN_NAME, 'b'), ('a', TARGET_COLUMN_NAME, 'a'), *source_columns])
         np.testing.assert_array_almost_equal(backtests[3].df["b", PREDICTION_COLUMN_NAME, "b"].values, np.array([-1.51, -1.52]), 2)
         np.testing.assert_array_almost_equal(backtests[3].df["a", PREDICTION_COLUMN_NAME, "c"].values, np.array([0.56, 0.56]), 2)
         np.testing.assert_array_equal(backtests[3].df["b", LABEL_COLUMN_NAME, "b"].values, df["b"].values)
@@ -78,11 +78,11 @@ class TestFitter(TestCase):
     def test__predict(self):
         """given"""
         fls = [FeaturesAndLabels(["a"], ["b"]),
-               FeaturesAndLabels(["a"], ["b"], targets=lambda _, f: f["b"]),
-               FeaturesAndLabels(["a"], ["b", "c"], targets=lambda _, f: -1),
+               FeaturesAndLabels(["a"], ["b"], targets=lambda f: f["b"]),
+               FeaturesAndLabels(["a"], ["b", "c"], targets=lambda f: -1),
                FeaturesAndLabels(["a"], {"b": ["b"], "a": ["c"]},
-                                 targets=lambda t, f: pd.Series(-1 if t == "b" else -2, index=f.index, name=t),
-                                 loss=lambda t, f: pd.Series(-1, index=f.index, name=t))
+                                 targets=lambda f, t: pd.Series(-1 if t == "b" else -2, index=f.index, name=t),
+                                 loss=lambda f, t: pd.Series(-1, index=f.index, name=t))
                ]
 
         providers = [SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
@@ -118,4 +118,4 @@ class TestFitter(TestCase):
 
         """then"""
         self.assertListEqual(predictions.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'b')])
-        self.assertEqual(fl.min_required_samples, 3)
+        self.assertEqual(fitted.model.features_and_labels.min_required_samples, 3)

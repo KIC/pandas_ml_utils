@@ -1,5 +1,5 @@
 """Augment pandas DataFrame with methods for machine learning"""
-__version__ = '0.0.19'
+__version__ = '0.0.21'
 
 # imports to provide functionality via root import like import pandas_ml_utils as pmu; pmu.XY
 from pandas_ml_utils.pandas_utils_extension import *
@@ -10,7 +10,7 @@ from pandas_ml_utils.model.features_and_labels.features_and_labels import Featur
 # imports only used to augment pandas classes
 from pandas_ml_utils.analysis.correlation_analysis import plot_correlation_matrix
 from pandas_ml_utils.datafetching.fetch_yahoo import fetch_yahoo
-from pandas_ml_utils.model.fitting.fitter import fit, predict, backtest
+from pandas_ml_utils.model.fitting.fitter import fit, predict, backtest, features_and_label_extractor
 from pandas_ml_utils.analysis.selection import feature_selection
 from pandas.core.base import PandasObject
 import pandas as pd
@@ -29,10 +29,13 @@ PandasObject.extend_forecast = extend_forecast
 PandasObject.plot_correlation_matrix = plot_correlation_matrix
 PandasObject.feature_selection = feature_selection
 
-# new we just have one fit method
+# provide fit, predict and backtest method
 PandasObject.fit = fit
 PandasObject.predict = predict
 PandasObject.backtest = backtest
+
+# also provide the plan features and labels extractor
+PandasObject.features_and_label_extractor = features_and_label_extractor
 
 # data fetcher
 setattr(pd, 'fetch_yahoo', fetch_yahoo)

@@ -36,8 +36,8 @@ class MultiModelTest(unittest.TestCase):
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
                 pdu.FeaturesAndLabels(features=['vix_Close'],
                                       labels={"a": ["is_above_1.0"], "b": ["is_above_1.2"]},
-                                      targets=lambda t, frame: frame["sma"].rename(f"sma {t}"),
-                                      loss=lambda _, frame: frame["spy_Close"] - frame["sma"])))
+                                      targets=lambda frame, t: frame["sma"].rename(f"sma {t}"),
+                                      loss=lambda frame: frame["spy_Close"] - frame["sma"])))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
@@ -52,11 +52,11 @@ class MultiModelTest(unittest.TestCase):
                               ('a', 'loss', 'a'), ('b', 'loss', 'b'),
                               ('a', 'target', 'sma a'), ('b', 'target', 'sma b')])
 
-        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
-
         self.assertListEqual(predict_df.columns.tolist(),
                              [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2'),
                               ('a', 'target', 'sma a'), ('b', 'target', 'sma b')])
+
+        self.assertEqual(bt_summary_df.shape, (6706, 20))
 
     def test_multi_model_multi_class_classifications(self):
         """given"""
@@ -71,8 +71,8 @@ class MultiModelTest(unittest.TestCase):
                 pdu.FeaturesAndLabels(features=['vix_Close'],
                                       labels={"1": OneHotEncodedTargets("is_above_1.0", np.linspace(-0.1, 0.1, 5, endpoint=True) + 1),
                                               "2": OneHotEncodedTargets("is_above_1.2", np.linspace(-0.1, 0.1, 5, endpoint=True) + 2)},
-                                      targets=lambda t, frame: (frame["sma"] + int(t)).rename(f"sma {t}"),
-                                      loss=lambda _, frame: frame["spy_Close"] - frame["sma"])))
+                                      targets=lambda frame, t: (frame["sma"] + int(t)).rename(f"sma {t}"),
+                                      loss=lambda frame: frame["spy_Close"] - frame["sma"])))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
@@ -90,10 +90,10 @@ class MultiModelTest(unittest.TestCase):
                               ('1', 'loss', '1'), ('2', 'loss', '2'),
                               ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
 
-        self.assertListEqual(bt_summary_df.columns.tolist(), fit_summary_df.columns.tolist())
-
         self.assertListEqual(predict_df.columns.tolist(),
                              [('1', 'prediction', '(-inf, 0.95]'), ('1', 'prediction', '(0.95, 1.0]'), ('1', 'prediction', '(1.0, 1.05]'), ('1', 'prediction', '(1.05, inf]'),
                               ('2', 'prediction', '(-inf, 1.95]'), ('2', 'prediction', '(1.95, 2.0]'), ('2', 'prediction', '(2.0, 2.05]'), ('2', 'prediction', '(2.05, inf]'),
                               ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
+
+        self.assertEqual(bt_summary_df.shape, (6706, 32))
 

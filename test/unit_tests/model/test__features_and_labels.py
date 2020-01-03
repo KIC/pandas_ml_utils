@@ -38,23 +38,3 @@ class TestFeaturesAndLabels(TestCase):
         """then"""
         # shape is ((timesteps, features), (labels, )
         self.assertEqual(shape, ((4, 3), (2, )))
-
-    def test_min_required_samples(self):
-        """when"""
-        fl1 = FeaturesAndLabels(["a", "b", "c"], ["d", "e"],
-                                feature_lags=[1])
-        fl2 = FeaturesAndLabels(["a", "b", "c"], ["d", "e"],
-                                feature_lags=[1],
-                                lag_smoothing={1: lambda df: SMA(df[df.columns[0]], timeperiod=2)})
-
-        """then"""
-        # original | lagged | smoothed
-        # 1        |        |
-        # 2        | 1      |
-        self.assertEqual(fl1.min_required_samples, 1 + 1)
-
-        # original | lagged | smoothed
-        # 1        |        |
-        # 2        | 1      |
-        # 3        | 2      | 1.5
-        self.assertEqual(fl2.min_required_samples, 1 + 1 + (2 -1))

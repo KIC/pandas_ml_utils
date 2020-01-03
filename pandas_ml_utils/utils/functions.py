@@ -1,5 +1,6 @@
 import io
 import base64
+import inspect
 from collections import OrderedDict
 from time import perf_counter as pc
 from typing import Callable, Dict, Iterable, Any, List
@@ -43,3 +44,10 @@ def one_hot(index: int, number_of_classes: int):
 
     return vec
 
+
+def call_callable_dyamic_args(func, *args):
+    spec = inspect.getfullargspec(func)
+    if spec.varargs:
+        return func(*args)
+    else:
+        return func(*args[:len(spec.args)])
