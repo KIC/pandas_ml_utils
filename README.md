@@ -229,6 +229,9 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 * add whatever you need for yourself and share it with us 
 
 ## Change Log
+### 0.0.22
+* introduce proper keras session and graph handling in case of tensorflow backend
+
 ### 0.0.21
 * added engineered source frame to backtest
 * introduced pre-processing of data frame in features and labels

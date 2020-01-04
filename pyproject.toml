@@ -18,6 +18,7 @@ requires = [
     "scikit-learn",
     "statsmodels",
     "hyperopt",
+    "h5py",
     "dill"
 ]
 

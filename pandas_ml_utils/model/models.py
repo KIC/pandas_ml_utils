@@ -1,18 +1,23 @@
 from __future__ import annotations
 
+import contextlib
 import inspect
 import logging
+import os
+import tempfile
+import uuid
 from copy import deepcopy
 
 import dill as pickle
 import numpy as np
 import pandas as pd
-from typing import List, Callable, Tuple, TYPE_CHECKING, Dict
+from typing import List, Callable, TYPE_CHECKING
 
 from sklearn.linear_model import LogisticRegression
 
 from pandas_ml_utils.summary.summary import Summary
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
+from pandas_ml_utils.utils.functions import suitable_kwargs
 
 _log = logging.getLogger(__name__)
 
@@ -32,7 +37,7 @@ class Model(object):
         Loads a previously saved model from disk. By default `dill <https://pypi.org/project/dill/>`_ is used to
         serialize / deserialize a model.
 
-        :param filename: filename of the serialized model
+        :param filename: filename of the serialized model inclusive file extension
         :return: returns a deserialized model
         """
         with open(filename, 'rb') as file:
@@ -87,7 +92,7 @@ class Model(object):
     def save(self, filename: str):
         """
         save model to disk
-        :param filename: filename
+        :param filename: filename inclusive file extension
         :return: None
         """
         with open(filename, 'wb') as file:
@@ -216,18 +221,44 @@ class KerasModel(Model):
                  epochs: int = 100,
                  callbacks: List[Callable] = [],
                  **kwargs):
+        """
+        Keras compatible implementation of :class:`.Model`.
+        :param keras_compiled_model_provider: a callable which provides a compiled ready to fit keras model
+        :param features_and_labels: see :class:`.Model`
+        :param summary_provider: :class:`.Model`.
+        :param epochs: number of epochs passed to the keras fit function
+        :param callbacks: a list of callable's providing a keras compatible callback. It is neccessary to pass the
+                          callable i.e. BaseLogger or lambda: BaseLogger(...) vs. BaseLogger(...)
+        :param kwargs: a list of arguments passed to the keras_compiled_model_provider and keras fit function as they
+                       match the signature
+        """
         super().__init__(features_and_labels, summary_provider, **kwargs)
         self.keras_model_provider = keras_compiled_model_provider
-        self.keras_model = keras_compiled_model_provider()
+
+        import keras
+        if keras.backend.backend() == 'tensorflow':
+            import tensorflow as tf
+            self.is_tensorflow = True
+            self.graph = tf.Graph()
+            with self.graph.as_default():
+                self.session = tf.Session(graph=self.graph)
+        else:
+            self.is_tensorflow = False
+
+        provider_args = suitable_kwargs(keras_compiled_model_provider, **kwargs)
+        self.keras_model = self._exec_within_session(keras_compiled_model_provider, **provider_args)
         self.epochs = epochs
         self.callbacks = callbacks
         self.history = None
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
-        possible_fitter_args = inspect.getfullargspec(self.keras_model.fit).args
-        fitter_args = {arg: self.kwargs[arg] for arg in self.kwargs.keys() if arg in possible_fitter_args}
-        fit_history = self.keras_model.fit(x, y, epochs=self.epochs, validation_data=(x_val, y_val), callbacks=self.callbacks, **fitter_args)
-
+        fitter_args = suitable_kwargs(self.keras_model.fit, **self.kwargs)
+        fit_history = self._exec_within_session(self.keras_model.fit,
+                                                x, y,
+                                                epochs=self.epochs,
+                                                validation_data=(x_val, y_val),
+                                                callbacks=[cb() for cb in self.callbacks],
+                                                **fitter_args)
         if self.history is None:
             self.history = fit_history.history
         else:
@@ -237,7 +268,13 @@ class KerasModel(Model):
         return min(fit_history.history['loss'])
 
     def predict(self, x):
-        return self.keras_model.predict(x)
+        return self._exec_within_session(self.keras_model.predict, x)
+
+    def get_weights(self):
+        return self._exec_within_session(self.keras_model.get_weights)
+
+    def set_weights(self, weights):
+        self._exec_within_session(self.keras_model.set_weights, weights)
 
     def plot_loss(self):
         import matplotlib.pyplot as plt
@@ -245,17 +282,79 @@ class KerasModel(Model):
         plt.plot(self.history['val_loss'])
         plt.plot(self.history['loss'])
 
+    def _exec_within_session(self, func, *args, **kwargs):
+        if self.is_tensorflow:
+            with self.graph.as_default():
+                with self.session.as_default():
+                    return func(*args, **kwargs)
+        else:
+            return func(*args, **kwargs)
+
+    def __getstate__(self):
+        # Copy the object's state from self.__dict__ which contains all our instance attributes.
+        # Always use the dict.copy() method to avoid modifying the original state.
+        state = self.__dict__.copy()
+
+        # remove un-pickleable fields
+        if self.is_tensorflow:
+            del state['graph']
+            del state['session']
+
+        # special treatment for the keras model
+        tmp_keras_file = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
+        self._exec_within_session(lambda: self.keras_model.save(tmp_keras_file, True, True))
+        with open(tmp_keras_file, mode='rb') as file:
+            state['keras_model'] = file.read()
+
+        # clean up temp file
+        with contextlib.suppress(OSError):
+            os.remove(tmp_keras_file)
+
+        # return state
+        return state
+
+    def __setstate__(self, state):
+        from keras.models import load_model
+
+        # restore keras file
+        tmp_keras_file = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
+        with open(tmp_keras_file, mode='wb') as file:
+            file.write(state['keras_model'])
+            del state['keras_model']
+
+        # Restore instance attributes
+        self.__dict__.update(state)
+
+        # restore keras model and tensorflow session if needed
+        if self.is_tensorflow:
+            from keras import backend as K
+            import tensorflow as tf
+            self.graph = tf.Graph()
+            with self.graph.as_default():
+                self.session = tf.Session(graph=self.graph)
+                K.set_session(self.session)
+                self.keras_model = load_model(tmp_keras_file)
+        else:
+            self.keras_model = load_model(tmp_keras_file)
+
+        # clean up temp file
+        with contextlib.suppress(OSError):
+            os.remove(tmp_keras_file)
+
+    def __del__(self):
+        if self.is_tensorflow:
+            self.session.close()
+
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,
                                self.features_and_labels,
                                self.summary_provider,
                                self.epochs,
                                deepcopy(self.callbacks),
-                               **deepcopy(self.kwargs))
+                               **deepcopy(self.kwargs), **kwargs)
 
-        if kwargs:
-            new_model.keras_model = new_model.keras_model_provider(**kwargs)
-
+        # copy weights before return
+        new_model.set_weights(self.get_weights())
         return new_model
 
 

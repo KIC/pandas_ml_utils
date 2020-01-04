@@ -12,5 +12,6 @@ seaborn
 pandas
 keras
 Mako
+h5py
 dill
 gym
