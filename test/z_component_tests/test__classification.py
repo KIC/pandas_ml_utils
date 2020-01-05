@@ -31,7 +31,7 @@ class ClassificationTest(unittest.TestCase):
             pdu.FeaturesAndLabels(features=['vix_Close'],
                                   labels=["is_above"],
                                   targets=lambda frame: frame["sma"],
-                                  loss=lambda frame: frame["spy_Close"] - frame["sma"]))
+                                  gross_loss=lambda frame: frame["spy_Close"] - frame["sma"]))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42)
@@ -40,7 +40,7 @@ class ClassificationTest(unittest.TestCase):
         predict_df = df.predict(fit.model, tail=1)
 
         """then"""
-        self.assertListEqual(fit_summary_df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'is_above'), (LABEL_COLUMN_NAME, 'is_above'), (LOSS_COLUMN_NAME, 'loss'), (TARGET_COLUMN_NAME, 'sma')])
+        self.assertListEqual(fit_summary_df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'is_above'), (LABEL_COLUMN_NAME, 'is_above'), (GROSS_LOSS_COLUMN_NAME, GROSS_LOSS_COLUMN_NAME), (TARGET_COLUMN_NAME, 'sma')])
         self.assertEqual(len(fit_summary_df), 4023)
 
         self.assertEqual(bt_summary_df.shape, (6706, 15))

@@ -5,7 +5,7 @@ PREDICTION_COLUMN_NAME = "prediction"
 FEATURE_COLUMN_NAME = "feature"
 TARGET_COLUMN_NAME = "target"
 LABEL_COLUMN_NAME = "label"
-LOSS_COLUMN_NAME = "loss"
+GROSS_LOSS_COLUMN_NAME = "gross_loss"
 SOURCE_COLUMN_NAME = "source"
 
 PROBABILITY_POSTFIX = "_proba"

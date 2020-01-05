@@ -76,7 +76,7 @@ class FeatureTargetLabelExtractor(object):
             df = df.join(dfl, how='inner')
 
             # add loss if provided
-            loss_df = self.loss_df
+            loss_df = self.gross_loss_df
             df = df.join(loss_df.loc[df.index], how='inner') if loss_df is not None else df
 
         # add target if provided
@@ -213,20 +213,20 @@ class FeatureTargetLabelExtractor(object):
         return df
 
     @property
-    def loss_df(self):
+    def gross_loss_df(self):
         df = None
 
-        if self._features_and_labels.loss is not None:
+        if self._features_and_labels.gross_loss is not None:
             labels = self._features_and_labels.labels
             for target in (labels.keys() if isinstance(labels, dict) else [None]):
-                dfl = call_callable_dyamic_args(self._features_and_labels.loss,
+                dfl = call_callable_dyamic_args(self._features_and_labels.gross_loss,
                                                 self.df, target, self._features_and_labels)
                 if isinstance(dfl, pd.Series):
                     if dfl.name is None:
-                        dfl.name = target or LOSS_COLUMN_NAME
+                        dfl.name = target or GROSS_LOSS_COLUMN_NAME
                     dfl = dfl.to_frame()
 
-                dfl.columns = [(LOSS_COLUMN_NAME, col) if target is None else (target, LOSS_COLUMN_NAME, col)
+                dfl.columns = [(GROSS_LOSS_COLUMN_NAME, col) if target is None else (target, GROSS_LOSS_COLUMN_NAME, col)
                                for col in dfl.columns]
 
                 df = dfl if df is None else df.join(dfl)

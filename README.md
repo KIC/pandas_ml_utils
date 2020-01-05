@@ -231,6 +231,7 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 ## Change Log
 ### 0.0.22
 * introduce proper keras session and graph handling in case of tensorflow backend
+* rename features_and_labels.loss to gross_loss to avoid confusion with traning loss
 
 ### 0.0.21
 * added engineered source frame to backtest

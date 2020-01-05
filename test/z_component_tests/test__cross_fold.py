@@ -38,7 +38,7 @@ class CrossFoldTest(unittest.TestCase):
             pdu.SkitModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
                 pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
-                                      loss=lambda df: df["spy_Close"] - df["spy_Open"])),
+                                      gross_loss=lambda df: df["spy_Close"] - df["spy_Open"])),
             test_size=0.4,
             cross_validation=(1, split),
             test_validate_split_seed=42)

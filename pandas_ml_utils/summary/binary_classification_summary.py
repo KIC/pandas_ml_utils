@@ -31,7 +31,7 @@ class BinaryClassificationSummary(Summary):
 
     def get_confusion_loss(self, total=True):
         try:
-            loss_mx = np.array([[[c[LOSS_COLUMN_NAME].iloc[:, 0].sum() for c in r] for r in cm] for cm in self.confusions])
+            loss_mx = np.array([[[c[GROSS_LOSS_COLUMN_NAME].iloc[:, 0].sum() for c in r] for r in cm] for cm in self.confusions])
             return loss_mx.sum(axis=0) if total else loss_mx
         except:
             return np.array([[0, 0], [0, 0]])
@@ -94,8 +94,8 @@ class BinaryClassificationSummary(Summary):
 
             scatt = sns.scatterplot(ax=ax1,
                                     x=range(len(df)),
-                                    y=df[LOSS_COLUMN_NAME].iloc[:, 0].clip(upper=0),
-                                    size=df[LOSS_COLUMN_NAME].iloc[:, 0] * -1,
+                                    y=df[GROSS_LOSS_COLUMN_NAME].iloc[:, 0].clip(upper=0),
+                                    size=df[GROSS_LOSS_COLUMN_NAME].iloc[:, 0] * -1,
                                     hue=color,
                                     palette=palette)
 

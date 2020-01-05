@@ -9,7 +9,7 @@ from sklearn.neural_network import MLPClassifier
 import pandas_ml_utils as pdu
 from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets
 from test.utils import SMA
-
+from pandas_ml_utils.constants import *
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -37,7 +37,7 @@ class MultiModelTest(unittest.TestCase):
                 pdu.FeaturesAndLabels(features=['vix_Close'],
                                       labels={"a": ["is_above_1.0"], "b": ["is_above_1.2"]},
                                       targets=lambda frame, t: frame["sma"].rename(f"sma {t}"),
-                                      loss=lambda frame: frame["spy_Close"] - frame["sma"])))
+                                      gross_loss=lambda frame: frame["spy_Close"] - frame["sma"])))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
@@ -47,14 +47,14 @@ class MultiModelTest(unittest.TestCase):
 
         """then"""
         self.assertListEqual(fit_summary_df.columns.tolist(),
-                             [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2'),
-                              ('a', 'label', 'is_above_1.0'), ('b', 'label', 'is_above_1.2'),
-                              ('a', 'loss', 'a'), ('b', 'loss', 'b'),
-                              ('a', 'target', 'sma a'), ('b', 'target', 'sma b')])
+                             [('a', PREDICTION_COLUMN_NAME, 'is_above_1.0'), ('b', PREDICTION_COLUMN_NAME, 'is_above_1.2'),
+                              ('a', LABEL_COLUMN_NAME, 'is_above_1.0'), ('b', LABEL_COLUMN_NAME, 'is_above_1.2'),
+                              ('a', GROSS_LOSS_COLUMN_NAME, 'a'), ('b', GROSS_LOSS_COLUMN_NAME, 'b'),
+                              ('a', TARGET_COLUMN_NAME, 'sma a'), ('b', TARGET_COLUMN_NAME, 'sma b')])
 
         self.assertListEqual(predict_df.columns.tolist(),
-                             [('a', 'prediction', 'is_above_1.0'), ('b', 'prediction', 'is_above_1.2'),
-                              ('a', 'target', 'sma a'), ('b', 'target', 'sma b')])
+                             [('a', PREDICTION_COLUMN_NAME, 'is_above_1.0'), ('b', PREDICTION_COLUMN_NAME, 'is_above_1.2'),
+                              ('a', TARGET_COLUMN_NAME, 'sma a'), ('b', TARGET_COLUMN_NAME, 'sma b')])
 
         self.assertEqual(bt_summary_df.shape, (6706, 20))
 
@@ -72,7 +72,7 @@ class MultiModelTest(unittest.TestCase):
                                       labels={"1": OneHotEncodedTargets("is_above_1.0", np.linspace(-0.1, 0.1, 5, endpoint=True) + 1),
                                               "2": OneHotEncodedTargets("is_above_1.2", np.linspace(-0.1, 0.1, 5, endpoint=True) + 2)},
                                       targets=lambda frame, t: (frame["sma"] + int(t)).rename(f"sma {t}"),
-                                      loss=lambda frame: frame["spy_Close"] - frame["sma"])))
+                                      gross_loss=lambda frame: frame["spy_Close"] - frame["sma"])))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
@@ -87,13 +87,13 @@ class MultiModelTest(unittest.TestCase):
                               ('2', 'prediction', '(-inf, 1.95]'), ('2', 'prediction', '(1.95, 2.0]'), ('2', 'prediction', '(2.0, 2.05]'), ('2', 'prediction', '(2.05, inf]'),
                               ('1', 'label', '(-inf, 0.95]'), ('1', 'label', '(0.95, 1.0]'), ('1', 'label', '(1.0, 1.05]'), ('1', 'label', '(1.05, inf]'),
                               ('2', 'label', '(-inf, 1.95]'), ('2', 'label', '(1.95, 2.0]'), ('2', 'label', '(2.0, 2.05]'), ('2', 'label', '(2.05, inf]'),
-                              ('1', 'loss', '1'), ('2', 'loss', '2'),
-                              ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
+                              ('1', GROSS_LOSS_COLUMN_NAME, '1'), ('2', GROSS_LOSS_COLUMN_NAME, '2'),
+                              ('1', TARGET_COLUMN_NAME, 'sma 1'), ('2', TARGET_COLUMN_NAME, 'sma 2')])
 
         self.assertListEqual(predict_df.columns.tolist(),
                              [('1', 'prediction', '(-inf, 0.95]'), ('1', 'prediction', '(0.95, 1.0]'), ('1', 'prediction', '(1.0, 1.05]'), ('1', 'prediction', '(1.05, inf]'),
                               ('2', 'prediction', '(-inf, 1.95]'), ('2', 'prediction', '(1.95, 2.0]'), ('2', 'prediction', '(2.0, 2.05]'), ('2', 'prediction', '(2.05, inf]'),
-                              ('1', 'target', 'sma 1'), ('2', 'target', 'sma 2')])
+                              ('1', TARGET_COLUMN_NAME, 'sma 1'), ('2', TARGET_COLUMN_NAME, 'sma 2')])
 
         self.assertEqual(bt_summary_df.shape, (6706, 32))
 
