@@ -17,7 +17,7 @@ from sklearn.linear_model import LogisticRegression
 
 from pandas_ml_utils.summary.summary import Summary
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
-from pandas_ml_utils.utils.functions import suitable_kwargs
+from pandas_ml_utils.utils.functions import suitable_kwargs, call_with_suitable_kwargs
 
 _log = logging.getLogger(__name__)
 
@@ -245,8 +245,17 @@ class KerasModel(Model):
         else:
             self.is_tensorflow = False
 
+        # create keras model
         provider_args = suitable_kwargs(keras_compiled_model_provider, **kwargs)
-        self.keras_model = self._exec_within_session(keras_compiled_model_provider, **provider_args)
+        keras_model = self._exec_within_session(keras_compiled_model_provider, **provider_args)
+
+        # eventually compile keras model
+        if not keras_model.optimizer:
+            compile_args = suitable_kwargs(keras_model.compile, **kwargs)
+            self._exec_within_session(keras_model.compile, **compile_args)
+
+        # set all members
+        self.keras_model = keras_model
         self.epochs = epochs
         self.callbacks = callbacks
         self.history = None
@@ -333,9 +342,9 @@ class KerasModel(Model):
             with self.graph.as_default():
                 self.session = tf.Session(graph=self.graph)
                 K.set_session(self.session)
-                self.keras_model = load_model(tmp_keras_file)
+                self.keras_model = load_model(tmp_keras_file, custom_objects=self.kwargs)
         else:
-            self.keras_model = load_model(tmp_keras_file)
+            self.keras_model = load_model(tmp_keras_file, custom_objects=self.kwargs)
 
         # clean up temp file
         with contextlib.suppress(OSError):

@@ -51,8 +51,8 @@ def suitable_kwargs(func, **kwargs):
 
 
 def call_with_suitable_kwargs(func, **kwargs):
-    args = suitable_kwargs(kwargs)
-    return func(args)
+    args = suitable_kwargs(func, **kwargs)
+    return func(**args)
 
 
 def call_callable_dyamic_args(func, *args):
