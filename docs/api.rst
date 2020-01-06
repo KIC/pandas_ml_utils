@@ -38,6 +38,22 @@ Model
    .. automethod:: __init__
 
 
+SkitModel
+.........
+Simply provide the sklearn model i.e. LogisticRegression along with the features and labels
+
+
+KerasModel
+..........
+.. autoclass:: pandas_ml_utils.Model
+   :members:
+
+   .. automethod:: __init__
+
+NOTE in case of tensorflow backend currently only tensorflow 1.* is supported.
+For tensorflow 2.x we need implement a TfKeras Model.
+
+
 FeaturesAndLabels
 -----------------
 .. autoclass:: pandas_ml_utils.FeaturesAndLabels

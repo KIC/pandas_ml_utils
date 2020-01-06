@@ -223,7 +223,9 @@ class KerasModel(Model):
                  **kwargs):
         """
         Keras compatible implementation of :class:`.Model`.
-        :param keras_compiled_model_provider: a callable which provides a compiled ready to fit keras model
+        :param keras_compiled_model_provider: a callable which provides an eventually compiled ready to fit keras model.
+               if the model is not compiled you ned to pass "optimizer" argument as kwargs.
+               NOTE: the tensorflow backend is currently limited to 1.*
         :param features_and_labels: see :class:`.Model`
         :param summary_provider: :class:`.Model`.
         :param epochs: number of epochs passed to the keras fit function

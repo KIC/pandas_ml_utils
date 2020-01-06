@@ -221,8 +221,7 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 * add Proximity https://stats.stackexchange.com/questions/270201/pooling-levels-of-categorical-variables-for-regression-trees/275867#275867
 
 ## Wanna help?
-* currently I only need binary classification
-    * maybe you want to add a feature for multiple classes
+* for tensorflow 2.x implement a new TfKeras Model
 * for non classification problems you might want to augment the `Summary` 
 * write some tests
 * add different more charts for a better understanding/interpretation of the models
