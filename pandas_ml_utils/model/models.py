@@ -335,6 +335,7 @@ class KerasModel(Model):
         self.__dict__.update(state)
 
         # restore keras model and tensorflow session if needed
+        custom_objects = {v.__name__: v for v in self.kwargs.values() if hasattr(v, "__name__")}
         if self.is_tensorflow:
             from keras import backend as K
             import tensorflow as tf
@@ -342,9 +343,9 @@ class KerasModel(Model):
             with self.graph.as_default():
                 self.session = tf.Session(graph=self.graph)
                 K.set_session(self.session)
-                self.keras_model = load_model(tmp_keras_file, custom_objects=self.kwargs)
+                self.keras_model = load_model(tmp_keras_file, custom_objects=custom_objects)
         else:
-            self.keras_model = load_model(tmp_keras_file, custom_objects=self.kwargs)
+            self.keras_model = load_model(tmp_keras_file, custom_objects=custom_objects)
 
         # clean up temp file
         with contextlib.suppress(OSError):

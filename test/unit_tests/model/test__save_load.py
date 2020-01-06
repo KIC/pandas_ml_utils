@@ -83,8 +83,7 @@ class TestSaveLoad(TestCase):
             return model
 
         """when"""
-        # FIXME my_custom_loss should have proper name
-        fit = df.fit(pmu.KerasModel(keras_model_provider, features_and_labels, optimizer='adam', loss=my_custom_loss, verbose=0, my_custom_loss=my_custom_loss))
+        fit = df.fit(pmu.KerasModel(keras_model_provider, features_and_labels, optimizer='adam', loss=my_custom_loss, verbose=0))
         fitted_model = fit.model
 
         fit.save_model(name)
