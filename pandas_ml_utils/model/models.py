@@ -1,23 +1,21 @@
 from __future__ import annotations
 
 import contextlib
-import inspect
 import logging
 import os
 import tempfile
 import uuid
 from copy import deepcopy
+from typing import List, Callable, TYPE_CHECKING
 
 import dill as pickle
 import numpy as np
 import pandas as pd
-from typing import List, Callable, TYPE_CHECKING
-
 from sklearn.linear_model import LogisticRegression
 
-from pandas_ml_utils.summary.summary import Summary
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
-from pandas_ml_utils.utils.functions import suitable_kwargs, call_with_suitable_kwargs
+from pandas_ml_utils.summary.summary import Summary
+from pandas_ml_utils.utils.functions import suitable_kwargs
 
 _log = logging.getLogger(__name__)
 
