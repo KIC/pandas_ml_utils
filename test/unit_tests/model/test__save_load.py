@@ -73,9 +73,13 @@ class TestSaveLoad(TestCase):
         features_and_labels = pmu.FeaturesAndLabels(["a"], ["b"])
         name = '/tmp/pandas-ml-utils-unittest-test_model_keras_custom_loss'
 
-        def my_custom_loss(x, y):
-            import keras.backend as K
-            return K.sum(x - y)
+        def loss_provider(foo):
+            def my_custom_loss(x, y):
+                print(foo)
+                import keras.backend as K
+                return K.sum(x - y)
+
+            return my_custom_loss
 
         def keras_model_provider():
             model = Sequential()
@@ -83,7 +87,7 @@ class TestSaveLoad(TestCase):
             return model
 
         """when"""
-        fit = df.fit(pmu.KerasModel(keras_model_provider, features_and_labels, optimizer='adam', loss=my_custom_loss, verbose=0))
+        fit = df.fit(pmu.KerasModel(keras_model_provider, features_and_labels, optimizer='adam', loss=loss_provider("bar"), verbose=0))
         fitted_model = fit.model
 
         fit.save_model(name)
