@@ -9,7 +9,7 @@ author = "KIC"
 author-email = "vorarlberger@gmail.com"
 home-page = "https://github.com/KIC/pandas_ml_utils"
 description-file = "README.md"
-classifiers = ["License :: OSI Approved :: MIT License", "Development Status :: 2 - Pre-Alpha"]
+classifiers = ["License :: OSI Approved :: MIT License", "Development Status :: 3 - Alpha"]
 requires-python = ">= 3.7"
 requires = [
     "pandas",
