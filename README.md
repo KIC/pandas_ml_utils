@@ -129,13 +129,14 @@ from sklearn.linear_model import LogisticRegression
 from pandas_ml_utils.summary.binary_classification_summary import BinaryClassificationSummary
 
 df = pd.read_csv('burritos.csv')
-df["with_fires"] = df["Fries"].apply(lambda x: str(x).lower() == "x")
-df["price"] = df["Cost"] * -1
-df = df[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "with_fires", "price"]].dropna()
+columns = ["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "with_fires", "price"]
 fit = df.fitpmu.SkitModel(LogisticRegression(solver='lbfgs'),
                           pmu.FeaturesAndLabels(["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling",
                                                   "Uniformity", "Salsa", "Synergy", "Wrap", "overall"],
-                                                 ["with_fires"]),
+                                                 ["with_fires"], 
+                                                pre_processor=lambda _df: pmu.LazyDataFrame(_df,
+                                                                                            with_fires = lambda f: f["Fries"].apply(lambda x: str(x).lower() == "x"),
+                                                                                            price      = lambda f: f["Cost"] * -1).to_dataframe()[columns].dropna()),
                           BinaryClassificationSummary)
 
 fit
@@ -152,11 +153,10 @@ serves the needed columns by your features.
 fit.save_model("/tmp/burrito.model")
 ```
 
+An then just apply the model on the data frame as you would expect it from your data source:
 
 ```python
 df = pd.read_csv('burritos.csv')
-df["price"] = df["Cost"] * -1
-df = df[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "price"]].dropna()
 df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 ```
 
