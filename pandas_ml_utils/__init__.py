@@ -1,5 +1,5 @@
 """Augment pandas DataFrame with methods for machine learning"""
-__version__ = '0.0.22'
+__version__ = '0.0.23'
 
 # imports to provide functionality via root import like import pandas_ml_utils as pmu; pmu.XY
 from pandas_ml_utils.pandas_utils_extension import *

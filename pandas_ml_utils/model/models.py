@@ -353,7 +353,10 @@ class KerasModel(Model):
 
     def __del__(self):
         if self.is_tensorflow:
-            self.session.close()
+            try:
+                self.session.close()
+            except AttributeError:
+                pass
 
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,
