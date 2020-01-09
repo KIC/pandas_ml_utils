@@ -3,7 +3,8 @@
 )
 # Pandas ML Utils
 
-Pandas ML Utils is intended to help you through your journey of applying statistical oder machine learning models to data while you never need to leave the world of pandas.
+Pandas ML Utils is intended to help you through your journey of statistical or machine learning models, 
+while you never need to leave the world of pandas.
 
 1. install
 1. analyze your features
@@ -128,13 +129,14 @@ from sklearn.linear_model import LogisticRegression
 from pandas_ml_utils.summary.binary_classification_summary import BinaryClassificationSummary
 
 df = pd.read_csv('burritos.csv')
-df["with_fires"] = df["Fries"].apply(lambda x: str(x).lower() == "x")
-df["price"] = df["Cost"] * -1
-df = df[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "with_fires", "price"]].dropna()
+columns = ["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "with_fires", "price"]
 fit = df.fitpmu.SkitModel(LogisticRegression(solver='lbfgs'),
                           pmu.FeaturesAndLabels(["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling",
                                                   "Uniformity", "Salsa", "Synergy", "Wrap", "overall"],
-                                                 ["with_fires"]),
+                                                 ["with_fires"], 
+                                                pre_processor=lambda _df: pmu.LazyDataFrame(_df,
+                                                                                            with_fires = lambda f: f["Fries"].apply(lambda x: str(x).lower() == "x"),
+                                                                                            price      = lambda f: f["Cost"] * -1).to_dataframe()[columns].dropna()),
                           BinaryClassificationSummary)
 
 fit
@@ -151,11 +153,10 @@ serves the needed columns by your features.
 fit.save_model("/tmp/burrito.model")
 ```
 
+An then just apply the model on the data frame as you would expect it from your data source:
 
 ```python
 df = pd.read_csv('burritos.csv')
-df["price"] = df["Cost"] * -1
-df = df[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "price"]].dropna()
 df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 ```
 
@@ -221,14 +222,17 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 * add Proximity https://stats.stackexchange.com/questions/270201/pooling-levels-of-categorical-variables-for-regression-trees/275867#275867
 
 ## Wanna help?
-* currently I only need binary classification
-    * maybe you want to add a feature for multiple classes
+* for tensorflow 2.x implement a new TfKeras Model
 * for non classification problems you might want to augment the `Summary` 
 * write some tests
 * add different more charts for a better understanding/interpretation of the models
 * add whatever you need for yourself and share it with us 
 
 ## Change Log
+### 0.0.22
+* introduce proper keras session and graph handling in case of tensorflow backend
+* rename features_and_labels.loss to gross_loss to avoid confusion with traning loss
+
 ### 0.0.21
 * added engineered source frame to backtest
 * introduced pre-processing of data frame in features and labels

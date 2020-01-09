@@ -1,3 +1,4 @@
+import operator
 from unittest import TestCase
 
 import os
@@ -72,20 +73,26 @@ class TestModel(TestCase):
             return model
 
         """when"""
-        model_provider = KerasModel(keras_model_provider, features_and_labels, callbacks=[BaseLogger()], verbose=0, foo="bar")
+        model_provider = KerasModel(keras_model_provider, features_and_labels, callbacks=[BaseLogger], verbose=0, foo="bar")
         model1 = model_provider()
         model2 = model_provider(optimizer='rmsprop')
 
+        """then weighs must be equal"""
+        np.testing.assert_array_almost_equal(model1.get_weights(), model2.get_weights())
+
+        """and after we fit one model"""
         loss = model2.fit(np.array([0.1, 0.01]), np.array([0.1, 0.01]), np.array([0.1, 0.01]), np.array([0.1, 0.01]),
                           [0,1], [2,3])
 
         """then"""
         self.assertIsNotNone(loss)
-        self.assertEqual(model1.kwargs, model2.kwargs)
+        self.assertEqual({**model1.kwargs, "optimizer": 'rmsprop'}, model2.kwargs)
         self.assertFalse(model1.kwargs is model2.kwargs)
         self.assertEqual(len(model1.callbacks), len(model2.callbacks))
-        self.assertEqual(type(model1.callbacks[0]), type(model2.callbacks[0]))
-        self.assertNotEqual(model1.callbacks[0], model2.callbacks[0])
+        self.assertEqual(model1.callbacks[0], model2.callbacks[0])
+        self.assertNotEqual(model1.session, model2.session)
+        self.assertNotEqual(model1.graph, model2.graph)
         self.assertEqual(type(model1.keras_model.optimizer), Adam)
         self.assertEqual(type(model2.keras_model.optimizer), RMSprop)
-        self.assertTrue(True)
+        np.testing.assert_array_almost_equal(model2.get_weights(), model2().get_weights())
+        np.testing.assert_array_compare(operator.__ne__, model1.get_weights(), model2.get_weights())

@@ -68,3 +68,31 @@ class TestSaveLoad(TestCase):
         self.assertEqual(model.kwargs["ldf"].kwargs['foo'](None), 'bar')
         self.assertEqual(model2.kwargs["ldf"].kwargs['foo'](None), 'bar')
 
+    def test_save_load_keras_custom_loss(self):
+        """given"""
+        features_and_labels = pmu.FeaturesAndLabels(["a"], ["b"])
+        name = '/tmp/pandas-ml-utils-unittest-test_model_keras_custom_loss'
+
+        def loss_provider(foo):
+            def my_custom_loss(x, y):
+                print(foo)
+                import keras.backend as K
+                return K.sum(x - y)
+
+            return my_custom_loss
+
+        def keras_model_provider():
+            model = Sequential()
+            model.add(Dense(1, input_dim=1, activation='sigmoid'))
+            return model
+
+        """when"""
+        fit = df.fit(pmu.KerasModel(keras_model_provider, features_and_labels, optimizer='adam', loss=loss_provider("bar"), verbose=0))
+        fitted_model = fit.model
+
+        fit.save_model(name)
+        restored_model = pmu.Model.load(name)
+
+        """then"""
+        pd.testing.assert_frame_equal(df.predict(fitted_model), df.predict(restored_model))
+        pd.testing.assert_frame_equal(df.backtest(fitted_model).df, df.backtest(restored_model).df)

@@ -25,10 +25,10 @@ class FeaturesAndLabels(object):
                  features: List[str],
                  labels: Union[List[str], TargetLabelEncoder, Dict[str, Union[List[str], TargetLabelEncoder]]],
                  label_type:Type = int,
-                 loss: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
+                 gross_loss: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  targets: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  feature_lags: Iterable[int] = None,
-                 feature_rescaling: Dict[Tuple[str, ...], Tuple[int, ...]] = None, # fiXme lets provide a rescaler ..
+                 feature_rescaling: Dict[Tuple[str, ...], Tuple[int, ...]] = None,  # fiXme lets provide a rescaler ..
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
                  pre_processor: Callable[[pd.DataFrame, Dict], pd.DataFrame] = lambda x, _: x,
                  **kwargs):
@@ -40,12 +40,12 @@ class FeaturesAndLabels(object):
                        want to classify whether a stock price is bleow or above average and you want to provide what
                        the average was.
         :param label_type: whether to treat a label as int, float, bool
-        :param loss: expects a callable which receives the source data frame and a target (or None) and should
+        :param gross_loss: expects a callable which receives the source data frame and a target (or None) and should
                      return a series or data frame. Let's say you want to classify whether a printer is jamming the
                      next page or not. Halting and servicing the printer costs 5'000 while a jam costs 15'000.
-                     Your target will be 0 or empty but your loss will be -5000 for all your type II errors and -15'000
-                     for all your type I errors in case of miss-classification. Another example would be if you want to
-                     classify whether a stock price is above (buy) the current price or not (do nothing).
+                     Your target will be 0 or empty but your gross loss will be -5000 for all your type II errors
+                     and -15'000 for all your type I errors in case of miss-classification. Another example would be
+                     if you want to classify whether a stock price is above (buy) the current price or not (do nothing).
                      Your target is the today's price and your loss is tomorrows price minus today's price.
         :param targets: expects a callable which receives the source data frame and a target (or None) and should
                         return a series or data frame. In case of multiple targets the series names need to be unique!
@@ -64,7 +64,7 @@ class FeaturesAndLabels(object):
         self._features = features
         self._labels = labels
         self._targets = targets
-        self._loss = loss
+        self._gross_loss = gross_loss
         self.label_type = label_type
         self.feature_lags = [lag for lag in feature_lags] if feature_lags is not None else None
         self.feature_rescaling = feature_rescaling
@@ -89,8 +89,8 @@ class FeaturesAndLabels(object):
         return self._targets
 
     @property
-    def loss(self):
-        return self._loss
+    def gross_loss(self):
+        return self._gross_loss
 
     @property
     def min_required_samples(self):

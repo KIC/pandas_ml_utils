@@ -28,7 +28,7 @@ class ClassificationTest(unittest.TestCase):
             pdu.SkitModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
                 pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
-                                      loss=lambda df: df["spy_Close"] - df["spy_Open"]),
+                                      gross_loss=lambda df: df["spy_Close"] - df["spy_Open"]),
                 BinaryClassificationSummary),
             test_size=0.4,
             test_validate_split_seed=42)
@@ -54,7 +54,7 @@ class ClassificationTest(unittest.TestCase):
         self.assertDictEqual({k: repr(v) for k,v in fit.test_summary.plot_classification().items()},
                              {None: '<Figure size 1600x900 with 2 Axes>'})
         self.assertDictEqual({k: len(fig_to_png_base64(v)) for k,v in fit.test_summary.plot_classification().items()},
-                             {None: 138908})
+                             {None: 141863})
 
         """  and _repr_html_"""
-        self.assertEqual(len(fit.test_summary._repr_html_()), 142212)
+        self.assertEqual(len(fit.test_summary._repr_html_()), 145167)

@@ -27,7 +27,7 @@ class PreprocessorTest(unittest.TestCase):
             pdu.SkitModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
                 pdu.FeaturesAndLabels(features=['feature'], labels=['label'],
-                                      loss=lambda df: df["spy_Close"] - df["spy_Open"],
+                                      gross_loss=lambda df: df["spy_Close"] - df["spy_Open"],
                                       pre_processor=lambda _df, _: pdu.LazyDataFrame(
                                           _df,
                                           feature=lambda f: f["vix_Close"].rolling(2).mean(),
@@ -39,10 +39,10 @@ class PreprocessorTest(unittest.TestCase):
         p = df.predict(fit.model, 2)
 
         """then fit"""
-        self.assertListEqual(fit.test_summary.df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'label'), (LABEL_COLUMN_NAME, 'label'), (LOSS_COLUMN_NAME, 'loss')])
+        self.assertListEqual(fit.test_summary.df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'label'), (LABEL_COLUMN_NAME, 'label'), (GROSS_LOSS_COLUMN_NAME, GROSS_LOSS_COLUMN_NAME)])
 
         """ and backtest"""
-        self.assertListEqual(bt.df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'label'), (LABEL_COLUMN_NAME, 'label'), (LOSS_COLUMN_NAME, 'loss'), *[(SOURCE_COLUMN_NAME, c) for c in df.columns], (SOURCE_COLUMN_NAME, "feature"), (SOURCE_COLUMN_NAME, "label")])
+        self.assertListEqual(bt.df.columns.tolist(), [(PREDICTION_COLUMN_NAME, 'label'), (LABEL_COLUMN_NAME, 'label'), (GROSS_LOSS_COLUMN_NAME, GROSS_LOSS_COLUMN_NAME), *[(SOURCE_COLUMN_NAME, c) for c in df.columns], (SOURCE_COLUMN_NAME, "feature"), (SOURCE_COLUMN_NAME, "label")])
         self.assertEqual(bt.df.index[-1], "2019-09-13")
 
         """ and prediction"""

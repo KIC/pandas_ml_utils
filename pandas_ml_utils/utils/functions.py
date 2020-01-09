@@ -45,6 +45,16 @@ def one_hot(index: int, number_of_classes: int):
     return vec
 
 
+def suitable_kwargs(func, **kwargs):
+    suitable_args = inspect.getfullargspec(func).args
+    return {arg: kwargs[arg] for arg in kwargs.keys() if arg in suitable_args}
+
+
+def call_with_suitable_kwargs(func, **kwargs):
+    args = suitable_kwargs(func, **kwargs)
+    return func(**args)
+
+
 def call_callable_dyamic_args(func, *args):
     spec = inspect.getfullargspec(func)
     if spec.varargs:

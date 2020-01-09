@@ -28,7 +28,7 @@ class FeatureAndLabelsExtractorTest(unittest.TestCase):
             pdu.SkitModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
                 pdu.FeaturesAndLabels(features=['feature'], labels=['label'],
-                                      loss=lambda df: df["spy_Close"] - df["spy_Open"],
+                                      gross_loss=lambda df: df["spy_Close"] - df["spy_Open"],
                                       targets=lambda df: df["spy_Close"],
                                       pre_processor=lambda _df, _: pdu.LazyDataFrame(
                                           _df,
@@ -42,7 +42,7 @@ class FeatureAndLabelsExtractorTest(unittest.TestCase):
         self.assertListEqual(extractor.labels_df.columns.tolist(), ['label'])
         self.assertListEqual(extractor.source_df[SOURCE_COLUMN_NAME].columns.tolist(), [*df.columns.tolist(), 'feature', 'label'])
         self.assertListEqual(extractor.target_df.columns.tolist(), [(TARGET_COLUMN_NAME, "spy_Close")])
-        self.assertListEqual(extractor.loss_df.columns.tolist(), [(LOSS_COLUMN_NAME, "loss")])
+        self.assertListEqual(extractor.gross_loss_df.columns.tolist(), [(GROSS_LOSS_COLUMN_NAME, GROSS_LOSS_COLUMN_NAME)])
         self.assertEqual(fnl[0].shape, (6704, 2))
         self.assertEqual(fnl[1].shape, (6704, 1))
         self.assertEqual(fnl[2].shape, (6704, 1))

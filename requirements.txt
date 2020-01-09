@@ -2,7 +2,7 @@
 sortedcontainers
 scikit-learn
 statsmodels
-tensorflow
+tensorflow==1.*
 matplotlib
 cachetools
 yfinance
@@ -12,5 +12,6 @@ seaborn
 pandas
 keras
 Mako
+h5py
 dill
 gym
