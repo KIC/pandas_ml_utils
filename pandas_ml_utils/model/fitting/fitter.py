@@ -63,7 +63,7 @@ def fit(df: pd.DataFrame,
         for k, v in list(hyper_parameter_space.items()):
             if k.startswith("__"):
                 hyperopt_params[k[2:]] = hyper_parameter_space.pop(k)
-            elif type(v) in [int, float, bool]:
+            elif isinstance(v, (int, float, bool)):
                 constants[k] = hyper_parameter_space.pop(k)
 
         # optimize hyper parameters

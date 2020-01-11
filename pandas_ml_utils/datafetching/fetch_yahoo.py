@@ -29,7 +29,6 @@ def fetch_yahoo(*args: str, period: str = 'max', multi_index: bool = False, **kw
                     df = df_
                 else:
                     df = inner_join(df, df_)
-                pass
             else:
                 if df is None:
                     df = df_.add_prefix(px)
@@ -61,7 +60,7 @@ def __download_yahoo_data(symbol, period):
         try:
             # first try to append the most recent data
             df = ticker.history(period="1d", interval='1d')[-1:].combine_first(ticker.history(period=period))
-        except:
+        except IOError:
             traceback.print_exc()
             logging.warning(
                 'failed to add yf.Ticker({v}).history(period="1d", interval="1d")[-1:] fallback to hist only!')

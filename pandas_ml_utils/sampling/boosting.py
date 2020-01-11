@@ -1,7 +1,5 @@
-from typing import Tuple
-
 import numpy as np
-from sklearn.model_selection import KFold, ShuffleSplit, StratifiedKFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.utils.validation import _num_samples
 
 

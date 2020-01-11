@@ -155,7 +155,7 @@ class SkitModel(Model):
             return self.skit_model.loss_
         else:
             prediction = self.predict(x)
-            if type(self.skit_model) == LogisticRegression\
+            if isinstance(self.skit_model, LogisticRegression)\
             or type(self.skit_model).__name__.endswith("Classifier")\
             or type(self.skit_model).__name__.endswith("SVC"):
                 from sklearn.metrics import log_loss
@@ -271,7 +271,7 @@ class KerasModel(Model):
         if self.history is None:
             self.history = fit_history.history
         else:
-            for metric, values in self.history.items():
+            for metric, _ in self.history.items():
                 self.history[metric] = self.history[metric] + fit_history.history[metric]
 
         return min(fit_history.history['loss'])
