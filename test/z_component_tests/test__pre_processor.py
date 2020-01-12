@@ -28,7 +28,7 @@ class PreprocessorTest(unittest.TestCase):
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
                 pdu.FeaturesAndLabels(features=['feature'], labels=['label'],
                                       gross_loss=lambda df: df["spy_Close"] - df["spy_Open"],
-                                      pre_processor=lambda _df, _: pdu.LazyDataFrame(
+                                      pre_processor=lambda _df: pdu.LazyDataFrame(
                                           _df,
                                           feature=lambda f: f["vix_Close"].rolling(2).mean(),
                                           label=lambda f: (f["spy_Close"].shift(1) > f["spy_Open"]).shift(-1)).to_dataframe())),

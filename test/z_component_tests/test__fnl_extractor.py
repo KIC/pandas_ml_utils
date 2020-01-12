@@ -30,7 +30,7 @@ class FeatureAndLabelsExtractorTest(unittest.TestCase):
                 pdu.FeaturesAndLabels(features=['feature'], labels=['label'],
                                       gross_loss=lambda df: df["spy_Close"] - df["spy_Open"],
                                       targets=lambda df: df["spy_Close"],
-                                      pre_processor=lambda _df, _: pdu.LazyDataFrame(
+                                      pre_processor=lambda _df: pdu.LazyDataFrame(
                                           _df,
                                           feature=lambda f: f["vix_Close"].rolling(2).mean(),
                                           label=lambda f: (f["spy_Close"].shift(1) > f["spy_Open"]).shift(-1)))))

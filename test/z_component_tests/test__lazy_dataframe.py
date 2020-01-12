@@ -45,7 +45,7 @@ class LazyDataFrameTest(unittest.TestCase):
             pdu.FeaturesAndLabels(
                 ["sma"],
                 ["label"],
-                pre_processor=lambda _df, _: pdu.LazyDataFrame(
+                pre_processor=lambda _df: pdu.LazyDataFrame(
                     _df,
                     sma=lambda f: f["vix_Close"].rolling(2).mean(),
                     label=lambda f: f["spy_Close"] > f["spy_Open"]

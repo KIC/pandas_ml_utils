@@ -1,5 +1,4 @@
 import logging
-import re
 from functools import lru_cache
 from time import perf_counter as pc
 from typing import Tuple, Dict, Union, List
@@ -13,25 +12,29 @@ from pandas_ml_utils.model.features_and_labels.features_and_labels import Featur
 from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder, \
     MultipleTargetEncodingWrapper, IdentityEncoder
 from pandas_ml_utils.utils.classes import ReScaler
-from pandas_ml_utils.utils.functions import log_with_time, call_callable_dyamic_args
+from pandas_ml_utils.utils.functions import log_with_time, call_callable_dynamic_args
 
 _log = logging.getLogger(__name__)
 
 
 class FeatureTargetLabelExtractor(object):
 
-    def __init__(self, df: pd.DataFrame, features_and_labels: FeaturesAndLabels):
+    def __init__(self, df: pd.DataFrame, features_and_labels: FeaturesAndLabels, **kwargs):
+        # prepare fields
         labels = features_and_labels.labels
         encoder = lambda frame: frame
         label_columns = None
-        targets = None
 
-        # Union[List[str], TargetLabelEncoder, Dict[str, Union[List[str], TargetLabelEncoder]]]
+        # eventually transform callable labels to its expected structure
+        if callable(labels):
+            joined_kwargs = {**features_and_labels.kwargs, **kwargs}
+            labels = call_callable_dynamic_args(labels, df, **joined_kwargs)
+
+        # unfold labels, currently supported types are:
+        #  Union[List[str], TargetLabelEncoder, Dict[str, Union[List[str], TargetLabelEncoder]]]
         if isinstance(labels, list):
-            targets = None
             label_columns = labels
         elif isinstance(labels, TargetLabelEncoder):
-            targets = None
             encoder = labels.encode
             label_columns = labels.labels_source_columns
         elif isinstance(labels, Dict):
@@ -44,11 +47,27 @@ class FeatureTargetLabelExtractor(object):
                 t: l if isinstance(l, TargetLabelEncoder) else IdentityEncoder(l) for t, l in labels.items()
             }).encode
 
-        self.df = call_callable_dyamic_args(features_and_labels.pre_processor, df, features_and_labels.kwargs, features_and_labels)
-        self._features_and_labels = features_and_labels
-        self._labels = label_columns
-        self._targets = targets
+        # assign all fields
+        self._features_and_labels = features_and_labels # depricated copy all fields here
+        self._features = features_and_labels.features
+        self._labels_columns = label_columns
+        self._labels = labels
+        self._label_type = features_and_labels.label_type
+        self._targets = features_and_labels.targets
+        self._gross_loss = features_and_labels.gross_loss
         self._encoder = encoder
+
+        # pre assign this variable
+        # but notice that it get overwritten by an engineered data frame later on
+        self.df = df
+
+        # this function uses clojures
+        def call_dynamic(func, *args):
+            joined_kwargs = {**self.__dict__, **features_and_labels.kwargs, **kwargs}
+            return call_callable_dynamic_args(func, *args, **joined_kwargs)
+
+        self.df = call_dynamic(features_and_labels.pre_processor, df)
+        self.__call_dynamic = call_dynamic
 
     def prediction_to_frame(self,
                             prediction: np.ndarray,
@@ -117,7 +136,7 @@ class FeatureTargetLabelExtractor(object):
         x = self._fix_shape(df_features)
 
         # labels are straight forward but eventually need to be type corrected
-        y = df_labels.values.astype(self._features_and_labels.label_type)
+        y = df_labels.values.astype(self._label_type)
         _log.info(f"  features shape: {x.shape}, labels shape: {y.shape}")
 
         # sanity check
@@ -131,7 +150,7 @@ class FeatureTargetLabelExtractor(object):
     def features_df(self) -> pd.DataFrame:
         start_pc = log_with_time(lambda: _log.debug(" make features ..."))
         feature_lags = self._features_and_labels.feature_lags
-        features = self._features_and_labels.features
+        features = self._features
         lag_smoothing = self._features_and_labels.lag_smoothing
         feature_rescaling = self._features_and_labels.feature_rescaling
 
@@ -184,11 +203,11 @@ class FeatureTargetLabelExtractor(object):
 
     @property
     def feature_names(self) -> np.ndarray:
-        return np.array(self._features_and_labels.features)
+        return np.array(self._features)
 
     def label_names(self, level_above=None) -> List[Union[Tuple[str, ...],str]]:
-        labels = self._features_and_labels.labels.encoded_labels_columns \
-            if isinstance( self._features_and_labels.labels, TargetLabelEncoder) else self._features_and_labels.labels
+        labels = self._labels.encoded_labels_columns \
+            if isinstance(self._labels, TargetLabelEncoder) else self._labels
 
         if isinstance(labels, dict):
             label_columns = []
@@ -203,7 +222,7 @@ class FeatureTargetLabelExtractor(object):
     @property
     def labels_df(self) -> pd.DataFrame:
         # here we can do all sorts of tricks and encodings ...
-        df = self._encoder(self.df[self._labels]).dropna().copy()
+        df = self._encoder(self.df[self._labels_columns]).dropna().copy()
         return df
 
     @property
@@ -216,11 +235,10 @@ class FeatureTargetLabelExtractor(object):
     def gross_loss_df(self):
         df = None
 
-        if self._features_and_labels.gross_loss is not None:
-            labels = self._features_and_labels.labels
+        if self._gross_loss is not None:
+            labels = self._labels
             for target in (labels.keys() if isinstance(labels, dict) else [None]):
-                dfl = call_callable_dyamic_args(self._features_and_labels.gross_loss,
-                                                self.df, target, self._features_and_labels)
+                dfl = self.__call_dynamic(self._gross_loss, self.df, target)
                 if isinstance(dfl, pd.Series):
                     if dfl.name is None:
                         dfl.name = target or GROSS_LOSS_COLUMN_NAME
@@ -240,11 +258,10 @@ class FeatureTargetLabelExtractor(object):
     def target_df(self):
         df = None
 
-        if self._features_and_labels.targets is not None:
-            labels = self._features_and_labels.labels
+        if self._targets is not None:
+            labels = self._labels
             for i, target in enumerate(labels.keys() if isinstance(labels, dict) else [None]):
-                dft = call_callable_dyamic_args(self._features_and_labels.targets,
-                                                self.df, target, self._features_and_labels)
+                dft = self.__call_dynamic(self._targets, self.df, target)
 
                 if isinstance(dft, pd.Series):
                     if dft.name is None:

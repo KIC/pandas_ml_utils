@@ -15,6 +15,20 @@ DF = pd.DataFrame({"a": [1,2,3,4,5],
 
 class TestFeaturesAndLabelsExtraction(TestCase):
 
+    def test_magic_arguments(self):
+        """given"""
+        labels = []
+
+        def test(df, _labels):
+            labels.append(_labels)
+            return df
+
+        """when"""
+        FeatureTargetLabelExtractor(pd.DataFrame({}), FeaturesAndLabels(["a"], ["b"], pre_processor=test))
+
+        """then"""
+        self.assertListEqual(labels, [["b"]])
+
     def test_simple(self):
         """given"""
         fl = FeaturesAndLabels(["a"], ["d", "e"],
@@ -33,7 +47,7 @@ class TestFeaturesAndLabelsExtraction(TestCase):
 
     def test_pre_processor(self):
         """given"""
-        fl = FeaturesAndLabels(["lala"], ["b"], pre_processor=lambda _df, names: _df.rename(columns=names), a="lala")
+        fl = FeaturesAndLabels(["lala"], ["b"], pre_processor=lambda _df, **kwargs: _df.rename(columns=kwargs), a="lala")
 
         """when"""
         df, _, _ = FeatureTargetLabelExtractor(DF, fl).features_labels
