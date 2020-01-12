@@ -9,4 +9,4 @@ engines:
     enabled: false
 exclude_paths:
   - '**.md'
-  - '**/test/**'
+  - 'test/**'

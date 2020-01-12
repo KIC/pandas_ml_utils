@@ -27,7 +27,7 @@ finance = [
     "yfinance"
 ]
 crypto = [
-    "cryptocmd"
+    "requests"
 ]
 notebook = [
     "vdom",

@@ -8,6 +8,7 @@ cachetools
 yfinance
 hyperopt
 keras-rl
+requests
 seaborn
 pandas
 keras
