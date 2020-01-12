@@ -1,19 +1,15 @@
 import logging
-import os
 import unittest
 
-import numpy as np
 import pandas as pd
 from sklearn.neural_network import MLPClassifier
-from pandas_ml_utils.constants import *
+
 import pandas_ml_utils as pdu
-from pandas_ml_utils.summary.binary_classification_summary import BinaryClassificationSummary
-from pandas_ml_utils.utils.functions import fig_to_png_base64
+from pandas_ml_utils.constants import *
+from test.config import TEST_FILE
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-TEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "test.csv")
 
 
 class PreprocessorTest(unittest.TestCase):
