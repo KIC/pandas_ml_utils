@@ -5,3 +5,7 @@ engines:
   prospector:
     enabled: true
     python_version: 3
+  remark-lint:
+    enabled: false
+exclude_paths:
+  - '**.md'
