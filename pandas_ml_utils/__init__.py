@@ -2,6 +2,7 @@
 __version__ = '0.0.23'
 
 import logging
+import pandas as pd
 
 # imports to provide functionality via root import like import pandas_ml_utils as pmu; pmu.XY
 from pandas_ml_utils.model.models import Model, SkitModel, KerasModel, MultiModel
@@ -15,7 +16,6 @@ from pandas_ml_utils.datafetching.fetch_yahoo import fetch_yahoo
 from pandas_ml_utils.model.fitting.fitter import fit, predict, backtest, features_and_label_extractor
 from pandas_ml_utils.analysis.selection import feature_selection
 from pandas.core.base import PandasObject
-import pandas as pd
 from pandas_ml_utils.datafetching.fetch_cryptocompare import fetch_cryptocompare_daily, fetch_cryptocompare_hourly
 
 
