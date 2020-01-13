@@ -4,6 +4,7 @@ import datetime
 import logging
 import time
 
+import cachetools
 import requests
 
 _log = logging.getLogger(__name__)
@@ -42,15 +43,16 @@ LIMIT = 1440
 ###############################################################################
 
 
+@cachetools.func.ttl_cache(maxsize=1, ttl=10 * 60)
 def query_cryptocompare(url,errorCheck=True):
     try:
         _log.debug(url)
         response = requests.get(url).json()
     except Exception as e:
-        print('Error getting coin information. %s' % str(e))
+        _log.error('Error getting coin information. %s' % str(e))
         return None
     if errorCheck and (response.get('Response') == 'Error'):
-        print('[ERROR] %s' % response.get('Message'))
+        _log.error('[ERROR] %s' % response.get('Message'))
         return None
     return response
 
@@ -102,9 +104,10 @@ def get_historical_price_day(coin, curr=CURR, limit=LIMIT):
 
 
 def get_historical_price_hour(coin, curr=CURR, limit=LIMIT):
+    current_ts = int(time.time()) + 60 * 60 * 24 + 1 # to be on the safe side
     if limit is None or limit > LIMIT:
         _log.info("batch download < now")
-        data = query_cryptocompare(URL_HIST_PRICE_HOUR.format(coin, format_parameter(curr), MAX_LIMIT, MAX_INT))
+        data = query_cryptocompare(URL_HIST_PRICE_HOUR.format(coin, format_parameter(curr), MAX_LIMIT, current_ts))
         batch = data
 
         while True:
@@ -121,7 +124,7 @@ def get_historical_price_hour(coin, curr=CURR, limit=LIMIT):
                     data[DATA] = data[DATA][:limit]
                     return data
     else:
-        return query_cryptocompare(URL_HIST_PRICE_HOUR.format(coin, format_parameter(curr), limit, MAX_INT))
+        return query_cryptocompare(URL_HIST_PRICE_HOUR.format(coin, format_parameter(curr), limit, current_ts))
 
 
 def get_historical_price_minute(coin, curr=CURR, limit=LIMIT):

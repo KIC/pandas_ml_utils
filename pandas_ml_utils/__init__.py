@@ -14,6 +14,7 @@ from pandas_ml_utils.model.fitting.fitter import fit, predict, backtest, feature
 from pandas_ml_utils.analysis.selection import feature_selection
 from pandas.core.base import PandasObject
 import pandas as pd
+from pandas_ml_utils.datafetching.fetch_cryptocompare import fetch_cryptocompare_daily, fetch_cryptocompare_hourly
 
 
 # add functions to pandas
@@ -39,6 +40,8 @@ PandasObject.features_and_label_extractor = features_and_label_extractor
 
 # data fetcher
 setattr(pd, 'fetch_yahoo', fetch_yahoo)
+setattr(pd, 'fetch_cryptocompare_daily', fetch_cryptocompare_daily)
+setattr(pd, 'fetch_cryptocompare_hourly', fetch_cryptocompare_hourly)
 
 __doc__ = """
 The main concept is to extend pandas DataFrame objects such that you can apply any statistical or machine learning
