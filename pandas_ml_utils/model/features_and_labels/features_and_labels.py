@@ -143,14 +143,6 @@ class FeaturesAndLabels(object):
         copy.kwargs = {**self.kwargs, **kwargs}
         return copy
 
-    def __getitem__(self, item):
-        if isinstance(item, tuple) and len(item) == 2:
-            return self.kwargs[item[0]] if item[0] in self.kwargs else item[1]
-        elif item in self.kwargs:
-            return self.kwargs[item]
-        else:
-            raise KeyError(f"key not found {item}")
-
     def __repr__(self):
         return f'FeaturesAndLabels({self.features},{self.labels},{self.targets},' \
                f'{self.feature_lags},{self.feature_rescaling}{self.lag_smoothing}) ' \
