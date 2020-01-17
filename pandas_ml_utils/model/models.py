@@ -6,7 +6,7 @@ import os
 import tempfile
 import uuid
 from copy import deepcopy
-from typing import List, Callable, TYPE_CHECKING
+from typing import List, Callable, TYPE_CHECKING, Tuple
 
 import dill as pickle
 import numpy as np
@@ -234,6 +234,7 @@ class KerasModel(Model):
         """
         super().__init__(features_and_labels, summary_provider, **kwargs)
         self.keras_model_provider = keras_compiled_model_provider
+        self.custom_objects = {}
 
         import keras
         if keras.backend.backend() == 'tensorflow':
@@ -248,6 +249,14 @@ class KerasModel(Model):
         # create keras model
         provider_args = suitable_kwargs(keras_compiled_model_provider, **kwargs)
         keras_model = self._exec_within_session(keras_compiled_model_provider, **provider_args)
+
+        if isinstance(keras_model, Tuple):
+            # store custom objects
+            for i in range(1, len(keras_model)):
+                if hasattr(keras_model[i], "__name__"):
+                    self.custom_objects[keras_model[i].__name__] = keras_model[i]
+
+            keras_model = keras_model[0]
 
         # eventually compile keras model
         if not keras_model.optimizer:
@@ -335,7 +344,6 @@ class KerasModel(Model):
         self.__dict__.update(state)
 
         # restore keras model and tensorflow session if needed
-        custom_objects = {v.__name__: v for v in self.kwargs.values() if hasattr(v, "__name__")}
         if self.is_tensorflow:
             from keras import backend as K
             import tensorflow as tf
@@ -343,9 +351,9 @@ class KerasModel(Model):
             with self.graph.as_default():
                 self.session = tf.Session(graph=self.graph)
                 K.set_session(self.session)
-                self.keras_model = load_model(tmp_keras_file, custom_objects=custom_objects)
+                self.keras_model = load_model(tmp_keras_file, custom_objects=self.custom_objects)
         else:
-            self.keras_model = load_model(tmp_keras_file, custom_objects=custom_objects)
+            self.keras_model = load_model(tmp_keras_file, custom_objects=self.custom_objects)
 
         # clean up temp file
         with contextlib.suppress(OSError):

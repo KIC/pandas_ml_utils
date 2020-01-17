@@ -84,10 +84,12 @@ class TestSaveLoad(TestCase):
         def keras_model_provider():
             model = Sequential()
             model.add(Dense(1, input_dim=1, activation='sigmoid'))
-            return model
+
+            model.compile(optimizer='Adam', loss=loss_provider("bar"))
+            return model, loss_provider("bar")
 
         """when"""
-        fit = df.fit(pmu.KerasModel(keras_model_provider, features_and_labels, optimizer='adam', loss=loss_provider("bar"), verbose=0))
+        fit = df.fit(pmu.KerasModel(keras_model_provider, features_and_labels, optimizer='adam', verbose=0))
         fitted_model = fit.model
 
         fit.save_model(name)
