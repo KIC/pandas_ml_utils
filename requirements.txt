@@ -2,7 +2,7 @@
 sortedcontainers
 scikit-learn
 statsmodels
-tensorflow==1.*
+tensorflow==1.13
 matplotlib
 cachetools
 yfinance
