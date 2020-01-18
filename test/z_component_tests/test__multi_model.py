@@ -1,5 +1,4 @@
 import logging
-import os
 import unittest
 
 import numpy as np
@@ -7,13 +6,13 @@ import pandas as pd
 from sklearn.neural_network import MLPClassifier
 
 import pandas_ml_utils as pdu
-from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets
-from test.utils import SMA
 from pandas_ml_utils.constants import *
+from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets
+from test.config import TEST_FILE
+from test.utils import SMA
+
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-TEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "test.csv")
 
 
 class MultiModelTest(unittest.TestCase):

@@ -33,7 +33,7 @@ class BinaryClassificationSummary(Summary):
         try:
             loss_mx = np.array([[[c[GROSS_LOSS_COLUMN_NAME].iloc[:, 0].sum() for c in r] for r in cm] for cm in self.confusions])
             return loss_mx.sum(axis=0) if total else loss_mx
-        except:
+        except (ValueError, ArithmeticError):
             return np.array([[0, 0], [0, 0]])
 
     def get_metrics(self):
@@ -92,12 +92,12 @@ class BinaryClassificationSummary(Summary):
             colors = {0: sns.xkcd_rgb['white'], 1: sns.xkcd_rgb['pale green'], 2: sns.xkcd_rgb['cerise']}
             palette = [colors[color_index] for color_index in np.sort(color.unique())]
 
-            scatt = sns.scatterplot(ax=ax1,
-                                    x=range(len(df)),
-                                    y=df[GROSS_LOSS_COLUMN_NAME].iloc[:, 0].clip(upper=0),
-                                    size=df[GROSS_LOSS_COLUMN_NAME].iloc[:, 0] * -1,
-                                    hue=color,
-                                    palette=palette)
+            sns.scatterplot(ax=ax1,
+                            x=range(len(df)),
+                            y=df[GROSS_LOSS_COLUMN_NAME].iloc[:, 0].clip(upper=0),
+                            size=df[GROSS_LOSS_COLUMN_NAME].iloc[:, 0] * -1,
+                            hue=color,
+                            palette=palette)
 
             plt.close()
             plots[target] = fig

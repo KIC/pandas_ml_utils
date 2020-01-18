@@ -44,7 +44,7 @@ def fit(df: pd.DataFrame,
 
     trails = None
     model = model_provider()
-    features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels)
+    features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels, **model.kwargs)
 
     # make training and test data sets
     x_train, x_test, y_train, y_test, index_train, index_test = \
@@ -63,7 +63,7 @@ def fit(df: pd.DataFrame,
         for k, v in list(hyper_parameter_space.items()):
             if k.startswith("__"):
                 hyperopt_params[k[2:]] = hyper_parameter_space.pop(k)
-            elif type(v) in [int, float, bool]:
+            elif isinstance(v, (int, float, bool)):
                 constants[k] = hyper_parameter_space.pop(k)
 
         # optimize hyper parameters
@@ -155,7 +155,7 @@ def predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
         else:
             _log.warning("could not determine the minimum required data from the model")
 
-    features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels)
+    features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels, **model.kwargs)
     dff, x = make_forecast_data(features_and_labels)
 
     y_hat = model.predict(x)
@@ -163,7 +163,7 @@ def predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
 
 
 def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.DataFrame], Summary] = Summary) -> Summary:
-    features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels)
+    features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels, **model.kwargs)
 
     # make training and test data sets
     x, _, _, _, index, _ = make_training_data(features_and_labels, 0)
@@ -174,5 +174,5 @@ def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.Data
 
 
 def features_and_label_extractor(df: pd.DataFrame, model: Model) -> FeatureTargetLabelExtractor:
-    return FeatureTargetLabelExtractor(df, model.features_and_labels)
+    return FeatureTargetLabelExtractor(df, model.features_and_labels, **model.kwargs)
 

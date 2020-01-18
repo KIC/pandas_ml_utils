@@ -1,17 +1,16 @@
 import logging
-import os
 import unittest
 
 import pandas as pd
 
 import pandas_ml_utils as pdu
-from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.analysis.correlation_analysis import _sort_correlation
+from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.model.fitting.train_test_data import make_training_data
+from test.config import TEST_FILE
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-TEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "test.csv")
 
 
 class ComponentTest(unittest.TestCase):

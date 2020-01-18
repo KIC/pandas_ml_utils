@@ -1,15 +1,14 @@
 import logging
-import os
 import unittest
 
 import pandas as pd
 from sklearn.neural_network import MLPClassifier
 
 import pandas_ml_utils as pdu
+from test.config import TEST_FILE
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-TEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "test.csv")
 
 
 class LazyDataFrameTest(unittest.TestCase):
@@ -45,7 +44,7 @@ class LazyDataFrameTest(unittest.TestCase):
             pdu.FeaturesAndLabels(
                 ["sma"],
                 ["label"],
-                pre_processor=lambda _df, _: pdu.LazyDataFrame(
+                pre_processor=lambda _df: pdu.LazyDataFrame(
                     _df,
                     sma=lambda f: f["vix_Close"].rolling(2).mean(),
                     label=lambda f: f["spy_Close"] > f["spy_Open"]

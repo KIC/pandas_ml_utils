@@ -38,9 +38,17 @@ Model
    .. automethod:: __init__
 
 
+**Lambda Magic**:
+Note that all places which accept a `callable` perform some argument magic. Usually the first argument
+is the data frame and the second argument is the target name. By using smart argument names you have
+full control which data you need for your lambda. So is it possible to inject all members and kwaegs
+of the `FeaturesAndLabels` class as well as from the `Model` class. So is it possible i.e. to inject
+the labels by using ``lambda df, _labels: ...``
+
+
 SkitModel
 .........
-Simply provide the sklearn model i.e. LogisticRegression along with the features and labels
+Simply provide the sklearn model i.e. `LogisticRegression` along with the features and labels
 
 
 KerasModel
@@ -72,4 +80,3 @@ Summary
 -------
 .. autoclass:: pandas_ml_utils.summary.summary.Summary
    :members:
-

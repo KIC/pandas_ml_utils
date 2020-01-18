@@ -6,10 +6,14 @@
 Pandas ML Utils is intended to help you through your journey of statistical or machine learning models, 
 while you never need to leave the world of pandas.
 
-1. install
-1. analyze your features
-1. find a model
-1. save and reuse your model
+ 1. install `pip install pandas-ml-utils`
+    1. optional finance: `pip install pandas-ml-utils[finance]` allows you to `pd.fetch_yahoo(...)`
+    1. optional crypto: `pip install pandas-ml-utils[crypto]` allows you to `pd.fetch_crypto(...)`
+    1. optional notebook: `pip install pandas-ml-utils[notebook]` renders results nicely in notebooks 
+    1. optional development: `pip install pandas-ml-utils[development]` if you want to develop 
+ 1. analyze your features
+ 1. find a model
+ 1. save and reuse your model
 
 Or [read the docs](https://pandas-ml-utils.readthedocs.io/en/latest/).
 

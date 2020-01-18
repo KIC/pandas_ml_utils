@@ -23,10 +23,13 @@ requires = [
 ]
 
 [tool.flit.metadata.requires-extra]
-stock_prices = [
+finance = [
     "yfinance"
 ]
-jupyther = [
+crypto = [
+    "requests"
+]
+notebook = [
     "vdom",
     "mako",
     "matplotlib",

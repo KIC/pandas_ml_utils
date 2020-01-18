@@ -6,7 +6,7 @@ import os
 import tempfile
 import uuid
 from copy import deepcopy
-from typing import List, Callable, TYPE_CHECKING
+from typing import List, Callable, TYPE_CHECKING, Tuple
 
 import dill as pickle
 import numpy as np
@@ -155,7 +155,7 @@ class SkitModel(Model):
             return self.skit_model.loss_
         else:
             prediction = self.predict(x)
-            if type(self.skit_model) == LogisticRegression\
+            if isinstance(self.skit_model, LogisticRegression)\
             or type(self.skit_model).__name__.endswith("Classifier")\
             or type(self.skit_model).__name__.endswith("SVC"):
                 from sklearn.metrics import log_loss
@@ -234,6 +234,7 @@ class KerasModel(Model):
         """
         super().__init__(features_and_labels, summary_provider, **kwargs)
         self.keras_model_provider = keras_compiled_model_provider
+        self.custom_objects = {}
 
         import keras
         if keras.backend.backend() == 'tensorflow':
@@ -248,6 +249,14 @@ class KerasModel(Model):
         # create keras model
         provider_args = suitable_kwargs(keras_compiled_model_provider, **kwargs)
         keras_model = self._exec_within_session(keras_compiled_model_provider, **provider_args)
+
+        if isinstance(keras_model, Tuple):
+            # store custom objects
+            for i in range(1, len(keras_model)):
+                if hasattr(keras_model[i], "__name__"):
+                    self.custom_objects[keras_model[i].__name__] = keras_model[i]
+
+            keras_model = keras_model[0]
 
         # eventually compile keras model
         if not keras_model.optimizer:
@@ -271,7 +280,7 @@ class KerasModel(Model):
         if self.history is None:
             self.history = fit_history.history
         else:
-            for metric, values in self.history.items():
+            for metric, _ in self.history.items():
                 self.history[metric] = self.history[metric] + fit_history.history[metric]
 
         return min(fit_history.history['loss'])
@@ -335,7 +344,6 @@ class KerasModel(Model):
         self.__dict__.update(state)
 
         # restore keras model and tensorflow session if needed
-        custom_objects = {v.__name__: v for v in self.kwargs.values() if hasattr(v, "__name__")}
         if self.is_tensorflow:
             from keras import backend as K
             import tensorflow as tf
@@ -343,9 +351,9 @@ class KerasModel(Model):
             with self.graph.as_default():
                 self.session = tf.Session(graph=self.graph)
                 K.set_session(self.session)
-                self.keras_model = load_model(tmp_keras_file, custom_objects=custom_objects)
+                self.keras_model = load_model(tmp_keras_file, custom_objects=self.custom_objects)
         else:
-            self.keras_model = load_model(tmp_keras_file, custom_objects=custom_objects)
+            self.keras_model = load_model(tmp_keras_file, custom_objects=self.custom_objects)
 
         # clean up temp file
         with contextlib.suppress(OSError):
@@ -353,7 +361,10 @@ class KerasModel(Model):
 
     def __del__(self):
         if self.is_tensorflow:
-            self.session.close()
+            try:
+                self.session.close()
+            except AttributeError:
+                pass
 
     def __call__(self, *args, **kwargs):
         new_model = KerasModel(self.keras_model_provider,

@@ -1,7 +1,8 @@
 import pandas as pd
+from typing import Tuple
 
 
-def plot_correlation_matrix(df: pd.DataFrame, figsize=(12, 10)):
+def plot_correlation_matrix(df: pd.DataFrame, figsize: Tuple[int, int] = (12, 10)):
     correlation_matrix = df.corr()
     sorted_correlation_matrix = _sort_correlation(correlation_matrix)
     _plot_heatmap(sorted_correlation_matrix, figsize)
