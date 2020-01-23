@@ -21,7 +21,7 @@ class LazyDataFrameTest(unittest.TestCase):
             sma=lambda f: f["vix_Close"].rolling(2).mean(),
             label=lambda f: f["spy_Close"] > f["spy_Open"]
         )
-        model = pdu.SkitModel(
+        model = pdu.SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
             pdu.FeaturesAndLabels(["sma"], ["label"])
         )
@@ -39,7 +39,7 @@ class LazyDataFrameTest(unittest.TestCase):
     def test_pre_process_and_fit_and_co(self):
         """given"""
         df = pd.read_csv(TEST_FILE, index_col='Date').tail(100)
-        model = pdu.SkitModel(
+        model = pdu.SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
             pdu.FeaturesAndLabels(
                 ["sma"],

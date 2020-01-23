@@ -134,7 +134,7 @@ class Model(object):
             raise ValueError(f"construction of model with new parameters is not supported\n{type(self)}: {kwargs}")
 
 
-class SkitModel(Model):
+class SkModel(Model):
 
     def __init__(self,
                  skit_model,
@@ -149,7 +149,7 @@ class SkitModel(Model):
         y = y.ravel() if len(y.shape) > 1 and y.shape[1] == 1 else y
 
         # remember fitted model
-        self.skit_model = self.skit_model.fit(SkitModel.reshape_rnn_as_ar(x), y)
+        self.skit_model = self.skit_model.fit(SkModel.reshape_rnn_as_ar(x), y)
 
         if getattr(self.skit_model, 'loss_', None):
             return self.skit_model.loss_
@@ -172,10 +172,10 @@ class SkitModel(Model):
 
     def predict(self, x) -> np.ndarray:
         if callable(getattr(self.skit_model, 'predict_proba', None)):
-            y_hat = self.skit_model.predict_proba(SkitModel.reshape_rnn_as_ar(x))
+            y_hat = self.skit_model.predict_proba(SkModel.reshape_rnn_as_ar(x))
             return y_hat[:, 1] if len(self.features_and_labels.labels) == 1 and y_hat.shape[1] == 2 else y_hat
         else:
-            return self.skit_model.predict(SkitModel.reshape_rnn_as_ar(x))
+            return self.skit_model.predict(SkModel.reshape_rnn_as_ar(x))
 
     def plot_loss(self):
         loss_curve = getattr(self.skit_model, 'loss_curve_', None)
@@ -193,7 +193,7 @@ class SkitModel(Model):
         if not kwargs:
             return deepcopy(self)
         else:
-            new_model = SkitModel(type(self.skit_model)(**kwargs), self.features_and_labels, self.summary_provider)
+            new_model = SkModel(type(self.skit_model)(**kwargs), self.features_and_labels, self.summary_provider)
             new_model.kwargs = deepcopy(self.kwargs)
             return new_model
 

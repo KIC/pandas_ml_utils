@@ -24,7 +24,7 @@ class ClassificationTest(unittest.TestCase):
         df["sma"] = SMA(df["spy_Close"])
         df["is_above"] = (df["spy_Close"] / df["sma"]) > 1
 
-        model = pdu.SkitModel(
+        model = pdu.SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
             pdu.FeaturesAndLabels(features=['vix_Close'],
                                   labels=["is_above"],
@@ -58,7 +58,7 @@ class ClassificationTest(unittest.TestCase):
             res.columns = ["close <0.1", "close <0.05", "close >0", "close >0.05"]
             return res
 
-        model = pdu.SkitModel(
+        model = pdu.SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
             pdu.FeaturesAndLabels(features=['vix_Close'],
                                   labels=OneHotEncodedTargets("label", np.linspace(-0.1, 0.1, 5, endpoint=True)),
@@ -90,7 +90,7 @@ class ClassificationTest(unittest.TestCase):
         df["is_above_1.0"] = (df["spy_Close"] / df["sma"]) > 1
         df["is_above_1.2"] = (df["spy_Close"] / df["sma"]) > 1.2
 
-        model = pdu.SkitModel(
+        model = pdu.SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
             pdu.FeaturesAndLabels(features=['vix_Close'],
                                   labels={"a": ["is_above_1.0"], "b": ["is_above_1.2"]}))
@@ -117,7 +117,7 @@ class ClassificationTest(unittest.TestCase):
         df["sma"] = SMA(df["spy_Close"])
         df["is_above"] = (df["spy_Close"] / df["sma"]) > 1
 
-        model = pdu.SkitModel(
+        model = pdu.SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
             pdu.FeaturesAndLabels(features=['vix_Close'],
                                   feature_lags=[0, 1, 2],

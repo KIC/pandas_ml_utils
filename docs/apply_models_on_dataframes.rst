@@ -22,7 +22,7 @@ along the lines.
    df["with_fires"] = df["Fries"].apply(lambda x: str(x).lower() == "x")
    df["price"] = df["Cost"] * -1
    df = df[["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling", "Uniformity", "Salsa", "Synergy", "Wrap", "overall", "with_fires", "price"]].dropna()
-   fit = df.fit(pmu.SkitModel(LogisticRegression(solver='lbfgs'),
+   fit = df.fit(pmu.SkModel(LogisticRegression(solver='lbfgs'),
                               pmu.FeaturesAndLabels(["Tortilla", "Temp", "Meat", "Fillings", "Meat:filling",
                                                      "Uniformity", "Salsa", "Synergy", "Wrap", "overall"],
                                                     ["with_fires"],

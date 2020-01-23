@@ -21,7 +21,7 @@ class MultiModelTest(unittest.TestCase):
     def test_invalid_multi_model(self):
         """expect"""
         self.assertRaises(ValueError,
-                          lambda: pdu.MultiModel(pdu.MultiModel(pdu.SkitModel(MLPClassifier(), pdu.FeaturesAndLabels([],{})))))
+                          lambda: pdu.MultiModel(pdu.MultiModel(pdu.SkModel(MLPClassifier(), pdu.FeaturesAndLabels([], {})))))
 
     def test_multi_model_binary_classifications(self):
         """given"""
@@ -31,7 +31,7 @@ class MultiModelTest(unittest.TestCase):
         df["is_above_1.2"] = (df["spy_Close"] / df["sma"]) > 1.2
 
         model = pdu.MultiModel(
-            pdu.SkitModel(
+            pdu.SkModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
                 pdu.FeaturesAndLabels(features=['vix_Close'],
                                       labels={"a": ["is_above_1.0"], "b": ["is_above_1.2"]},
@@ -65,7 +65,7 @@ class MultiModelTest(unittest.TestCase):
         df["is_above_1.2"] = (df["spy_Close"] / df["sma"]) + 2
 
         model = pdu.MultiModel(
-            pdu.SkitModel(
+            pdu.SkModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
                 pdu.FeaturesAndLabels(features=['vix_Close'],
                                       labels={"1": OneHotEncodedTargets("is_above_1.0", np.linspace(-0.1, 0.1, 5, endpoint=True) + 1),

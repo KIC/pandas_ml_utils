@@ -20,7 +20,7 @@ class FeatureAndLabelsExtractorTest(unittest.TestCase):
 
         """when"""
         extractor = df.features_and_label_extractor(
-            pdu.SkitModel(
+            pdu.SkModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
                 pdu.FeaturesAndLabels(features=['feature'], labels=['label'],
                                       gross_loss=lambda df: df["spy_Close"] - df["spy_Open"],

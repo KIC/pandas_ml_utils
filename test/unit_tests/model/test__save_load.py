@@ -31,13 +31,13 @@ class TestSaveLoad(TestCase):
             return model
 
         providers = [
-            pmu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
-                          features_and_labels, foo='bar'),
-            pmu.SkitModel(LogisticRegression(), features_and_labels),
-            pmu.SkitModel(LinearSVC(), features_and_labels),
-            pmu.SkitModel(RandomForestClassifier(), features_and_labels),
+            pmu.SkModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
+                        features_and_labels, foo='bar'),
+            pmu.SkModel(LogisticRegression(), features_and_labels),
+            pmu.SkModel(LinearSVC(), features_and_labels),
+            pmu.SkModel(RandomForestClassifier(), features_and_labels),
             pmu.KerasModel(keras_model_provider, features_and_labels),
-            pmu.MultiModel(pmu.SkitModel(LogisticRegression(), pmu.FeaturesAndLabels(["a"], {"b": ["b"]})))
+            pmu.MultiModel(pmu.SkModel(LogisticRegression(), pmu.FeaturesAndLabels(["a"], {"b": ["b"]})))
         ]
 
         """when"""
@@ -55,7 +55,7 @@ class TestSaveLoad(TestCase):
 
     def test_model_with_LazyDataFrame_copy(self):
         """given"""
-        model = pmu.SkitModel(
+        model = pmu.SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
             pmu.FeaturesAndLabels([], []), foo='bar', ldf=LazyDataFrame(None, foo=lambda _f: 'bar'))
 

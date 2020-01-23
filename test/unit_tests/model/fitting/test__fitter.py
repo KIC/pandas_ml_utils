@@ -17,11 +17,11 @@ class TestFitter(TestCase):
         """given"""
         features_and_labels = FeaturesAndLabels(["a"], ["b"], targets=lambda f: f["b"])
         providers = [
-            SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
-                      features_and_labels, foo='bar'),
-            SkitModel(LogisticRegression(), features_and_labels),
-            SkitModel(LinearSVC(), features_and_labels),
-            SkitModel(RandomForestClassifier(), features_and_labels)]
+            SkModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
+                    features_and_labels, foo='bar'),
+            SkModel(LogisticRegression(), features_and_labels),
+            SkModel(LinearSVC(), features_and_labels),
+            SkModel(RandomForestClassifier(), features_and_labels)]
 
         """when"""
         fits = [fit(df, p, 0) for p in providers]
@@ -52,8 +52,8 @@ class TestFitter(TestCase):
                                  gross_loss=lambda f, t: pd.Series(-1, index=f.index, name=t))
                ]
 
-        providers = [SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
-                               features_and_labels=fl) for fl in fls]
+        providers = [SkModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
+                             features_and_labels=fl) for fl in fls]
 
         """when"""
         fitted_models = [fit(df, p, 0).model for p in providers]
@@ -85,8 +85,8 @@ class TestFitter(TestCase):
                                  gross_loss=lambda f, t: pd.Series(-1, index=f.index, name=t))
                ]
 
-        providers = [SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
-                               features_and_labels=fl) for fl in fls]
+        providers = [SkModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
+                             features_and_labels=fl) for fl in fls]
 
 
         """when"""
@@ -109,8 +109,8 @@ class TestFitter(TestCase):
                            "b": range(20)})
 
         fl = FeaturesAndLabels(["a"], ["b"], feature_lags=[0,1,2])
-        provider = SkitModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
-                             features_and_labels=fl)
+        provider = SkModel(MLPRegressor(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42),
+                           features_and_labels=fl)
 
         """when"""
         fitted = fit(df, provider, 0)
