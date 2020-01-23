@@ -15,4 +15,4 @@ python:
   system_packages: true
   install:
     - requirements: docs/requirements.txt
-    - requirements: requirements.txt
+    - requirements: docs-requirements.txt

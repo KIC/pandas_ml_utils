@@ -2,12 +2,10 @@
 sortedcontainers
 scikit-learn
 statsmodels
-tensorflow==1.*
 matplotlib
 cachetools
 yfinance
 hyperopt
-keras-rl
 requests
 seaborn
 pandas
