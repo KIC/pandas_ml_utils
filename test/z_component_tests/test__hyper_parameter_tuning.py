@@ -23,8 +23,8 @@ class HyportParameterOptimizationTest(unittest.TestCase):
 
         """when fit with find hyper parameter"""
         fit = df.fit(
-            pdu.SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
-                          pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
+            pdu.SkModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
+                        pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
                                                 target_columns=["vix_Open"],
                                                 loss_column="spy_Volume")),
             test_size=0.4,

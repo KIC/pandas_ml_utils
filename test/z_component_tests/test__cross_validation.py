@@ -24,7 +24,7 @@ class CrossValidationTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(
-            pdu.SkitModel(
+            pdu.SkModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42, max_iter=10),
                 pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'])),
             test_size=0.4,

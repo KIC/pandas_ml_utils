@@ -19,7 +19,7 @@ class RegressionTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(
-            pdu.SkitModel(
+            pdu.SkModel(
                 MLPRegressor(activation='tanh', hidden_layer_sizes=(4, 3, 2, 1, 2, 3, 4), random_state=42),
                 pdu.FeaturesAndLabels(
                     features=['spy_Open', 'spy_High', 'spy_Low', 'spy_Close'],
@@ -58,7 +58,7 @@ class RegressionTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(
-            pdu.SkitModel(
+            pdu.SkModel(
                 MLPRegressor(activation='tanh', hidden_layer_sizes=(4, 3, 2, 1, 2, 3, 4), random_state=42),
                 pdu.FeaturesAndLabels(
                     features=['spy_Open', 'spy_High', 'spy_Low', 'spy_Close'],

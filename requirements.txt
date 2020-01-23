@@ -2,12 +2,12 @@
 sortedcontainers
 scikit-learn
 statsmodels
-tensorflow==1.13.2
+tensorflow[tensorflow]==1.*
 matplotlib
 cachetools
 yfinance
 hyperopt
-keras-rl
+keras-rl[reinforcement]
 requests
 seaborn
 pandas

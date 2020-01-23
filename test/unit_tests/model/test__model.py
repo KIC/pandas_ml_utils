@@ -16,19 +16,19 @@ features_and_labels = FeaturesAndLabels([], [])
 class TestModel(TestCase):
 
     def test_reshape_rnn_as_ar(self):
-        np.testing.assert_array_almost_equal(SkitModel.reshape_rnn_as_ar(np.array([[[1], [2]]], ndmin=3)),
+        np.testing.assert_array_almost_equal(SkModel.reshape_rnn_as_ar(np.array([[[1], [2]]], ndmin=3)),
                                              np.array([[1, 2]], ndmin=2))
 
-        np.testing.assert_array_almost_equal(SkitModel.reshape_rnn_as_ar(np.array([[1, 2]], ndmin=2)),
+        np.testing.assert_array_almost_equal(SkModel.reshape_rnn_as_ar(np.array([[1, 2]], ndmin=2)),
                                              np.array([[1, 2]], ndmin=2))
 
     def test_different_skit_models(self):
         """given"""
-        providers = [SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1,1), alpha=0.001, random_state=42), features_and_labels, foo='bar'),
-                     SkitModel(LogisticRegression(), features_and_labels),
-                     SkitModel(LinearSVC(), features_and_labels),
-                     SkitModel(RandomForestClassifier(), features_and_labels)
-        ]
+        providers = [SkModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42), features_and_labels, foo='bar'),
+                     SkModel(LogisticRegression(), features_and_labels),
+                     SkModel(LinearSVC(), features_and_labels),
+                     SkModel(RandomForestClassifier(), features_and_labels)
+                     ]
 
         """when"""
         losses = [model.fit(np.array([[0.1], [0.01]]), np.array([True, False]), np.array([[0.1], [0.01]]),
@@ -41,7 +41,7 @@ class TestModel(TestCase):
 
     def test_skit_model(self):
         """given"""
-        model_provider = SkitModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1,1), alpha=0.001, random_state=42), features_and_labels, foo='bar')
+        model_provider = SkModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(1, 1), alpha=0.001, random_state=42), features_and_labels, foo='bar')
 
         """when"""
         model1 = model_provider()

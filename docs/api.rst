@@ -16,7 +16,7 @@ The general pattern is:
    from sklearn.neural_network import MLPClassifier
    from hyperopt import hp, fmin
 
-   fit = df.fit(pmu.SkitModel(MLPClassifier(activation='tanh', random_state=42), fAndL_v1),
+   fit = df.fit(pmu.SkModel(MLPClassifier(activation='tanh', random_state=42), fAndL_v1),
                 test_size=0.2,
                 hyper_parameter_space={'learning_rate_init': hp.uniform('learning_rate_init', 0.0001, 0.01),
                                        'alpha': hp.uniform('alpha', 0.00001, 0.01),
@@ -46,7 +46,7 @@ of the `FeaturesAndLabels` class as well as from the `Model` class. So is it pos
 the labels by using ``lambda df, _labels: ...``
 
 
-SkitModel
+SkModel
 .........
 Simply provide the sklearn model i.e. `LogisticRegression` along with the features and labels
 

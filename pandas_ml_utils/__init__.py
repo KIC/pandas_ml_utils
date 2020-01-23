@@ -1,11 +1,11 @@
 """Augment pandas DataFrame with methods for machine learning"""
-__version__ = '0.0.23'
+__version__ = '0.0.24'
 
 import logging
 import pandas as pd
 
 # imports to provide functionality via root import like import pandas_ml_utils as pmu; pmu.XY
-from pandas_ml_utils.model.models import Model, SkitModel, KerasModel, MultiModel
+from pandas_ml_utils.model.models import Model, SkModel, KerasModel, MultiModel
 from pandas_ml_utils.wrappers.lazy_dataframe import LazyDataFrame
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
 
@@ -21,7 +21,7 @@ from pandas_ml_utils.datafetching.fetch_cryptocompare import fetch_cryptocompare
 
 # log provided classes
 _log = logging.getLogger(__name__)
-_log.debug(f"available {Model} classes {[SkitModel, KerasModel, MultiModel]}")
+_log.debug(f"available {Model} classes {[SkModel, KerasModel, MultiModel]}")
 _log.debug(f"available other classes {[LazyDataFrame, FeaturesAndLabels]}")
 
 # add functions to pandas
