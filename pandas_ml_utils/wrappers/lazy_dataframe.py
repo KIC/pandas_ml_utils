@@ -35,17 +35,23 @@ class LazyDataFrame(object):
 
     def __getitem__(self, item: str):
         if isinstance(item, list):
-            df = self.df[[value for value in item if value in self.df.columns]]
-            for key in item:
-                if key in self.kwargs:
-                    res = self.kwargs[key](self.df)
-                    if isinstance(res, pd.Series):
-                        res.name = key
-                        df = df.join(res)
-                    elif isinstance(res, pd.DataFrame):
-                        df = df.join(res.add_prefix(f'{key}_'))
+            df = self.df.copy()
+            columns = set(item)
+            cache = set()
 
-            return df
+            for col, func in self.kwargs.items():
+                for key in columns:
+                    if key.startswith(col) and col not in cache:
+                        res = func(self.df)
+
+                        if isinstance(res, pd.Series):
+                            res.name = key
+                            df = df.join(res)
+                        elif isinstance(res, pd.DataFrame):
+                            df = df.join(res.add_prefix(f'{col}_'))
+                            cache.add(col)
+
+            return df[[col for col in item if col in df.columns]]
         else:
             if item in self.df:
                 return self.df[item]

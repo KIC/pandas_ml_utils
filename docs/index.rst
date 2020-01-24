@@ -5,7 +5,7 @@
 
 Welcome to pandas ml utils's documentation!
 ===========================================
-Pandas ML Utils is intended to help you through your journey of applying statistical oder machine learning models
+Pandas ML Utils is intended to help you through your journey of applying statistical or machine learning models
 to data while you never need to leave the world of pandas.
 
 I was really sick of converting data frames to numpy arrays back and forth just to try out a
