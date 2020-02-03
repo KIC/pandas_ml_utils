@@ -35,6 +35,8 @@ def feature_selection(df: pd.DataFrame,
     """
     df = df.drop(ignore, axis=1).dropna()
     N = len(df)
+    assert N > 1
+
     correlation_mx = _sort_correlation(df.corr())
 
     if show_plots:
@@ -66,10 +68,14 @@ def feature_selection(df: pd.DataFrame,
     features = _sort_correlation(features)
     while len(features) > minimum_features and __max_correlation(features) > correlation_threshold:
         index = np.unravel_index(__argmax_correlation(features), features.values.shape)
+        print(f"\nfilter feature {features.columns[index[1]]}"
+              f" with correlation {features[features.columns[index[1]]].loc[features.index[index[1]]]}"
+              f" > {correlation_threshold}")
+
         features = features.drop(features.index[index[1]], axis=0)
         features = features.drop(features.columns[index[1]], axis=1)
 
-    print(f"\nfiltered features with correlation < {correlation_threshold}")
+    print("Features after correlation filer:")
     print(correlation_mx[features.columns][:1])
 
     if show_plots:

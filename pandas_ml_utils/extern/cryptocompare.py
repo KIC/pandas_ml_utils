@@ -107,18 +107,19 @@ def get_historical_price_hour(coin, curr=CURR, limit=LIMIT):
     current_ts = int(time.time()) + 60 * 60 * 24 + 1 # to be on the safe side
     if limit is None or limit > LIMIT:
         _log.info("batch download < now")
+        youngest_ts = get_historical_price_day(coin, curr, None)["TimeFrom"] / 1000
         data = query_cryptocompare(URL_HIST_PRICE_HOUR.format(coin, format_parameter(curr), MAX_LIMIT, current_ts))
         batch = data
 
         while True:
-            last_ts = batch[DATA][0][TIME]
+            last_ts = min(batch[DATA][0][TIME], batch[DATA][-1][TIME])
             _log.info(f"batch download < {last_ts}")
             batch = query_cryptocompare(URL_HIST_PRICE_HOUR.format(coin, format_parameter(curr), MAX_LIMIT, last_ts - 1))
             if batch is None:
                 return data
             else:
                 data[DATA] += batch[DATA]
-                if len(batch) <= 0:
+                if len(batch) <= 0 or last_ts < youngest_ts:
                     return data
                 elif limit is not None and len(data[DATA]) >= limit:
                     data[DATA] = data[DATA][:limit]

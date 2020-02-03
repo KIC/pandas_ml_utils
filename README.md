@@ -233,6 +233,13 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 * add whatever you need for yourself and share it with us 
 
 ## Change Log
+### 0.0.25
+* 
+
+### 0.0.23 / 24
+* changed SkitModel to SkModel
+* some minor bug fixes  
+
 ### 0.0.22
 * introduce proper keras session and graph handling in case of tensorflow backend
 * rename features_and_labels.loss to gross_loss to avoid confusion with traning loss

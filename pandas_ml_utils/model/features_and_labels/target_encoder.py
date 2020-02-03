@@ -22,7 +22,7 @@ class TargetLabelEncoder(object):
         pass
 
     def __len__(self):
-        1
+        return 1
 
 
 class IdentityEncoder(TargetLabelEncoder):

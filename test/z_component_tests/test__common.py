@@ -15,13 +15,6 @@ logger.setLevel(logging.DEBUG)
 
 class ComponentTest(unittest.TestCase):
 
-    def test_fetch_yahoo(self):
-        """when"""
-        df = pd.fetch_yahoo(spy="SPY").tail()
-
-        """then"""
-        self.assertTrue(df["spy_Close"].sum() > 0)
-
     def test_correlation_matrix(self):
         """given"""
         df = pd.read_csv(TEST_FILE, index_col='Date')[["spy_Open", "spy_High", "spy_Low", "spy_Close"]]
