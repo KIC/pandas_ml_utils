@@ -128,3 +128,28 @@ class OneHotEncodedTargets(TargetLabelEncoder):
 
     def __len__(self):
         return len(self.buckets)
+
+
+class OneHotEncodedDiscrete(TargetLabelEncoder):
+
+    def __init__(self, label: str, nr_of_categories: int):
+        super().__init__()
+        self.label = label
+        self.nr_of_categories = nr_of_categories
+
+    @property
+    def labels_source_columns(self) -> List[str]:
+        return [self.label]
+
+    @property
+    def encoded_labels_columns(self) -> List[str]:
+        return [f'{self.label}_{i}' for i in range(self.nr_of_categories)]
+
+    def encode(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df[[self.label]].apply(lambda r: one_hot(r.values.sum(), self.nr_of_categories), axis=1, result_type='expand')
+
+    def decode(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df.apply(lambda r: r[np.argmax(r)], raw=True, axis=1)
+
+    def __len__(self):
+        return self.nr_of_categories

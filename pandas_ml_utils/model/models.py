@@ -271,6 +271,10 @@ class KerasModel(Model):
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
         fitter_args = suitable_kwargs(self.keras_model.fit, **self.kwargs)
+
+        if "verbose" in self.kwargs and self.kwargs["verbose"] > 0:
+            print(f'pass args to fit: {fitter_args}')
+
         fit_history = self._exec_within_session(self.keras_model.fit,
                                                 x, y,
                                                 epochs=self.epochs,
