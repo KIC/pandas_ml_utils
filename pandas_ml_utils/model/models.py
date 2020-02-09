@@ -388,15 +388,15 @@ class MultiModel(Model):
     def __init__(self,
                  model_provider: Model,
                  summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
-                 alpha: float = 0.5):
-        super().__init__(model_provider.features_and_labels, summary_provider)
+                 loss_alpha: float = 0.5):
+        super().__init__(model_provider.features_and_labels, summary_provider, **model_provider.kwargs)
 
         if isinstance(model_provider, MultiModel):
             raise ValueError("Nesting Multi Models is not supported, you might use a flat structure of all your models")
 
         self.model_provider = model_provider
         self.models = {target: model_provider() for target in self.features_and_labels.labels.keys()}
-        self.alpha = alpha
+        self.loss_alpha = loss_alpha
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
         losses = []
@@ -410,7 +410,7 @@ class MultiModel(Model):
             pos += len(labels)
 
         losses = np.array(losses)
-        a = self.alpha
+        a = self.loss_alpha
 
         # return weighted loss between mean and max loss
         return (losses.mean() * (1 - a) + a * losses.max()) if len(losses) > 0 else None
@@ -436,7 +436,7 @@ class MultiModel(Model):
                               axis=1)
 
     def __call__(self, *args, **kwargs):
-        new_multi_model = MultiModel(self.model_provider, self.summary_provider, self.alpha)
+        new_multi_model = MultiModel(self.model_provider, self.summary_provider, self.loss_alpha, **self.kwargs)
 
         if kwargs:
             new_multi_model.models = {target: self.model_provider(**kwargs) for target in self.features_and_labels.get_goals().keys()}
