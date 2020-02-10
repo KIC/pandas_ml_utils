@@ -37,7 +37,8 @@ def fit(df: pd.DataFrame,
                            thus they are a provider of itself
     :param test_size: the fraction [0, 1] of samples which are used for a test set
     :param cross_validation: tuple of number of epochs for each fold provider and a cross validation provider
-    :param test_validate_split_seed: seed if train, test split needs to be reproduceable
+    :param test_validate_split_seed: seed if train, test split needs to be reproduceable. A magic seed 'youngest' is
+                                     available, which just uses the youngest data as test data
     :param hyper_parameter_space: space of hyper parameters passed as kwargs to your model provider
     :return: returns a :class:`pandas_ml_utils.model.fitting.fit.Fit` object
     """

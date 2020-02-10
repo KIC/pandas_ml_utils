@@ -30,9 +30,17 @@ def make_training_data(features_and_labels: FeatureTargetLabelExtractor,
 
     # split training and test data
     start_split_pc = log_with_time(lambda: _log.debug("  splitting ..."))
-    x_train, x_test, y_train, y_test, index_train, index_test = \
-        train_test_split(x, y, index, test_size=test_size, random_state=seed) if test_size > 0 \
-            else (x, None, y, None, index, None)
+
+    if test_size <= 0:
+        x_train, x_test, y_train, y_test, index_train, index_test = (x, None, y, None, index, None)
+    elif seed == 'youngest':
+        i = int(len(index) - len(index) * test_size)
+        index_train, index_test = index[:i], index[i:]
+        x_train, x_test = x[:i], x[i:]
+        y_train, y_test = y[:i], y[i:]
+    else:
+        x_train, x_test, y_train, y_test, index_train, index_test = \
+            train_test_split(x, y, index, test_size=test_size, random_state=seed)
 
     _log.info(f"  splitting ... done in {pc() - start_split_pc: .2f} sec!")
     _log.info(f"make training / test data split ... done in {pc() - start_pc: .2f} sec!")

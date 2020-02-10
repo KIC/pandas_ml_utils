@@ -96,6 +96,8 @@ class Model(object):
         with open(filename, 'wb') as file:
             pickle.dump(self, file)
 
+        print(f"saved model to: {os.path.abspath(filename)}")
+
     def fit(self, x: np.ndarray, y: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, df_index_train: list, df_index_test: list) -> float:
         """
         function called to fit the model
