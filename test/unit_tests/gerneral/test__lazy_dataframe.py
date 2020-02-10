@@ -14,7 +14,7 @@ class TestLazyDataFrame(unittest.TestCase):
         ldf2 = ldf.with_dataframe(df2)
 
         # test lazy functions
-        pd.testing.assert_series_equal(ldf["foo"], df["test"] * 2)
+        pd.testing.assert_series_equal(ldf["foo"], df["test"] * 2, check_names=False)
         self.assertEqual(ldf[["foo", "test"]].shape, (5,2))
         pd.testing.assert_frame_equal(ldf[["test", "foo"]], ldf.to_dataframe())
         pd.testing.assert_frame_equal(ldf2[["test2", "foo"]], ldf2.to_dataframe())

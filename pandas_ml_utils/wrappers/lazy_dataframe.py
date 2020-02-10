@@ -1,4 +1,5 @@
 import uuid
+from functools import lru_cache
 from typing import Callable, Union
 
 import pandas as pd
@@ -34,31 +35,7 @@ class LazyDataFrame(object):
         return len(self.df)
 
     def __getitem__(self, item: str):
-        if isinstance(item, list):
-            df = self.df.copy()
-            columns = set(item)
-            cache = set()
-
-            for col, func in self.kwargs.items():
-                for key in columns:
-                    if key.startswith(col) and col not in cache:
-                        res = func(self.df)
-
-                        if isinstance(res, pd.Series):
-                            res.name = key
-                            df = df.join(res)
-                        elif isinstance(res, pd.DataFrame):
-                            df = df.join(res.add_prefix(f'{col}_'))
-                            cache.add(col)
-
-            return df[[col for col in item if col in df.columns]]
-        else:
-            if item in self.df:
-                return self.df[item]
-            elif item in self.kwargs:
-                return self.kwargs[item](self.df)
-            else:
-                raise ValueError(f"invalid item {item}")
+        return self.to_dataframe()[item]
 
     def __setitem__(self, key: str, value: Callable[[pd.DataFrame], Union[pd.DataFrame, pd.Series]]):
         self.hash = uuid.uuid4()
@@ -75,7 +52,7 @@ class LazyDataFrame(object):
             return self.to_dataframe().__getattr__(item)
 
     def __contains__(self, key):
-        return key in self.df or key in self.kwargs
+        return key in self.to_dataframe()
 
     def __hash__(self):
         return int(self.hash)
@@ -92,7 +69,8 @@ class LazyDataFrame(object):
     def with_dataframe(self, df: pd.DataFrame):
         return LazyDataFrame(df, **self.kwargs)
 
-    def to_dataframe(self):
+    @lru_cache(maxsize=1)
+    def to_dataframe(self) -> pd.DataFrame:
         df = self.df.copy()
         for key, calculation in self.kwargs.items():
             column = calculation(df)
