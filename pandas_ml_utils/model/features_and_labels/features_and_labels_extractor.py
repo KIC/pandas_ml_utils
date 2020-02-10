@@ -22,7 +22,7 @@ class FeatureTargetLabelExtractor(object):
     def __init__(self, df: pd.DataFrame, features_and_labels: FeaturesAndLabels, **kwargs):
         # prepare fields
         labels = features_and_labels.labels
-        encoder = lambda frame: frame
+        encoder = lambda frame, **kwargs: frame
         label_columns = None
 
         # eventually transform callable labels to its expected structure
@@ -222,7 +222,7 @@ class FeatureTargetLabelExtractor(object):
     @property
     def labels_df(self) -> pd.DataFrame:
         # here we can do all sorts of tricks and encodings ...
-        df = self._encoder(self.df[self._labels_columns]).dropna().copy()
+        df = self._encoder(self.df[self._labels_columns], **self._features_and_labels.kwargs).dropna().copy()
         return df
 
     @property

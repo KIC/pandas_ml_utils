@@ -9,7 +9,7 @@ import pandas as pd
 from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
 
 _log = logging.getLogger(__name__)
-
+_LABELS = Union[List[str], TargetLabelEncoder, Dict[str, Union[List[str], TargetLabelEncoder]]]
 
 # This class should be able to be pickled and unpickled without risk of change between versions
 # This means business logic need to be kept outside of this class!
@@ -23,7 +23,7 @@ class FeaturesAndLabels(object):
 
     def __init__(self,
                  features: List[str],
-                 labels: Union[List[str], TargetLabelEncoder, Dict[str, Union[List[str], TargetLabelEncoder]]],
+                 labels: _LABELS,
                  label_type:Type = int,
                  gross_loss: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  targets: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
@@ -129,14 +129,10 @@ class FeaturesAndLabels(object):
         """
         return len(self.labels)
 
-    #@deprecation.deprecated()
-    def get_feature_names(self) -> np.ndarray:
-        """
-        Returns all features names eventually post-fixed with the length of the lag
-
-        :return: numpy array of strings in the shape of the features
-        """
-        return np.array(self.features)
+    def with_labels(self, labels: _LABELS):
+        copy = deepcopy(self)
+        copy._labels = labels
+        return copy
 
     def with_kwargs(self, **kwargs):
         copy = deepcopy(self)

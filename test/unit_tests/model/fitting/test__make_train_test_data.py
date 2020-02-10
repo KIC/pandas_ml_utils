@@ -167,7 +167,6 @@ class TestTrainTestData(unittest.TestCase):
 
         """then"""
         self.assertEqual(len(df), len_features - len_none_lables)
-        np.testing.assert_array_equal(fl.get_feature_names(), np.array(['featureA']))
         self.assertAlmostEqual(df["featureA", 1].iloc[0], 1.0)
         self.assertAlmostEqual(df["featureA", 1].iloc[-1], 6.0)
 

@@ -14,6 +14,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
+from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
 from pandas_ml_utils.summary.summary import Summary
 from pandas_ml_utils.utils.functions import suitable_kwargs
 
@@ -394,8 +395,11 @@ class MultiModel(Model):
                  model_provider: Model,
                  summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
                  loss_alpha: float = 0.5,
-                 target_kwargs: Dict[str, Any] = None):
-        super().__init__(model_provider.features_and_labels, summary_provider, **model_provider.kwargs)
+                 target_kwargs: Dict[str, Dict[str, Any]] = None):
+        assert isinstance(model_provider.features_and_labels.labels, (TargetLabelEncoder, Dict))
+        super().__init__(model_provider.features_and_labels, # FIXME {target: self.features_and_labels.labels(kwargs) for target, kwargs in target_kwargs.items()} if target_kwargs else model_provider.features_and_labels
+                         summary_provider,
+                         **model_provider.kwargs)
 
         if isinstance(model_provider, MultiModel):
             raise ValueError("Nesting Multi Models is not supported, you might use a flat structure of all your models")
@@ -406,13 +410,20 @@ class MultiModel(Model):
 
         if target_kwargs:
             self.models = {target: model_provider(**kwargs) for target, kwargs in target_kwargs.items()}
+
+            # FIXME we need to fix current models labels -> wrap all encoders/labels into a dict
+            #  this is a bit ugly as this will only work with label encoders what if we dont use encoders?
+            kwargs = {}
+            target = self.features_and_labels.with_labels(self.features_and_labels.labels.with_kwargs(kwargs))
+
+            {target: self.features_and_labels.labels.with_kwargs(kwargs) for target, kwargs in target_kwargs.items()}
+
         else:
             self.models = {target: model_provider() for target in self.features_and_labels.labels.keys()}
 
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
         losses = []
         pos = 0
-        # FIXME use the features and labels of each individual model
         for target, labels in self.features_and_labels.labels.items():
             index = range(pos, pos + len(labels))
             target_y = y[:,index]
