@@ -23,19 +23,21 @@ if TYPE_CHECKING:
 
 
 def fit(df: pd.DataFrame,
-         model_provider: Callable[[int], Model],
-         test_size: float = 0.4,
-         cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None,
-         test_validate_split_seed = 42,
-         hyper_parameter_space: Dict = None
-         ) -> Fit:
+        model_provider: Callable[[int], Model],
+        test_size: float = 0.4,
+        youngest_size: float = None,
+        cross_validation: Tuple[int, Callable[[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]] = None,
+        test_validate_split_seed = 42,
+        hyper_parameter_space: Dict = None
+        ) -> Fit:
     """
 
     :param df: the DataFrame you apply this function to
     :param model_provider: a callable which provides a new :class:`.Model` instance i.e. for each hyper parameter if
                            hyper parameter tuning is enforced. Usually all the Model subclasses implement __call__
                            thus they are a provider of itself
-    :param test_size: the fraction [0, 1] of samples which are used for a test set
+    :param test_size: the fraction [0, 1] of random samples which are used for a test set
+    :param youngest_size: the fraction [0, 1] of the test samples which are not random but are the youngest
     :param cross_validation: tuple of number of epochs for each fold provider and a cross validation provider
     :param test_validate_split_seed: seed if train, test split needs to be reproduceable. A magic seed 'youngest' is
                                      available, which just uses the youngest data as test data
@@ -51,6 +53,7 @@ def fit(df: pd.DataFrame,
     x_train, x_test, y_train, y_test, index_train, index_test = \
         make_training_data(features_and_labels,
                            test_size,
+                           youngest_size,
                            seed=test_validate_split_seed)
 
     _log.info(f"create model ({features_and_labels})")

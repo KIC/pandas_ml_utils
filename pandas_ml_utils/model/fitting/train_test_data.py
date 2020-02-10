@@ -17,6 +17,7 @@ def make_backtest_data(df: pd.DataFrame, features_and_labels: FeatureTargetLabel
 
 def make_training_data(features_and_labels: FeatureTargetLabelExtractor,
                        test_size: float = 0.4,
+                       youngest_size: float = None,
                        seed: int = 42) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list]:
     # only import if this method is needed
     from sklearn.model_selection import train_test_split
@@ -35,12 +36,30 @@ def make_training_data(features_and_labels: FeatureTargetLabelExtractor,
         x_train, x_test, y_train, y_test, index_train, index_test = (x, None, y, None, index, None)
     elif seed == 'youngest':
         i = int(len(index) - len(index) * test_size)
-        index_train, index_test = index[:i], index[i:]
         x_train, x_test = x[:i], x[i:]
         y_train, y_test = y[:i], y[i:]
+        index_train, index_test = index[:i], index[i:]
     else:
-        x_train, x_test, y_train, y_test, index_train, index_test = \
-            train_test_split(x, y, index, test_size=test_size, random_state=seed)
+        random_sample_test_size = test_size if youngest_size is None else test_size * (1 - youngest_size)
+        random_sample_train_index_size = int(len(index) - len(index) * (test_size - random_sample_test_size))
+
+        if random_sample_train_index_size < len(index):
+            _log.warning(f"keeping youngest {len(index) - random_sample_train_index_size} elements in test set")
+
+            # cut the youngest data and use residual to randomize train/test data
+            x_train, x_test, y_train, y_test, index_train, index_test = \
+                train_test_split(x[:random_sample_train_index_size],
+                                 y[:random_sample_train_index_size],
+                                 index[:random_sample_train_index_size],
+                                 test_size=random_sample_test_size, random_state=seed)
+
+            # then concatenate (add back) the youngest data to the random test data
+            x_test = np.vstack([x_test, x[random_sample_train_index_size:]])
+            y_test = np.vstack([y_test, y[random_sample_train_index_size:]])
+            index_test = np.hstack([index_test, index[random_sample_train_index_size:]])  # index is 1D
+        else:
+            x_train, x_test, y_train, y_test, index_train, index_test = \
+                train_test_split(x, y, index, test_size=random_sample_test_size, random_state=seed)
 
     _log.info(f"  splitting ... done in {pc() - start_split_pc: .2f} sec!")
     _log.info(f"make training / test data split ... done in {pc() - start_pc: .2f} sec!")

@@ -65,6 +65,20 @@ class TestTrainTestData(unittest.TestCase):
         np.testing.assert_array_almost_equal(normal[3], np.array([[3], [4], [5]]))
         self.assertEqual(len(lagged[0]), 1)
 
+    def test_youngest_portion(self):
+        """given"""
+        df = pd.DataFrame({"featureA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                           "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
+
+        """when"""
+        fl = pdu.FeaturesAndLabels(["featureA"], ["labelA"])
+        x_train, x_test, y_train, y_test, _, _ = \
+            make_training_data(FeatureTargetLabelExtractor(df, fl), test_size=0.6, youngest_size=0.25)
+
+        "then"
+        self.assertEqual(6, len(y_test))
+        np.testing.assert_array_equal(y_test[-2:], np.array([[9], [10]]))
+
     def test_make_training_data_two_labels(self):
         """given"""
         df = pd.DataFrame({"featureA": [1,2,3,4,5],
