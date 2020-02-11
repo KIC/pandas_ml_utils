@@ -47,7 +47,7 @@ class TestFeaturesAndLabelsExtraction(TestCase):
 
     def test_pre_processor(self):
         """given"""
-        fl = FeaturesAndLabels(["lala"], ["b"], pre_processor=lambda _df, **kwargs: _df.rename(columns=kwargs), a="lala")
+        fl = FeaturesAndLabels(["lala"], ["b"], pre_processor=lambda df, **kwargs: df.rename(columns=kwargs), a="lala")
 
         """when"""
         df, _, _ = FeatureTargetLabelExtractor(DF, fl).features_labels
@@ -59,7 +59,7 @@ class TestFeaturesAndLabelsExtraction(TestCase):
         """given"""
         fl = FeaturesAndLabels(["lala"], ["b"],
                                feature_lags=[0, 1],
-                               pre_processor=lambda _df, names: _df.rename(columns=names), a="lala")
+                               pre_processor=lambda df, names: df.rename(columns=names), a="lala")
 
         """when"""
         fl = fl.with_kwargs(a="lolo", b="lala")

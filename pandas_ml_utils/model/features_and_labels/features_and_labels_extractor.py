@@ -59,14 +59,14 @@ class FeatureTargetLabelExtractor(object):
 
         # pre assign this variable
         # but notice that it get overwritten by an engineered data frame later on
-        self.df = df
+        self._df = df
 
         # this function uses clojures
         def call_dynamic(func, *args):
             joined_kwargs = {**self.__dict__, **features_and_labels.kwargs, **kwargs}
             return call_callable_dynamic_args(func, *args, **joined_kwargs)
 
-        self.df = call_dynamic(features_and_labels.pre_processor, df)
+        self._df = call_dynamic(features_and_labels.pre_processor, df)
         self.__call_dynamic = call_dynamic
 
     def prediction_to_frame(self,
@@ -79,7 +79,7 @@ class FeatureTargetLabelExtractor(object):
             raise ValueError(f"got unexpected prediction: {type(prediction)}\n{prediction}")
 
         # assign index
-        index = self.df.index if index is None else index
+        index = self._df.index if index is None else index
 
         # eventually fix the shape of the prediction
         if len(prediction.shape) == 1:
@@ -110,6 +110,10 @@ class FeatureTargetLabelExtractor(object):
         return df
 
     @property
+    def df(self):
+        return self._df
+
+    @property
     def features(self) -> Tuple[pd.DataFrame, np.ndarray]:
         df = self.features_df
         x = self._fix_shape(df)
@@ -119,7 +123,7 @@ class FeatureTargetLabelExtractor(object):
 
     @property
     def min_required_samples(self):
-        return len(self.df) - len(self.features_df) + 1
+        return len(self._df) - len(self.features_df) + 1
 
     @property
     def features_labels(self) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
@@ -155,7 +159,7 @@ class FeatureTargetLabelExtractor(object):
         feature_rescaling = self._features_and_labels.feature_rescaling
 
         # drop nan's and copy frame
-        df = self.df[features].dropna().copy()
+        df = self._df[features].dropna().copy()
 
         # generate feature matrix
         if feature_lags is None:
@@ -222,12 +226,12 @@ class FeatureTargetLabelExtractor(object):
     @property
     def labels_df(self) -> pd.DataFrame:
         # here we can do all sorts of tricks and encodings ...
-        df = self._encoder(self.df[self._labels_columns], **self._features_and_labels.kwargs).dropna().copy()
+        df = self._encoder(self._df[self._labels_columns], **self._features_and_labels.kwargs).dropna().copy()
         return df
 
     @property
     def source_df(self):
-        df = self.df.copy()
+        df = self._df.copy()
         df.columns = pd.MultiIndex.from_product([[SOURCE_COLUMN_NAME], df.columns])
         return df
 
@@ -238,7 +242,7 @@ class FeatureTargetLabelExtractor(object):
         if self._gross_loss is not None:
             labels = self._labels
             for target in (labels.keys() if isinstance(labels, dict) else [None]):
-                dfl = self.__call_dynamic(self._gross_loss, self.df, target)
+                dfl = self.__call_dynamic(self._gross_loss, self._df, target)
                 if isinstance(dfl, pd.Series):
                     if dfl.name is None:
                         dfl.name = target or GROSS_LOSS_COLUMN_NAME
@@ -261,14 +265,14 @@ class FeatureTargetLabelExtractor(object):
         if self._targets is not None:
             labels = self._labels
             for i, target in enumerate(labels.keys() if isinstance(labels, dict) else [None]):
-                dft = self.__call_dynamic(self._targets, self.df, target)
+                dft = self.__call_dynamic(self._targets, self._df, target)
 
                 if isinstance(dft, pd.Series):
                     if dft.name is None:
                         dft.name = target or TARGET_COLUMN_NAME
                     dft = dft.to_frame()
                 elif not isinstance(dft, (pd.Series, pd.DataFrame)):
-                    dft = pd.DataFrame({target or TARGET_COLUMN_NAME: dft}, index=self.df.index)
+                    dft = pd.DataFrame({target or TARGET_COLUMN_NAME: dft}, index=self._df.index)
 
                 dft.columns = [(TARGET_COLUMN_NAME, col) if target is None else (target, TARGET_COLUMN_NAME, col)
                                for col in dft.columns]

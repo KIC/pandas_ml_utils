@@ -1,7 +1,7 @@
 import inspect
 import logging
 from copy import deepcopy
-from typing import List, Callable, Iterable, Dict, Type, Tuple, Union
+from typing import List, Callable, Iterable, Dict, Type, Tuple, Union, Any
 
 import numpy as np
 import pandas as pd
@@ -10,6 +10,7 @@ from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabel
 
 _log = logging.getLogger(__name__)
 _LABELS = Union[List[str], TargetLabelEncoder, Dict[str, Union[List[str], TargetLabelEncoder]]]
+_LABELS = Union[_LABELS, Callable[[Any], _LABELS]]
 
 # This class should be able to be pickled and unpickled without risk of change between versions
 # This means business logic need to be kept outside of this class!

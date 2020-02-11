@@ -18,6 +18,7 @@ df = pd.DataFrame({"a": [0.5592344, 0.60739384, 0.19994533, 0.56642537, 0.509656
                          0.32559497, 0.12721287, 0.13904584, 0.65887554, 0.08830925],
                    "b": np.random.randint(2, size=20)})
 
+
 class TestSaveLoad(TestCase):
 
     def test_save_load_models(self):
