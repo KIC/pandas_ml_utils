@@ -53,8 +53,10 @@ def fit(df: pd.DataFrame,
     # make training and test data sets
     features, labels, weights = features_and_labels.features_labels_weights_df
     train_ix, test_ix = train_test_split(features.index, test_size, youngest_size, seed=test_validate_split_seed)
-    train, test = ((features.loc[train_ix].values, labels.loc[train_ix].values, weights.loc[train_ix].values),
-                   (features.loc[test_ix].values, labels.loc[test_ix].values, weights.loc[test_ix].values))
+    train, test = (
+        (features.loc[train_ix].values, labels.loc[train_ix].values, weights.loc[train_ix].values if weights is not None else None),
+        (features.loc[test_ix].values, labels.loc[test_ix].values, weights.loc[test_ix].values if weights is not None else None)
+    )
 
     # eventually perform a hyper parameter optimization first
     start_performance_count = log_with_time(lambda: _log.info("fit model"))
@@ -106,7 +108,7 @@ def __train_loop(model, cross_validation, train, test):
                 _log.info(f'fit fold {f}')
                 loss = model.fit(x_train[train_idx], y_train[train_idx],
                                  x_train[test_idx], y_train[test_idx],
-                                 w_train[train_idx], w_train[test_idx])
+                                 *((w_train[train_idx], w_train[test_idx]) if w_train is not None else (None, None)))
 
                 losses.append(loss)
 

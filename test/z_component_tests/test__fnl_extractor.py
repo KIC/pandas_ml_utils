@@ -40,5 +40,5 @@ class FeatureAndLabelsExtractorTest(unittest.TestCase):
         self.assertListEqual(extractor.gross_loss_df.columns.tolist(), [(GROSS_LOSS_COLUMN_NAME, GROSS_LOSS_COLUMN_NAME)])
         self.assertEqual(fnl[0].shape, (6704, 1))
         self.assertEqual(fnl[1].shape, (6704, 1))
-        self.assertEqual(fnl[2].shape, (6704, 1))
+        self.assertIsNone(fnl[2])
 

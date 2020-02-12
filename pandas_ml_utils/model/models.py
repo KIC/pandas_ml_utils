@@ -292,7 +292,7 @@ class KerasModel(Model):
 
         fit_history = self._exec_within_session(self.keras_model.fit,
                                                 x, y,
-                                                sample_weight=sample_weight_train.reshape((len(x), )),
+                                                sample_weight=sample_weight_train,
                                                 epochs=self.epochs,
                                                 validation_data=(x_val, y_val),
                                                 callbacks=[cb() for cb in self.callbacks],
@@ -433,8 +433,8 @@ class MultiModel(Model):
             index = range(pos, pos + len(labels))
             target_y = y[:,index]
             target_y_val = y_val[:,index]
-            target_w = sample_weight_train[:,index]
-            target_w_val = sample_weight_test[:,index]
+            target_w = sample_weight_train[:,index] if sample_weight_train is not None else None
+            target_w_val = sample_weight_test[:,index] if sample_weight_test is not None else None
             _log.info(f"fit model for target {target}")
             losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, target_w, target_w_val))
             pos += len(labels)

@@ -128,7 +128,7 @@ class FeatureTargetLabelExtractor(object):
         df_features = df_features.loc[index_intersect]
         df_labels = df_labels.loc[index_intersect]
         # TODO add proper label weights
-        df_weights = pd.DataFrame(np.ones(df_labels.shape), index=df_labels.index)
+        df_weights = None #pd.DataFrame(np.ones(len(df_labels)), index=df_labels.index)
 
         # sanity check
         if not len(df_features) == len(df_labels):
