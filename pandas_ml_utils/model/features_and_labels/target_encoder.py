@@ -71,8 +71,7 @@ class MultipleTargetEncodingWrapper(TargetLabelEncoder):
 
     @property
     def encoded_labels_columns(self) -> List[str]:
-        # FIXME
-        pass
+        [l for enc in self.target_labels.values() for l in enc.encoded_labels_columns]
 
     def encode(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
         df_labels = pd.DataFrame({}, index=df.index)

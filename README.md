@@ -233,9 +233,11 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 * add whatever you need for yourself and share it with us 
 
 ## Change Log
-### 0.0.25
-* 
-
+### 0.0.25 / 26
+* refactored how traing and test data sets are split
+* allow to control the amount of young test data being used (useful for time series)
+* add sample weights i.e. to penalize loss per sample in a keras model 
+ 
 ### 0.0.23 / 24
 * changed SkitModel to SkModel
 * some minor bug fixes  

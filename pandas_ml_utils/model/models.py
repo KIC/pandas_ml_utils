@@ -99,16 +99,18 @@ class Model(object):
 
         print(f"saved model to: {os.path.abspath(filename)}")
 
-    # FIXME replace df_index_test/train by weights_test/train
-    def fit(self, x: np.ndarray, y: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, df_index_train: list, df_index_test: list) -> float:
+    def fit(self,
+            x: np.ndarray, y: np.ndarray,
+            x_val: np.ndarray, y_val: np.ndarray,
+            sample_weight_train: np.ndarray, sample_weight_test: np.ndarray) -> float:
         """
         function called to fit the model
         :param x: x
         :param y: y
         :param x_val: x validation
         :param y_val: y validation
-        :param df_index_train: index of x, y values in the DataFrame
-        :param df_index_test: index of x_val, y_val values in the DataFrame
+        :param sample_weight_train: sample weights for loss penalisation (default np.ones)
+        :param sample_weight_test: sample weights for loss penalisation (default np.ones)
         :return: loss of the fit
         """
         pass
@@ -148,7 +150,10 @@ class SkModel(Model):
         super().__init__(features_and_labels, summary_provider, **kwargs)
         self.skit_model = skit_model
 
-    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
+    def fit(self,
+            x: np.ndarray, y: np.ndarray,
+            x_val: np.ndarray, y_val: np.ndarray,
+            sample_weight_train: np.ndarray, sample_weight_test: np.ndarray) -> float:
         # shape correction if needed
         y = y.ravel() if len(y.shape) > 1 and y.shape[1] == 1 else y
 
@@ -276,7 +281,10 @@ class KerasModel(Model):
         self.callbacks = callbacks
         self.history = None
 
-    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
+    def fit(self,
+            x: np.ndarray, y: np.ndarray,
+            x_val: np.ndarray, y_val: np.ndarray,
+            sample_weight_train: np.ndarray, sample_weight_test: np.ndarray) -> float:
         fitter_args = suitable_kwargs(self.keras_model.fit, **self.kwargs)
 
         #if self.sample_weight_column:
@@ -418,15 +426,19 @@ class MultiModel(Model):
         self.target_kwargs = target_kwargs
         self.loss_alpha = loss_alpha
 
-    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
+    def fit(self,
+            x: np.ndarray, y: np.ndarray,
+            x_val: np.ndarray, y_val: np.ndarray,
+            sample_weight_train: np.ndarray, sample_weight_test: np.ndarray) -> float:
         losses = []
         pos = 0
+
         for target, labels in self.features_and_labels.labels.items():
             index = range(pos, pos + len(labels))
             target_y = y[:,index]
             target_y_val = y_val[:,index]
             _log.info(f"fit model for target {target}")
-            losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, df_index_train, df_index_test))
+            losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, sample_weight_train, sample_weight_test))
             pos += len(labels)
 
         losses = np.array(losses)

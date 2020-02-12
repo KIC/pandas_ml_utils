@@ -22,7 +22,7 @@ class PreprocessorTest(unittest.TestCase):
         fit = df.fit(
             pdu.SkModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
-                pdu.FeaturesAndLabels(features=['feature'], labels=['label'],
+                pdu.FeaturesAndLabels(features=['feature'], labels=['label'], label_type=int,
                                       gross_loss=lambda df: df["spy_Close"] - df["spy_Open"],
                                       pre_processor=lambda _df: pdu.LazyDataFrame(
                                           _df,

@@ -40,7 +40,7 @@ class TestFitter(TestCase):
         np.testing.assert_array_equal(summaries[3][TARGET_COLUMN_NAME, "b"].values, df["b"].values)
 
         """and has html representation"""
-        self.assertTrue(len(fits[0]._repr_html_()) >= 2095)
+        self.assertTrue(len(fits[0]._repr_html_()) >= 2000)
 
     def test__backtest(self):
         """given"""

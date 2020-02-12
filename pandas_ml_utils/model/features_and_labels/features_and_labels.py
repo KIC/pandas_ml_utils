@@ -25,7 +25,7 @@ class FeaturesAndLabels(object):
     def __init__(self,
                  features: List[str],
                  labels: _LABELS,
-                 label_type: Type = int, # FIXME default to None!
+                 label_type: Type = None,
                  gross_loss: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  targets: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  feature_lags: Iterable[int] = None,

@@ -1,10 +1,10 @@
 from unittest import TestCase
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
+from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor import FeatureTargetLabelExtractor
 
 DF = pd.DataFrame({"a": [1,2,3,4,5],
                    "b": [5,4,3,2,1],
@@ -36,24 +36,24 @@ class TestFeaturesAndLabelsExtraction(TestCase):
                                targets={"b": None})
 
         """when"""
-        df, f, l = FeatureTargetLabelExtractor(DF, fl).features_labels
+        f, l, _ = FeatureTargetLabelExtractor(DF, fl).features_labels_weights_df
 
         """then"""
-        print(df.columns)
-        print(f)
-        np.testing.assert_array_almost_equal(f, np.array([[[3], [2], [1]],
-                                                          [[4], [3], [2]],
-                                                          [[5], [4], [3]]]))
+        np.testing.assert_array_almost_equal(f.values, np.array([[[3], [2], [1]],
+                                                                 [[4], [3], [2]],
+                                                                 [[5], [4], [3]]]))
 
     def test_pre_processor(self):
         """given"""
         fl = FeaturesAndLabels(["lala"], ["b"], pre_processor=lambda df, **kwargs: df.rename(columns=kwargs), a="lala")
 
         """when"""
-        df, _, _ = FeatureTargetLabelExtractor(DF, fl).features_labels
+        f, l, w = FeatureTargetLabelExtractor(DF, fl).features_labels_weights_df
 
         """then"""
-        self.assertListEqual(df.columns.tolist(), ['lala', 'b'])
+        self.assertEqual(len(f), len(l))
+        self.assertListEqual(f.columns.tolist(), ['lala'])
+        self.assertListEqual(l.columns.tolist(), ['b'])
 
     def test_wither(self):
         """given"""

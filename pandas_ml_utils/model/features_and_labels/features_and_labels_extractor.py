@@ -118,17 +118,6 @@ class FeatureTargetLabelExtractor(object):
         return df
 
     @property
-    def features(self) -> Tuple[pd.DataFrame, np.ndarray]:
-        df = self.features_df
-        x = self._fix_shape(df)
-
-        _log.info(f"features shape: {x.shape}")
-
-        # FIXME actually we would only need the index not the whole data frame
-        #  return df.index.tolist(), x
-        return df, x
-
-    @property
     def features_labels_weights_df(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         # engineer features and labels
         df_features = self.features_df
