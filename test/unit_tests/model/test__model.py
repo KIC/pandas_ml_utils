@@ -81,8 +81,9 @@ class TestModel(TestCase):
         np.testing.assert_array_almost_equal(model1.get_weights(), model2.get_weights())
 
         """and after we fit one model"""
-        loss = model2.fit(np.array([0.1, 0.01]), np.array([0.1, 0.01]), np.array([0.1, 0.01]), np.array([0.1, 0.01]),
-                          [0,1], [2,3])
+        loss = model2.fit(np.array([0.1, 0.01]), np.array([0.1, 0.01]),
+                          np.array([0.1, 0.01]), np.array([0.1, 0.01]),
+                          np.array([1,1]), np.array([1,1]))
 
         """then"""
         self.assertIsNotNone(loss)
