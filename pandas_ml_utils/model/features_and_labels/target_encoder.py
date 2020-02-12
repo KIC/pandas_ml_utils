@@ -71,7 +71,7 @@ class MultipleTargetEncodingWrapper(TargetLabelEncoder):
 
     @property
     def encoded_labels_columns(self) -> List[str]:
-        [l for enc in self.target_labels.values() for l in enc.encoded_labels_columns]
+        return [l for enc in self.target_labels.values() for l in enc.encoded_labels_columns]
 
     def encode(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
         df_labels = pd.DataFrame({}, index=df.index)
@@ -81,8 +81,11 @@ class MultipleTargetEncodingWrapper(TargetLabelEncoder):
         return df_labels
 
     def decode(self, df: pd.DataFrame) -> pd.DataFrame:
-        # FIXME
-        pass
+        df_labels = pd.DataFrame({}, index=df.index)
+        for target, enc in self.target_labels.items():
+            df_labels = df_labels.join(enc.decode(df), how='inner', rsuffix=f'_{target}')
+
+        return df_labels
 
     def __len__(self):
         sum([len(enc) for enc in self.target_labels.values()])
