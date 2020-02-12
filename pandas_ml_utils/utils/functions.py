@@ -6,7 +6,7 @@ from time import perf_counter as pc
 from typing import Callable, Dict, Iterable, Any, List
 
 import numpy as np
-
+import pandas as pd
 
 def log_with_time(log_statement: Callable[[], None]):
     log_statement()
@@ -21,6 +21,10 @@ def unfold_parameter_space(parameter_space: Dict[str, Iterable], parameters: Dic
                               argument in space]).flat)
     else:
         return parameters
+
+
+def unique_top_level_columns(df: pd.DataFrame):
+    return unique(df.columns.get_level_values(0)) if isinstance(df.columns, pd.MultiIndex) else None
 
 
 def unique(items):

@@ -99,6 +99,7 @@ class Model(object):
 
         print(f"saved model to: {os.path.abspath(filename)}")
 
+    # FIXME replace df_index_test/train by weights_test/train
     def fit(self, x: np.ndarray, y: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, df_index_train: list, df_index_test: list) -> float:
         """
         function called to fit the model
@@ -278,6 +279,11 @@ class KerasModel(Model):
     def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
         fitter_args = suitable_kwargs(self.keras_model.fit, **self.kwargs)
 
+        #if self.sample_weight_column:
+            # TODO now we can access the raw data frame from features and labels extractor
+            #  so if we have a column defined for class weight we could provide the weighs for each sample to the fitter!
+            # FIXME doen not work yet: fitter_args["sample_weight"] = self.features_and_labels[self.sample_weight_column].values
+
         if "verbose" in self.kwargs and self.kwargs["verbose"] > 0:
             print(f'pass args to fit: {fitter_args}')
 
@@ -382,7 +388,7 @@ class KerasModel(Model):
                                self.summary_provider,
                                self.epochs,
                                deepcopy(self.callbacks),
-                               **{**deepcopy(self.kwargs), **kwargs})
+                               **deepcopy(self.kwargs), **kwargs)
 
         # copy weights before return
         new_model.set_weights(self.get_weights())

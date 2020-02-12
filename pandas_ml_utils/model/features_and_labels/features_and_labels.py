@@ -25,11 +25,11 @@ class FeaturesAndLabels(object):
     def __init__(self,
                  features: List[str],
                  labels: _LABELS,
-                 label_type:Type = int,
+                 label_type: Type = int, # FIXME default to None!
                  gross_loss: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  targets: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  feature_lags: Iterable[int] = None,
-                 feature_rescaling: Dict[Tuple[str, ...], Tuple[int, ...]] = None,  # fiXme lets provide a rescaler ..
+                 feature_rescaling: Dict[Tuple[str, ...], Tuple[int, ...]] = None,  # TODO lets provide a rescaler ..
                  lag_smoothing: Dict[int, Callable[[pd.Series], pd.Series]] = None,
                  pre_processor: Callable[[pd.DataFrame, Dict], pd.DataFrame] = lambda x: x,
                  **kwargs):

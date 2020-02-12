@@ -12,7 +12,7 @@ from pandas_ml_utils.model.features_and_labels.features_and_labels import Featur
 from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder, \
     MultipleTargetEncodingWrapper, IdentityEncoder
 from pandas_ml_utils.utils.classes import ReScaler
-from pandas_ml_utils.utils.functions import log_with_time, call_callable_dynamic_args
+from pandas_ml_utils.utils.functions import log_with_time, call_callable_dynamic_args, unique_top_level_columns
 
 _log = logging.getLogger(__name__)
 
@@ -69,6 +69,14 @@ class FeatureTargetLabelExtractor(object):
         self._df = call_dynamic(features_and_labels.pre_processor, df)
         self.__call_dynamic = call_dynamic
 
+    @property
+    def df(self):
+        return self._df
+
+    @property
+    def min_required_samples(self):
+        return len(self._df) - len(self.features_df) + 1
+
     def prediction_to_frame(self,
                             prediction: np.ndarray,
                             index: pd.Index = None,
@@ -110,44 +118,34 @@ class FeatureTargetLabelExtractor(object):
         return df
 
     @property
-    def df(self):
-        return self._df
-
-    @property
     def features(self) -> Tuple[pd.DataFrame, np.ndarray]:
         df = self.features_df
         x = self._fix_shape(df)
 
         _log.info(f"features shape: {x.shape}")
+
+        # FIXME actually we would only need the index not the whole data frame
+        #  return df.index.tolist(), x
         return df, x
 
     @property
-    def min_required_samples(self):
-        return len(self._df) - len(self.features_df) + 1
-
-    @property
-    def features_labels(self) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
+    def features_labels_weights_df(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         # engineer features and labels
         df_features = self.features_df
         df_labels = self.labels_df
-        df = self.features_df.join(df_labels, how='inner').dropna()
+        index_intersect = df_features.index.intersection(df_labels.index)
 
         # select only joining index values
-        df_features = df_features.loc[df.index]
-        df_labels = df_labels.loc[df.index]
-
-        # features eventually are in RNN shape which is [row, time_step, feature]
-        x = self._fix_shape(df_features)
-
-        # labels are straight forward but eventually need to be type corrected
-        y = df_labels.values.astype(self._label_type)
-        _log.info(f"  features shape: {x.shape}, labels shape: {y.shape}")
+        df_features = df_features.loc[index_intersect]
+        df_labels = df_labels.loc[index_intersect]
+        # TODO add proper label weights
+        df_weights = pd.DataFrame(np.ones(df_labels.shape), index=df_labels.index)
 
         # sanity check
-        if not len(x) == len(y) == len(df):
-            raise ValueError(f"unbalanced length of features and labels {len(x), len(y), len(df)}")
+        if not len(df_features) == len(df_labels):
+            raise ValueError(f"unbalanced length of features and labels {len(df_features), len(df_labels)}")
 
-        return df, x, y
+        return df_features, df_labels, df_weights
 
     @property
     @lru_cache(maxsize=1)
@@ -203,6 +201,9 @@ class FeatureTargetLabelExtractor(object):
                     dff[col] = tmp[col]
 
         _log.info(f" make features ... done in {pc() - start_pc: .2f} sec!")
+
+        # finally patch the "values" property for features data frame and return
+        dff.__class__ = _RNNShapedValuesDataFrame
         return dff
 
     @property
@@ -227,7 +228,7 @@ class FeatureTargetLabelExtractor(object):
     def labels_df(self) -> pd.DataFrame:
         # here we can do all sorts of tricks and encodings ...
         df = self._encoder(self._df[self._labels_columns], **self._features_and_labels.kwargs).dropna().copy()
-        return df
+        return df if self._label_type is None else df.astype(self._label_type)
 
     @property
     def source_df(self):
@@ -285,7 +286,8 @@ class FeatureTargetLabelExtractor(object):
         return df
 
     def _fix_shape(self, df_features):
-        # features eventually are in RNN shape which is [row, time_step, feature]
+        # features eventually are in [feature, row, time_step]
+        # but need to be in RNN shape which is [row, time_step, feature]
         feature_arr = df_features.values if self._features_and_labels.feature_lags is None else \
             np.array([df_features[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
 
@@ -296,3 +298,38 @@ class FeatureTargetLabelExtractor(object):
 
     def __str__(self):
         return f'min required data = {self.min_required_samples}'
+
+
+class _RNNShapedValuesDataFrame(pd.DataFrame):
+
+    class Loc():
+        def __init__(self, df):
+            self.df = df
+
+        def __getitem__(self, item):
+            res = self.df.loc[item]
+            res.__class__ = _RNNShapedValuesDataFrame
+            return res
+
+    @property
+    def loc(self):
+        return _RNNShapedValuesDataFrame.Loc(super(pd.DataFrame, self))
+
+    @property
+    def values(self):
+        top_level_columns = unique_top_level_columns(self)
+
+        # we need to do a sneaky trick here to get a proper "super" object as super() does not work as expected
+        # so we simply rename with an empty dict
+        df = self.rename({})
+
+        # features eventually are in [feature, row, time_step]
+        # but need to be in RNN shape which is [row, time_step, feature]
+        feature_arr = df.values if top_level_columns is None else \
+            np.array([df[feature].values for feature in top_level_columns],
+                     ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
+
+        if len(feature_arr) <= 0:
+            _log.warning("empty feature array!")
+
+        return feature_arr
