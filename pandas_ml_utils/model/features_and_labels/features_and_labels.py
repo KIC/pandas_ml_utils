@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
+from pandas_ml_utils.utils.functions import join_kwargs
 
 _log = logging.getLogger(__name__)
 _LABELS = Union[List[str], TargetLabelEncoder, Dict[str, Union[List[str], TargetLabelEncoder]]]
@@ -137,7 +138,7 @@ class FeaturesAndLabels(object):
 
     def with_kwargs(self, **kwargs):
         copy = deepcopy(self)
-        copy.kwargs = {**self.kwargs, **kwargs}
+        copy.kwargs = join_kwargs(self.kwargs, kwargs)
         return copy
 
     def __repr__(self):

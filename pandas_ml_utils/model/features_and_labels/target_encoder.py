@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from typing import Iterable, List, Dict, Union, Callable
 
-from pandas_ml_utils.utils.functions import one_hot, call_callable_dynamic_args
+from pandas_ml_utils.utils.functions import one_hot, call_callable_dynamic_args, join_kwargs
 
 
 class TargetLabelEncoder(object):
@@ -28,7 +28,7 @@ class TargetLabelEncoder(object):
 
     def with_kwargs(self, **kwargs):
         copy = deepcopy(self)
-        copy.kwargs = {**copy.kwargs, **kwargs}
+        copy.kwargs = join_kwargs(copy.kwargs, kwargs)
         return copy
 
     def __len__(self):
@@ -163,8 +163,17 @@ class OneHotEncodedDiscrete(TargetLabelEncoder):
         return [f'{self.label}_{i}' for i in range(self.nr_of_categories)]
 
     def encode(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
-        s = (call_callable_dynamic_args(self.pre_processor, df, **kwargs) if self.pre_processor else df)[self.label]
+        # eventually pre-process data
+        joined_kwargs = join_kwargs(self.kwargs, kwargs)
+        sf = (call_callable_dynamic_args(self.pre_processor, df, **joined_kwargs) if self.pre_processor else df)
 
+        # extract single series for one hot encoding
+        if isinstance(sf, pd.Series):
+            s = sf.rename(self.label)
+        else:
+            s = sf[self.label]
+
+        # one hot encode and return
         return s.to_frame().apply(lambda r: one_hot(r.values.sum(), self.nr_of_categories), axis=1, result_type='expand')
 
     def decode(self, df: pd.DataFrame) -> pd.DataFrame:

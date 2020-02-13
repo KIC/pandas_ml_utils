@@ -14,7 +14,7 @@ from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor imp
 from pandas_ml_utils.model.fitting.fit import Fit
 from pandas_ml_utils.model.models import Model
 from pandas_ml_utils.summary.summary import Summary
-from pandas_ml_utils.utils.functions import log_with_time
+from pandas_ml_utils.utils.functions import log_with_time, join_kwargs
 
 _log = logging.getLogger(__name__)
 
@@ -132,7 +132,7 @@ def __hyper_opt(hyper_parameter_space,
 
     def f(args):
         sampled_parameters = {k: args[i] for i, k in enumerate(keys)}
-        model = model_provider(**sampled_parameters, **constants)
+        model = model_provider(**join_kwargs(sampled_parameters, constants))
         loss = __train_loop(model, cross_validation, train, test)
         if loss is None:
             raise ValueError("Can not hyper tune if model loss is None")

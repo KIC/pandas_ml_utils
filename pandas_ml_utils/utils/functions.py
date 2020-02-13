@@ -8,6 +8,15 @@ from typing import Callable, Dict, Iterable, Any, List
 import numpy as np
 import pandas as pd
 
+
+def join_kwargs(*dicts) -> Dict:
+    dict = {}
+    for d in dicts:
+        dict = {**dict, **d}
+
+    return dict
+
+
 def log_with_time(log_statement: Callable[[], None]):
     log_statement()
     return pc()

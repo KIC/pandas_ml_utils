@@ -12,7 +12,8 @@ from pandas_ml_utils.model.features_and_labels.features_and_labels import Featur
 from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder, \
     MultipleTargetEncodingWrapper, IdentityEncoder
 from pandas_ml_utils.utils.classes import ReScaler
-from pandas_ml_utils.utils.functions import log_with_time, call_callable_dynamic_args, unique_top_level_columns
+from pandas_ml_utils.utils.functions import log_with_time, call_callable_dynamic_args, unique_top_level_columns, \
+    join_kwargs
 
 _log = logging.getLogger(__name__)
 
@@ -24,10 +25,10 @@ class FeatureTargetLabelExtractor(object):
         labels = features_and_labels.labels
         encoder = lambda frame, **kwargs: frame
         label_columns = None
+        joined_kwargs = join_kwargs(features_and_labels.kwargs, kwargs)
 
         # eventually transform callable labels to its expected structure
         if callable(labels):
-            joined_kwargs = {**features_and_labels.kwargs, **kwargs}
             labels = call_callable_dynamic_args(labels, df, **joined_kwargs)
 
         # unfold labels, currently supported types are:
@@ -56,6 +57,7 @@ class FeatureTargetLabelExtractor(object):
         self._targets = features_and_labels.targets
         self._gross_loss = features_and_labels.gross_loss
         self._encoder = encoder
+        self._joined_kwargs = joined_kwargs
 
         # pre assign this variable
         # but notice that it get overwritten by an engineered data frame later on
@@ -63,7 +65,7 @@ class FeatureTargetLabelExtractor(object):
 
         # this function uses clojures
         def call_dynamic(func, *args):
-            joined_kwargs = {**self.__dict__, **features_and_labels.kwargs, **kwargs}
+            joined_kwargs = join_kwargs(self.__dict__, self._joined_kwargs)
             return call_callable_dynamic_args(func, *args, **joined_kwargs)
 
         self._df = call_dynamic(features_and_labels.pre_processor, df)
@@ -216,7 +218,8 @@ class FeatureTargetLabelExtractor(object):
     @property
     def labels_df(self) -> pd.DataFrame:
         # here we can do all sorts of tricks and encodings ...
-        df = self._encoder(self._df[self._labels_columns], **self._features_and_labels.kwargs).dropna().copy()
+        # joined_kwargs(self._features_and_labels.kwargs, self.)
+        df = self._encoder(self._df[self._labels_columns], **self._joined_kwargs).dropna().copy()
         return df if self._label_type is None else df.astype(self._label_type)
 
     @property

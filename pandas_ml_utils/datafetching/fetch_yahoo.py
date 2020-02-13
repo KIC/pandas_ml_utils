@@ -5,6 +5,7 @@ import cachetools.func
 import pandas as pd
 
 from ..pandas_utils_extension import inner_join
+from ..utils.functions import join_kwargs
 
 
 @cachetools.func.ttl_cache(maxsize=1, ttl=10 * 60)
@@ -16,7 +17,7 @@ def fetch_yahoo(*args: str, period: str = 'max', multi_index: bool = False, **kw
     else:
         # convert args to kwargs
         if len(args) > 0:
-            kwargs = {**{arg: arg for arg in args}, **kwargs}
+            kwargs = join_kwargs({arg: arg for arg in args}, kwargs)
 
         for k, v in kwargs.items():
             px = f'{k}_'

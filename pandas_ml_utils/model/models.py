@@ -16,7 +16,7 @@ from sklearn.linear_model import LogisticRegression
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
 from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
 from pandas_ml_utils.summary.summary import Summary
-from pandas_ml_utils.utils.functions import suitable_kwargs
+from pandas_ml_utils.utils.functions import suitable_kwargs, join_kwargs
 
 _log = logging.getLogger(__name__)
 
@@ -392,7 +392,7 @@ class KerasModel(Model):
                                self.summary_provider,
                                self.epochs,
                                deepcopy(self.callbacks),
-                               **deepcopy(self.kwargs), **kwargs)
+                               **join_kwargs(deepcopy(self.kwargs), kwargs))
 
         # copy weights before return
         new_model.set_weights(self.get_weights())
