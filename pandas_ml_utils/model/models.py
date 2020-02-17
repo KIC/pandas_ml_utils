@@ -405,14 +405,17 @@ class MultiModel(Model):
                  model_provider: Model,
                  summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
                  loss_alpha: float = 0.5,
-                 target_kwargs: Dict[str, Dict[str, Any]] = None):
+                 target_kwargs: Dict[str, Dict[str, Any]] = None,
+                 **kwargs: Dict):
         assert isinstance(model_provider.features_and_labels.labels, (TargetLabelEncoder, Dict))
         super().__init__(
             # if we have a target args and a target encoder then we need generate multiple targets with different kwargs
-            {self.features_and_labels.with_labels(self.features_and_labels.labels.with_kwargs(kwargs)) for target, kwargs in target_kwargs.items()} \
-                if target_kwargs and isinstance(model_provider.features_and_labels.labels, TargetLabelEncoder) else model_provider.features_and_labels,
+            model_provider.features_and_labels.with_labels(
+                {target: model_provider.features_and_labels.labels.with_kwargs(**kwargs) for target, kwargs in target_kwargs.items()}) \
+                    if target_kwargs and isinstance(model_provider.features_and_labels.labels, TargetLabelEncoder) \
+             else model_provider.features_and_labels,
             summary_provider,
-            **model_provider.kwargs)
+            **join_kwargs(model_provider.kwargs, kwargs))
 
         if isinstance(model_provider, MultiModel):
             raise ValueError("Nesting Multi Models is not supported, you might use a flat structure of all your models")
