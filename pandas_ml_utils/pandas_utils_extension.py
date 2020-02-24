@@ -45,4 +45,15 @@ def extend_forecast(df, periods: int):
 
 
 def inner_join(df, join: _pd.DataFrame, prefix: str = ''):
-    return _pd.merge(df, join.add_prefix(prefix), left_index=True, right_index=True, how='inner', sort=True)
+    if isinstance(df.columns, _pd.MultiIndex) and not isinstance(join.columns, _pd.MultiIndex):
+        b = join.copy()
+        b.columns = _pd.MultiIndex.from_product([[prefix], b.columns])
+        return _pd.merge(df, b, left_index=True, right_index=True, how='inner', sort=True)
+    else:
+        return _pd.merge(df, join.add_prefix(prefix), left_index=True, right_index=True, how='inner', sort=True)
+
+
+def cloc2(df: _pd.DataFrame, column):
+    res = df.loc[:, (slice(None), column)].swaplevel(0, 1, axis=1)
+    return res if isinstance(column, list) else res[column]
+

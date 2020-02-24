@@ -30,7 +30,7 @@ class FeatureAndLabelsExtractorTest(unittest.TestCase):
                                           feature=lambda f: f["vix_Close"].rolling(2).mean(),
                                           label=lambda f: (f["spy_Close"].shift(1) > f["spy_Open"]).shift(-1)))))
 
-        fnl = extractor.features_labels
+        fnl = extractor.features_labels_weights_df
 
         """then"""
         self.assertListEqual(extractor.features_df.columns.tolist(), ['feature'])
@@ -38,7 +38,7 @@ class FeatureAndLabelsExtractorTest(unittest.TestCase):
         self.assertListEqual(extractor.source_df[SOURCE_COLUMN_NAME].columns.tolist(), [*df.columns.tolist(), 'feature', 'label'])
         self.assertListEqual(extractor.target_df.columns.tolist(), [(TARGET_COLUMN_NAME, "spy_Close")])
         self.assertListEqual(extractor.gross_loss_df.columns.tolist(), [(GROSS_LOSS_COLUMN_NAME, GROSS_LOSS_COLUMN_NAME)])
-        self.assertEqual(fnl[0].shape, (6704, 2))
+        self.assertEqual(fnl[0].shape, (6704, 1))
         self.assertEqual(fnl[1].shape, (6704, 1))
-        self.assertEqual(fnl[2].shape, (6704, 1))
+        self.assertIsNone(fnl[2])
 

@@ -1,5 +1,5 @@
 """Augment pandas DataFrame with methods for machine learning"""
-__version__ = '0.0.25'
+__version__ = '0.0.26'
 
 import logging
 import pandas as pd
@@ -10,7 +10,8 @@ from pandas_ml_utils.wrappers.lazy_dataframe import LazyDataFrame
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
 
 # imports only used to augment pandas classes
-from pandas_ml_utils.pandas_utils_extension import inner_join, drop_re, drop_zero_or_nan, add_apply, shift_inplace, extend_forecast
+from pandas_ml_utils.pandas_utils_extension import inner_join, drop_re, drop_zero_or_nan, add_apply, shift_inplace, \
+    extend_forecast, cloc2
 from pandas_ml_utils.analysis.correlation_analysis import plot_correlation_matrix
 from pandas_ml_utils.datafetching.fetch_yahoo import fetch_yahoo
 from pandas_ml_utils.model.fitting.fitter import fit, predict, backtest, features_and_label_extractor
@@ -26,6 +27,7 @@ _log.debug(f"available other classes {[LazyDataFrame, FeaturesAndLabels]}")
 
 # add functions to pandas
 # general utility functions
+PandasObject.cloc2 = cloc2
 PandasObject.inner_join = inner_join
 PandasObject.drop_re = drop_re
 PandasObject.drop_zero_or_nan = drop_zero_or_nan

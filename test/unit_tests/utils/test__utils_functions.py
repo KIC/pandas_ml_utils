@@ -1,6 +1,9 @@
 from unittest import TestCase
 
-from pandas_ml_utils.utils.functions import call_callable_dynamic_args
+import numpy as np
+import pandas as pd
+
+from pandas_ml_utils.utils.functions import call_callable_dynamic_args, integrate_nested_arrays
 
 
 class TestUtilFunctions(TestCase):
@@ -35,3 +38,20 @@ class TestUtilFunctions(TestCase):
         self.assertTrue(call_callable_dynamic_args(lambda a, b: True, 1, 2))
         self.assertRaises(Exception, lambda: call_callable_dynamic_args(lambda a, b: True, 1))
         self.assertRaises(Exception, lambda: call_callable_dynamic_args(lambda a, b: True, 1, c=1))
+
+    def test_inegrate_nested_array(self):
+        """given"""
+        x = np.array([1, 2])
+        df = pd.DataFrame({"a": [np.zeros((4, 3)) for _ in range(10)],
+                           "b": [np.ones((4, 3)) for _ in range(10)]})
+
+        """when"""
+        res1 = integrate_nested_arrays(df[["a"]].values)
+        res2 = integrate_nested_arrays(df.values)
+        res3 = integrate_nested_arrays(x)
+
+        """then"""
+        self.assertTrue(df.values[-1].dtype == 'object')
+        self.assertEqual(res1.shape, (10, 4, 3))
+        self.assertEqual(res2.shape, (10, 2, 4, 3))
+        self.assertTrue(x is res3)

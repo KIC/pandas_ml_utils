@@ -7,7 +7,7 @@ from sklearn.neural_network import MLPClassifier
 
 import pandas_ml_utils as pdu
 from pandas_ml_utils.constants import *
-from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets
+from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets, OneHotEncodedDiscrete
 from test.config import TEST_FILE
 from test.utils import SMA
 
@@ -139,3 +139,25 @@ class ClassificationTest(unittest.TestCase):
                              [(PREDICTION_COLUMN_NAME, 'is_above')])
 
         self.assertEqual(bt_summary_df.shape, (6704, 13))
+
+    def test_discrete_encoded_classes(self):
+        """given"""
+        df = pd.read_csv(TEST_FILE, index_col='Date')
+        df["sma"] = SMA(df["spy_Close"])
+        df["label"] = (((df["spy_Close"] / df["sma"] -1) > 0.02).astype(int) - ((df["spy_Close"] / df["sma"] -1) < -0.02).astype(int)) + 1
+
+
+        model = pdu.SkModel(
+            MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
+            pdu.FeaturesAndLabels(features=['vix_Close'],
+                                  labels=OneHotEncodedDiscrete("label", 3)))
+
+        """when"""
+        fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
+        predict_df = df.predict(fit.model, tail=1)
+
+        """then"""
+        self.assertListEqual(predict_df.columns.tolist(),
+                             [(PREDICTION_COLUMN_NAME, 'label_0'),
+                              (PREDICTION_COLUMN_NAME, 'label_1'),
+                              (PREDICTION_COLUMN_NAME, 'label_2')])

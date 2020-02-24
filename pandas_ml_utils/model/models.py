@@ -6,7 +6,7 @@ import os
 import tempfile
 import uuid
 from copy import deepcopy
-from typing import List, Callable, TYPE_CHECKING, Tuple
+from typing import List, Callable, TYPE_CHECKING, Tuple, Dict, Any
 
 import dill as pickle
 import numpy as np
@@ -14,8 +14,9 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
+from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
 from pandas_ml_utils.summary.summary import Summary
-from pandas_ml_utils.utils.functions import suitable_kwargs
+from pandas_ml_utils.utils.functions import suitable_kwargs, join_kwargs
 
 _log = logging.getLogger(__name__)
 
@@ -96,15 +97,20 @@ class Model(object):
         with open(filename, 'wb') as file:
             pickle.dump(self, file)
 
-    def fit(self, x: np.ndarray, y: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, df_index_train: list, df_index_test: list) -> float:
+        print(f"saved model to: {os.path.abspath(filename)}")
+
+    def fit(self,
+            x: np.ndarray, y: np.ndarray,
+            x_val: np.ndarray, y_val: np.ndarray,
+            sample_weight_train: np.ndarray, sample_weight_test: np.ndarray) -> float:
         """
         function called to fit the model
         :param x: x
         :param y: y
         :param x_val: x validation
         :param y_val: y validation
-        :param df_index_train: index of x, y values in the DataFrame
-        :param df_index_test: index of x_val, y_val values in the DataFrame
+        :param sample_weight_train: sample weights for loss penalisation (default np.ones)
+        :param sample_weight_test: sample weights for loss penalisation (default np.ones)
         :return: loss of the fit
         """
         pass
@@ -144,7 +150,10 @@ class SkModel(Model):
         super().__init__(features_and_labels, summary_provider, **kwargs)
         self.skit_model = skit_model
 
-    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test):
+    def fit(self,
+            x: np.ndarray, y: np.ndarray,
+            x_val: np.ndarray, y_val: np.ndarray,
+            sample_weight_train: np.ndarray, sample_weight_test: np.ndarray) -> float:
         # shape correction if needed
         y = y.ravel() if len(y.shape) > 1 and y.shape[1] == 1 else y
 
@@ -255,8 +264,11 @@ class KerasModel(Model):
             for i in range(1, len(keras_model)):
                 if hasattr(keras_model[i], "__name__"):
                     self.custom_objects[keras_model[i].__name__] = keras_model[i]
+                else:
+                    raise ValueError("keras custom object must have a __name__")
 
             keras_model = keras_model[0]
+            _log.warning(f"keras model using custom objects {self.custom_objects}")
 
         # eventually compile keras model
         if not keras_model.optimizer:
@@ -269,10 +281,18 @@ class KerasModel(Model):
         self.callbacks = callbacks
         self.history = None
 
-    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
+    def fit(self,
+            x: np.ndarray, y: np.ndarray,
+            x_val: np.ndarray, y_val: np.ndarray,
+            sample_weight_train: np.ndarray, sample_weight_test: np.ndarray) -> float:
         fitter_args = suitable_kwargs(self.keras_model.fit, **self.kwargs)
+
+        if "verbose" in self.kwargs and self.kwargs["verbose"] > 0:
+            print(f'pass args to fit: {fitter_args}')
+
         fit_history = self._exec_within_session(self.keras_model.fit,
                                                 x, y,
+                                                sample_weight=sample_weight_train,
                                                 epochs=self.epochs,
                                                 validation_data=(x_val, y_val),
                                                 callbacks=[cb() for cb in self.callbacks],
@@ -372,7 +392,7 @@ class KerasModel(Model):
                                self.summary_provider,
                                self.epochs,
                                deepcopy(self.callbacks),
-                               **deepcopy(self.kwargs), **kwargs)
+                               **join_kwargs(deepcopy(self.kwargs), kwargs))
 
         # copy weights before return
         new_model.set_weights(self.get_weights())
@@ -384,29 +404,46 @@ class MultiModel(Model):
     def __init__(self,
                  model_provider: Model,
                  summary_provider: Callable[[pd.DataFrame], Summary] = Summary,
-                 alpha: float = 0.5):
-        super().__init__(model_provider.features_and_labels, summary_provider)
+                 loss_alpha: float = 0.5,
+                 target_kwargs: Dict[str, Dict[str, Any]] = None,
+                 **kwargs: Dict):
+        assert isinstance(model_provider.features_and_labels.labels, (TargetLabelEncoder, Dict))
+        super().__init__(
+            # if we have a target args and a target encoder then we need generate multiple targets with different kwargs
+            model_provider.features_and_labels.with_labels(
+                {target: model_provider.features_and_labels.labels.with_kwargs(**kwargs) for target, kwargs in target_kwargs.items()}) \
+                    if target_kwargs and isinstance(model_provider.features_and_labels.labels, TargetLabelEncoder) \
+             else model_provider.features_and_labels,
+            summary_provider,
+            **join_kwargs(model_provider.kwargs, kwargs))
 
         if isinstance(model_provider, MultiModel):
             raise ValueError("Nesting Multi Models is not supported, you might use a flat structure of all your models")
 
-        self.model_provider = model_provider
         self.models = {target: model_provider() for target in self.features_and_labels.labels.keys()}
-        self.alpha = alpha
+        self.model_provider = model_provider
+        self.target_kwargs = target_kwargs
+        self.loss_alpha = loss_alpha
 
-    def fit(self, x, y, x_val, y_val, df_index_train, df_index_test) -> float:
+    def fit(self,
+            x: np.ndarray, y: np.ndarray,
+            x_val: np.ndarray, y_val: np.ndarray,
+            sample_weight_train: np.ndarray, sample_weight_test: np.ndarray) -> float:
         losses = []
         pos = 0
+
         for target, labels in self.features_and_labels.labels.items():
             index = range(pos, pos + len(labels))
             target_y = y[:,index]
             target_y_val = y_val[:,index]
+            target_w = sample_weight_train[:,index] if sample_weight_train is not None else None
+            target_w_val = sample_weight_test[:,index] if sample_weight_test is not None else None
             _log.info(f"fit model for target {target}")
-            losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, df_index_train, df_index_test))
+            losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, target_w, target_w_val))
             pos += len(labels)
 
         losses = np.array(losses)
-        a = self.alpha
+        a = self.loss_alpha
 
         # return weighted loss between mean and max loss
         return (losses.mean() * (1 - a) + a * losses.max()) if len(losses) > 0 else None
@@ -432,10 +469,10 @@ class MultiModel(Model):
                               axis=1)
 
     def __call__(self, *args, **kwargs):
-        new_multi_model = MultiModel(self.model_provider, self.summary_provider, self.alpha)
+        new_multi_model = MultiModel(self.model_provider, self.summary_provider, self.loss_alpha, self.target_kwargs)
 
         if kwargs:
-            new_multi_model.models = {target: self.model_provider(**kwargs) for target in self.features_and_labels.get_goals().keys()}
+            raise ValueError("kwargs on cloning multi model ist currently not supported!")
 
         return new_multi_model
 
