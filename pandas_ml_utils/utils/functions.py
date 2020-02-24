@@ -88,3 +88,13 @@ def call_callable_dynamic_args(func, *args, **kwargs):
         return func(*call_args, **kwargs)
     else:
         return func(*call_args)
+
+
+def integrate_nested_arrays(arr: np.ndarray) -> np.ndarray:
+    if arr is not None and len(arr) > 0 and arr[-1].dtype == 'object':
+        if len(arr.shape) > 1 and arr.shape[1] > 1:
+            return np.array([[np.array(c) for c in r] for r in arr])
+        else:
+            return np.array([np.array(c) for r in arr for c in r])
+    else:
+        return arr

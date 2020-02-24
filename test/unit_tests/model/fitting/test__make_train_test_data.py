@@ -5,7 +5,7 @@ import pandas as pd
 
 import pandas_ml_utils as pdu
 from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor import FeatureTargetLabelExtractor
-from pandas_ml_utils.model.fitting.fitter import train_test_split
+from pandas_ml_utils.model.fitting.splitting import train_test_split
 
 
 class TestTrainTestData(unittest.TestCase):

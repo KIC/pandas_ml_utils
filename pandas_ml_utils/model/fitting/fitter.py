@@ -51,12 +51,7 @@ def fit(df: pd.DataFrame,
     _log.info(f"create model ({features_and_labels})")
 
     # make training and test data sets
-    features, labels, weights = features_and_labels.features_labels_weights_df
-    train_ix, test_ix = train_test_split(features.index, test_size, youngest_size, seed=test_validate_split_seed)
-    train, test = (
-        (features.loc[train_ix].values, labels.loc[train_ix].values, weights.loc[train_ix].values if weights is not None else None),
-        (features.loc[test_ix].values, labels.loc[test_ix].values, weights.loc[test_ix].values if weights is not None else None)
-    )
+    train, test = features_and_labels.training_and_test_data(test_size, youngest_size, seed=test_validate_split_seed)
 
     # eventually perform a hyper parameter optimization first
     start_performance_count = log_with_time(lambda: _log.info("fit model"))
@@ -84,9 +79,9 @@ def fit(df: pd.DataFrame,
     _log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
 
     # assemble result objects
-    df_train = features_and_labels.prediction_to_frame(model.predict(train[0]), index=train_ix, inclusive_labels=True)
-    df_test = features_and_labels.prediction_to_frame(model.predict(test[0]), index=test_ix, inclusive_labels=True) \
-        if len(test_ix) > 0 else None
+    df_train = features_and_labels.prediction_to_frame(model.predict(train[1]), index=train[0], inclusive_labels=True)
+    df_test = features_and_labels.prediction_to_frame(model.predict(test[1]), index=test[0], inclusive_labels=True) \
+        if len(test[0]) > 0 else None
 
     # update minimum required samples
     model.features_and_labels._min_required_samples = features_and_labels.min_required_samples
@@ -96,8 +91,8 @@ def fit(df: pd.DataFrame,
 
 
 def __train_loop(model, cross_validation, train, test):
-    x_train, y_train, w_train = train[0], train[1], train[2]
-    x_test, y_test, w_test = test[0], test[1], test[2]
+    x_train, y_train, w_train = train[1], train[2], train[3]
+    x_test, y_test, w_test = test[1], test[2], test[3]
 
     # apply cross validation
     if cross_validation is not None and isinstance(cross_validation, Tuple) and callable(cross_validation[1]):
@@ -181,37 +176,3 @@ def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.Data
 def features_and_label_extractor(df: pd.DataFrame, model: Model) -> FeatureTargetLabelExtractor:
     return FeatureTargetLabelExtractor(df, model.features_and_labels, **model.kwargs)
 
-
-def train_test_split(index: pd.Index,
-                     test_size: float = 0.4,
-                     youngest_size: float = None,
-                     seed: int = 42) -> Tuple[pd.Index, pd.Index]:
-
-    # convert data frame index to numpy array
-    index = index.values
-
-    if test_size <= 0:
-        train, test = index, index[:0]
-    elif seed == 'youngest':
-        i = int(len(index) - len(index) * test_size)
-        train, test = index[:i], index[i:]
-    else:
-        random_sample_test_size = test_size if youngest_size is None else test_size * (1 - youngest_size)
-        random_sample_train_index_size = int(len(index) - len(index) * (test_size - random_sample_test_size))
-
-        if random_sample_train_index_size < len(index):
-            _log.warning(f"keeping youngest {len(index) - random_sample_train_index_size} elements in test set")
-
-            # cut the youngest data and use residual to randomize train/test data
-            index_train, index_test = \
-                sk_train_test_split(index[:random_sample_train_index_size],
-                                 test_size=random_sample_test_size, random_state=seed)
-
-            # then concatenate (add back) the youngest data to the random test data
-            index_test = np.hstack([index_test, index[random_sample_train_index_size:]])  # index is 1D
-
-            train, test = index_train, index_test
-        else:
-            train, test = sk_train_test_split(index, test_size=random_sample_test_size, random_state=seed)
-
-    return pd.Index(train), pd.Index(test)

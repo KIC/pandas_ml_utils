@@ -11,9 +11,10 @@ from pandas_ml_utils.constants import *
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels
 from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder, \
     MultipleTargetEncodingWrapper, IdentityEncoder
+from pandas_ml_utils.model.fitting.splitting import train_test_split
 from pandas_ml_utils.utils.classes import ReScaler
 from pandas_ml_utils.utils.functions import log_with_time, call_callable_dynamic_args, unique_top_level_columns, \
-    join_kwargs
+    join_kwargs, integrate_nested_arrays
 
 _log = logging.getLogger(__name__)
 
@@ -96,7 +97,17 @@ class FeatureTargetLabelExtractor(object):
             prediction = prediction.reshape(len(prediction), 1)
 
         # prediction_columns
-        df = pd.DataFrame(prediction, index=index, columns=pd.MultiIndex.from_tuples(self.label_names(PREDICTION_COLUMN_NAME)))
+        columns = pd.MultiIndex.from_tuples(self.label_names(PREDICTION_COLUMN_NAME))
+        multi_dimension_prediction = len(prediction.shape) > 1 and len(columns) < prediction.shape[1]
+        if multi_dimension_prediction:
+            if len(prediction.shape) < 3:
+                df = pd.DataFrame({"a":[ r.tolist() for r in prediction]}, index=index)
+            else:
+                df = pd.DataFrame({col: [row.tolist() for row in prediction[:, col]] for col in range(prediction.shape[1])},index=index)
+
+            df.columns = columns
+        else:
+             df = pd.DataFrame(prediction, index=index, columns=columns)
 
         # add labels if requested
         if inclusive_labels:
@@ -118,6 +129,24 @@ class FeatureTargetLabelExtractor(object):
 
         # finally we can return our nice and shiny df
         return df
+
+    def training_and_test_data(self,
+                               test_size: float = 0.4,
+                               youngest_size: float = None,
+                               seed: int = 42) -> Tuple[Tuple[np.ndarray,...], Tuple[np.ndarray,...]]:
+        features, labels, weights = self.features_labels_weights_df
+        train_ix, test_ix = train_test_split(features.index, test_size, youngest_size, seed=seed)
+
+        return (
+            (train_ix,
+             features.loc[train_ix].values,
+             integrate_nested_arrays(labels.loc[train_ix].values),
+             weights.loc[train_ix].values if weights is not None else None),
+            (test_ix,
+             features.loc[test_ix].values,
+             integrate_nested_arrays(labels.loc[test_ix].values),
+             weights.loc[test_ix].values if weights is not None else None)
+        )
 
     @property
     def features_labels_weights_df(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
