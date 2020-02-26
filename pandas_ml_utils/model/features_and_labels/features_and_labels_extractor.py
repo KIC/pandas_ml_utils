@@ -13,6 +13,7 @@ from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabel
     MultipleTargetEncodingWrapper, IdentityEncoder
 from pandas_ml_utils.model.fitting.splitting import train_test_split
 from pandas_ml_utils.utils.classes import ReScaler
+from pandas_ml_utils.utils.delegator import delegate_to
 from pandas_ml_utils.utils.functions import log_with_time, call_callable_dynamic_args, unique_top_level_columns, \
     join_kwargs, integrate_nested_arrays
 
@@ -137,6 +138,14 @@ class FeatureTargetLabelExtractor(object):
         features, labels, weights = self.features_labels_weights_df
         train_ix, test_ix = train_test_split(features.index, test_size, youngest_size, seed=seed)
 
+        # return (
+        #     (Fix3DArrayValuesDataFrame(FixNestedArrayValuesDataFrame(features.loc[train_ix])),
+        #      FixNestedArrayValuesDataFrame(labels.loc[train_ix]),
+        #      FixNestedArrayValuesDataFrame(weights.loc[train_ix]) if weights is not None else None),
+        #     (Fix3DArrayValuesDataFrame(FixNestedArrayValuesDataFrame(features.loc[test_ix])),
+        #      FixNestedArrayValuesDataFrame(labels.loc[test_ix]),
+        #      FixNestedArrayValuesDataFrame(weights.loc[test_ix]) if weights is not None else None),
+        # )
         return (
             (train_ix,
              features.loc[train_ix].values,
@@ -354,3 +363,48 @@ class _RNNShapedValuesDataFrame(pd.DataFrame):
             _log.warning("empty feature array!")
 
         return feature_arr
+
+
+@delegate_to('df', pd.DataFrame)
+class FixNestedArrayValuesDataFrame(object):
+
+    def __init__(self, df: pd.DataFrame) -> None:
+        super().__init__()
+        self.df = df
+
+    @property
+    def values(self):
+        arr = self.df.values
+        if arr is not None and len(arr) > 0 and arr[-1].dtype == 'object':
+            if len(arr.shape) > 1 and arr.shape[1] > 1:
+                return np.array([[np.array(c) for c in r] for r in arr])
+            else:
+                return np.array([np.array(c) for r in arr for c in r])
+        else:
+            return arr
+
+
+@delegate_to('df', FixNestedArrayValuesDataFrame, pd.DataFrame)
+class Fix3DArrayValuesDataFrame(object):
+
+    def __init__(self, df: pd.DataFrame) -> None:
+        super().__init__()
+        self.df = df
+
+    @property
+    def values(self):
+        if isinstance(self.df.columns, pd.MultiIndex):
+            top_level_columns = unique_top_level_columns(self.df)
+
+            # features eventually are in [feature, row, time_step]
+            # but need to be in RNN shape which is [row, time_step, feature]
+            feature_arr = self.df.values if top_level_columns is None else \
+                np.array([self.df[feature].values for feature in top_level_columns],
+                         ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
+
+            if len(feature_arr) <= 0:
+                _log.warning("empty feature array!")
+
+            return feature_arr
+        else:
+            return self.df.values

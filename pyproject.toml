@@ -17,6 +17,7 @@ requires = [
     "sortedcontainers",
     "scikit-learn",
     "statsmodels",
+    "delegateto",
     "hyperopt",
     "h5py",
     "dill"

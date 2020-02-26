@@ -1,5 +1,5 @@
 """Augment pandas DataFrame with methods for machine learning"""
-__version__ = '0.0.26'
+__version__ = '0.0.27'
 
 import logging
 import pandas as pd
