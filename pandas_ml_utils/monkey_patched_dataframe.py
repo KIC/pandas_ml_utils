@@ -1,11 +1,13 @@
 import logging
 
 import numpy as _np
+import pandas as _pd
 from pandas import *
 
 from pandas_ml_utils.utils.functions import unique_top_level_columns, integrate_nested_arrays
 
 _log = logging.getLogger(__name__)
+__version__ = f'patched: {_pd.__version__}'
 
 
 def _values2D(self):

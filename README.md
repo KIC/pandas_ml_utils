@@ -233,6 +233,11 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 * add whatever you need for yourself and share it with us 
 
 ## Change Log
+
+### 0.0.27
+* I made my life easier, now i just do "from pandas_ml_utils import pd, np, FeaturesAndLabels, ..."
+* features and labels can now handle multi dimensions as a cell may contain another numpy array
+
 ### 0.0.25 / 26
 * refactored how traing and test data sets are split
 * allow to control the amount of young test data being used (useful for time series)
