@@ -1,9 +1,8 @@
 import unittest
 
 import numpy as np
-import pandas as pd
+from pandas_ml_utils import pd, FeaturesAndLabels
 
-import pandas_ml_utils as pdu
 from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.model.fitting.splitting import train_test_split
 
@@ -42,7 +41,7 @@ class TestTrainTestData(unittest.TestCase):
         """when"""
         normal_train, normal_test = train_test_split(df.index, test_size=0.5, seed='youngest')
         lagged_train, lagged_test = train_test_split(
-            FeatureTargetLabelExtractor(df, pdu.FeaturesAndLabels(["featureA"], ["labelA"], feature_lags=[0, 1])).features_labels_weights_df[0].index,
+            FeatureTargetLabelExtractor(df, FeaturesAndLabels(["featureA"], ["labelA"], feature_lags=[0, 1])).features_labels_weights_df[0].index,
             test_size=0.5,
             seed='youngest')
 
@@ -71,8 +70,8 @@ class TestTrainTestData(unittest.TestCase):
                            "labelB": [5, 4, 3, 2, 1, 0, 1, 2, 3, None]})
 
         """when lag smoothing is enabled using shift (which is introducing nan into the data frame)"""
-        fl = pdu.FeaturesAndLabels(["featureA"], ["labelB"], feature_lags=[0, 1],
-                                   lag_smoothing={1: lambda df: df["featureA"].shift(2)})
+        fl = FeaturesAndLabels(["featureA"], ["labelB"], feature_lags=[0, 1],
+                               lag_smoothing={1: lambda df: df["featureA"].shift(2)})
 
         f, l, _ = FeatureTargetLabelExtractor(df, fl).features_labels_weights_df
         len_features = 10 - 1 - 2
@@ -85,13 +84,13 @@ class TestTrainTestData(unittest.TestCase):
 
     def test_hashable_features_and_labels(self):
         """given"""
-        a = pdu.FeaturesAndLabels(["featureA"], ["featureA"], feature_lags=[1, 2, 3, 4],
-                                  lag_smoothing={2: lambda df: df[["featureA"]] * 2,
-                                                 4: lambda df: df[["featureA"]] * 4})
+        a = FeaturesAndLabels(["featureA"], ["featureA"], feature_lags=[1, 2, 3, 4],
+                              lag_smoothing={2: lambda df: df[["featureA"]] * 2,
+                                             4: lambda df: df[["featureA"]] * 4})
 
-        b = pdu.FeaturesAndLabels(["featureA"], ["featureA"], feature_lags=[1, 2, 3, 4],
-                                  lag_smoothing={2: lambda df: df[["featureA"]] * 2,
-                                                 4: lambda df: df[["featureA"]] * 4})
+        b = FeaturesAndLabels(["featureA"], ["featureA"], feature_lags=[1, 2, 3, 4],
+                              lag_smoothing={2: lambda df: df[["featureA"]] * 2,
+                                             4: lambda df: df[["featureA"]] * 4})
 
         """expect"""
         self.assertEqual(hash(a), hash(a))
@@ -109,12 +108,12 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
 
         """when"""
-        fl = pdu.FeaturesAndLabels(["featureA", "featureB", "featureC"],
-                                   ["labelA"],
-                                   feature_lags=[1, 2],
-                                   feature_rescaling={("featureA", "featureC"): (-1, 1)})
+        fl = FeaturesAndLabels(["featureA", "featureB", "featureC"],
+                               ["labelA"],
+                               feature_lags=[1, 2],
+                               feature_rescaling={("featureA", "featureC"): (-1, 1)})
 
-        f = FeatureTargetLabelExtractor(df, fl).features_df.values
+        f = FeatureTargetLabelExtractor(df, fl).features_df.feature_values
 
         """then"""
         self.assertEqual((8, 2, 3), f.shape)
@@ -130,11 +129,11 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
 
         """when"""
-        fl = pdu.FeaturesAndLabels(["featureA", "featureB", "featureC"],
-                                   ["labelA"],
-                                   feature_rescaling={("featureA", "featureC"): (-1, 1)})
+        fl = FeaturesAndLabels(["featureA", "featureB", "featureC"],
+                               ["labelA"],
+                               feature_rescaling={("featureA", "featureC"): (-1, 1)})
 
-        f = FeatureTargetLabelExtractor(df, fl).features_df.values
+        f = FeatureTargetLabelExtractor(df, fl).features_df.feature_values
 
         "then"
         np.testing.assert_array_almost_equal(f[0], np.array([-1, 0.1, 1]))
@@ -156,11 +155,11 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": range(20)})
 
         """when"""
-        fl = pdu.FeaturesAndLabels(["featureA", "featureB", "featureC"],
-                                   ["labelA"],
-                                   feature_lags=[0,1,2,3,4])
+        fl = FeaturesAndLabels(["featureA", "featureB", "featureC"],
+                               ["labelA"],
+                               feature_lags=[0,1,2,3,4])
 
-        f = FeatureTargetLabelExtractor(df, fl).features_df.values
+        f = FeatureTargetLabelExtractor(df, fl).features_df.feature_values
 
         """then"""
         self.assertEqual(len(f), len(df) - 4)
@@ -177,8 +176,8 @@ class TestTrainTestData(unittest.TestCase):
                            "labelA": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
 
         """when"""
-        fl = pdu.FeaturesAndLabels(["featureA"], ["labelA"])
-        f = FeatureTargetLabelExtractor(df, fl).features_df.values
+        fl = FeaturesAndLabels(["featureA"], ["labelA"])
+        f = FeatureTargetLabelExtractor(df, fl).features_df.feature_values
 
         """then"""
         self.assertEqual((10, 1), f.shape)

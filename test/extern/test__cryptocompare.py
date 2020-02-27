@@ -1,6 +1,6 @@
 import unittest
 import logging
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 import pytest
 
 import pandas_ml_utils.extern.cryptocompare as cc

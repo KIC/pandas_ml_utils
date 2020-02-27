@@ -1,10 +1,6 @@
 import unittest
 
-import pandas as pd
-
-import pandas_ml_utils as pmu
-
-print(pmu.__version__)
+from pandas_ml_utils import pd
 
 
 class TestFeatureSelection(unittest.TestCase):

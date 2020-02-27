@@ -2,17 +2,12 @@ import logging
 import unittest
 from typing import List
 
-import pandas as pd
 import numpy as np
-from sklearn.neural_network import MLPClassifier
-
-import pandas_ml_utils as pdu
-from pandas_ml_utils.constants import *
 from test.config import TEST_FILE
-
-from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
 from test.mocks.mock_model import MockModel
 
+from pandas_ml_utils import pd, FeaturesAndLabels
+from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
 from pandas_ml_utils.utils.functions import integrate_nested_arrays
 
 logger = logging.getLogger()
@@ -45,7 +40,7 @@ class EncoderTest(unittest.TestCase):
                 return res
 
         """when"""
-        model = MockModel(pdu.FeaturesAndLabels(["spy_Close"], ArrayEncoder(), feature_lags=[0, 1, 2]))
+        model = MockModel(FeaturesAndLabels(["spy_Close"], ArrayEncoder(), feature_lags=[0, 1, 2]))
         fit = df.fit(model)
 
         """then"""

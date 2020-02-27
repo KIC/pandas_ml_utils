@@ -1,13 +1,10 @@
 import logging
 import unittest
 
-import pandas as pd
-
-import pandas_ml_utils as pdu
+from pandas_ml_utils import pd
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-print(pdu.__version__)
 
 
 class ComponentTest(unittest.TestCase):

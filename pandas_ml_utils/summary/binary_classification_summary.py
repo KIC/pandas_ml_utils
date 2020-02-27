@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import Dict
 
 import numpy as np
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 
 from pandas_ml_utils.constants import *
 from pandas_ml_utils.summary.summary import Summary

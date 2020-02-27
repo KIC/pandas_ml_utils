@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import List, Callable, Iterable, Dict, Type, Tuple, Union, Any
 
 import numpy as np
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 
 from pandas_ml_utils.model.features_and_labels.target_encoder import TargetLabelEncoder
 from pandas_ml_utils.utils.functions import join_kwargs

@@ -1,7 +1,7 @@
 import datetime
 
 import cachetools
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 import pytz
 
 from pandas_ml_utils.extern.cryptocompare import CURR, LIMIT, TIME, get_historical_price_day, get_historical_price_hour

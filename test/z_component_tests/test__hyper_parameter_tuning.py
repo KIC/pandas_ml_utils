@@ -2,11 +2,10 @@ import logging
 import unittest
 
 import numpy as np
-import pandas as pd
 from sklearn.neural_network import MLPClassifier
-
-import pandas_ml_utils as pdu
 from test.config import TEST_FILE
+
+from pandas_ml_utils import pd, SkModel, FeaturesAndLabels
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -23,10 +22,10 @@ class HyportParameterOptimizationTest(unittest.TestCase):
 
         """when fit with find hyper parameter"""
         fit = df.fit(
-            pdu.SkModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
-                        pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
-                                                target_columns=["vix_Open"],
-                                                loss_column="spy_Volume")),
+            SkModel(MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
+                    FeaturesAndLabels(features=['vix_Close'], labels=['label'],
+                                      target_columns=["vix_Open"],
+                                      loss_column="spy_Volume")),
             test_size=0.4,
             test_validate_split_seed=42,
             hyper_parameter_space={'alpha': hp.choice('alpha', [0.0001, 10]), 'early_stopping': True, 'max_iter': 50,

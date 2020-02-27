@@ -1,12 +1,10 @@
 import logging
 from unittest import TestCase
 
-import pandas as pd
-import pandas_ml_utils as pmu
+from pandas_ml_utils import pd
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-logging.info(f"{pmu.__version__}")
 
 
 class TestFetchYahoo(TestCase):

@@ -1,6 +1,6 @@
 from typing import Any
 
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 import os
 from pandas_ml_utils.model.models import Model
 from pandas_ml_utils.summary.summary import Summary

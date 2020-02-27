@@ -4,7 +4,6 @@ scikit-learn
 statsmodels
 tensorflow==1.14.0
 matplotlib
-delegateto
 cachetools
 yfinance
 hyperopt

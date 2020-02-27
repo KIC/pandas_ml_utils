@@ -1,7 +1,7 @@
 import logging
 import unittest
 
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 from test.config import TEST_FILE
 
 from pandas_ml_utils.analysis.correlation_analysis import _sort_correlation

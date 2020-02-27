@@ -6,7 +6,7 @@ from time import perf_counter as pc
 from typing import Callable, Dict, Iterable, Any, List
 
 import numpy as np
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 
 
 def join_kwargs(*dicts) -> Dict:

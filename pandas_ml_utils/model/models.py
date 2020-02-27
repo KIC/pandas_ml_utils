@@ -10,7 +10,7 @@ from typing import List, Callable, TYPE_CHECKING, Tuple, Dict, Any
 
 import dill as pickle
 import numpy as np
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 from sklearn.linear_model import LogisticRegression
 
 from pandas_ml_utils.model.features_and_labels.features_and_labels import FeaturesAndLabels

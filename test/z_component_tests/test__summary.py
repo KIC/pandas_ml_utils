@@ -3,10 +3,10 @@ import os
 import unittest
 
 import numpy as np
-import pandas as pd
 from sklearn.neural_network import MLPClassifier
 
-import pandas_ml_utils as pdu
+from pandas_ml_utils import pd, SkModel, FeaturesAndLabels
+
 from pandas_ml_utils.summary.binary_classification_summary import BinaryClassificationSummary
 from pandas_ml_utils.utils.functions import fig_to_png_base64
 from test.config import TEST_FILE
@@ -24,10 +24,10 @@ class ClassificationTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(
-            pdu.SkModel(
+            SkModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
-                pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'],
-                                      gross_loss=lambda df: df["spy_Close"] - df["spy_Open"]),
+                FeaturesAndLabels(features=['vix_Close'], labels=['label'],
+                                  gross_loss=lambda df: df["spy_Close"] - df["spy_Open"]),
                 BinaryClassificationSummary),
             test_size=0.4,
             test_validate_split_seed=42)

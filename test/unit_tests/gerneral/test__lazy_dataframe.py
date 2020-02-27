@@ -1,6 +1,6 @@
 import unittest
 
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 from copy import deepcopy
 from pandas_ml_utils.wrappers.lazy_dataframe import LazyDataFrame
 

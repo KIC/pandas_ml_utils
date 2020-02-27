@@ -2,10 +2,10 @@ import logging
 import unittest
 
 import numpy as np
-import pandas as pd
 from sklearn.neural_network import MLPClassifier
 
-import pandas_ml_utils as pdu
+from pandas_ml_utils import pd, SkModel, MultiModel, FeaturesAndLabels
+
 from pandas_ml_utils.constants import *
 from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets
 from test.config import TEST_FILE
@@ -21,7 +21,7 @@ class MultiModelTest(unittest.TestCase):
     def test_invalid_multi_model(self):
         """expect"""
         self.assertRaises(ValueError,
-                          lambda: pdu.MultiModel(pdu.MultiModel(pdu.SkModel(MLPClassifier(), pdu.FeaturesAndLabels([], {})))))
+                          lambda: MultiModel(MultiModel(SkModel(MLPClassifier(), FeaturesAndLabels([], {})))))
 
     def test_multi_model_binary_classifications(self):
         """given"""
@@ -30,13 +30,13 @@ class MultiModelTest(unittest.TestCase):
         df["is_above_1.0"] = (df["spy_Close"] / df["sma"]) > 1
         df["is_above_1.2"] = (df["spy_Close"] / df["sma"]) > 1.2
 
-        model = pdu.MultiModel(
-            pdu.SkModel(
+        model = MultiModel(
+            SkModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
-                pdu.FeaturesAndLabels(features=['vix_Close'],
-                                      labels={"a": ["is_above_1.0"], "b": ["is_above_1.2"]},
-                                      targets=lambda frame, t: frame["sma"].rename(f"sma {t}"),
-                                      gross_loss=lambda frame: frame["spy_Close"] - frame["sma"])))
+                FeaturesAndLabels(features=['vix_Close'],
+                                  labels={"a": ["is_above_1.0"], "b": ["is_above_1.2"]},
+                                  targets=lambda frame, t: frame["sma"].rename(f"sma {t}"),
+                                  gross_loss=lambda frame: frame["spy_Close"] - frame["sma"])))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
@@ -64,14 +64,14 @@ class MultiModelTest(unittest.TestCase):
         df["is_above_1.0"] = (df["spy_Close"] / df["sma"]) + 1
         df["is_above_1.2"] = (df["spy_Close"] / df["sma"]) + 2
 
-        model = pdu.MultiModel(
-            pdu.SkModel(
+        model = MultiModel(
+            SkModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
-                pdu.FeaturesAndLabels(features=['vix_Close'],
-                                      labels={"1": OneHotEncodedTargets("is_above_1.0", np.linspace(-0.1, 0.1, 5, endpoint=True) + 1),
-                                              "2": OneHotEncodedTargets("is_above_1.2", np.linspace(-0.1, 0.1, 5, endpoint=True) + 2)},
-                                      targets=lambda frame, t: (frame["sma"] + int(t)).rename(f"sma {t}"),
-                                      gross_loss=lambda frame: frame["spy_Close"] - frame["sma"])))
+                FeaturesAndLabels(features=['vix_Close'],
+                                  labels={"1": OneHotEncodedTargets("is_above_1.0", np.linspace(-0.1, 0.1, 5, endpoint=True) + 1),
+                                          "2": OneHotEncodedTargets("is_above_1.2", np.linspace(-0.1, 0.1, 5, endpoint=True) + 2)},
+                                  targets=lambda frame, t: (frame["sma"] + int(t)).rename(f"sma {t}"),
+                                  gross_loss=lambda frame: frame["spy_Close"] - frame["sma"])))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)

@@ -1,12 +1,11 @@
 import logging
 import unittest
 
-import pandas as pd
 from sklearn.model_selection import KFold
 from sklearn.neural_network import MLPClassifier
-
-import pandas_ml_utils as pdu
 from test.config import TEST_FILE
+
+from pandas_ml_utils import pd, SkModel, FeaturesAndLabels
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -24,9 +23,9 @@ class CrossValidationTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(
-            pdu.SkModel(
+            SkModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42, max_iter=10),
-                pdu.FeaturesAndLabels(features=['vix_Close'], labels=['label'])),
+                FeaturesAndLabels(features=['vix_Close'], labels=['label'])),
             test_size=0.4,
             cross_validation = (2, cv.split),
             test_validate_split_seed=42)

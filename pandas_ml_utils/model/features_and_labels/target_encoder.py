@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 import numpy as np
 from typing import Iterable, List, Dict, Union, Callable
 

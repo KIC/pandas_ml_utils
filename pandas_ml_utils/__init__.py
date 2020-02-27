@@ -2,7 +2,7 @@
 __version__ = '0.0.27'
 
 import logging
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 
 # imports to provide functionality via root import like import pandas_ml_utils as pmu; pmu.XY
 from pandas_ml_utils.model.models import Model, SkModel, KerasModel, MultiModel
