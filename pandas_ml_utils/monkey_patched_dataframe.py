@@ -1,5 +1,6 @@
 import logging
 
+import numpy as _np
 from pandas import *
 
 from pandas_ml_utils.utils.functions import unique_top_level_columns, integrate_nested_arrays
@@ -21,7 +22,7 @@ def _values3D(self):
         # features eventually are in [feature, row, time_step]
         # but need to be in RNN shape which is [row, time_step, feature]
         values3D = values if top_level_columns is None else \
-            np.array([self[top_level_col].values for top_level_col in top_level_columns],
+            _np.array([self[top_level_col].values for top_level_col in top_level_columns],
                      ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
 
         if len(values3D) <= 0:
