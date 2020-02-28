@@ -33,7 +33,11 @@ def unfold_parameter_space(parameter_space: Dict[str, Iterable], parameters: Dic
 
 
 def unique_top_level_columns(df: pd.DataFrame):
-    return unique(df.columns.get_level_values(0)) if isinstance(df.columns, pd.MultiIndex) else None
+    return unique(df.columns.get_level_values(0)) if isinstance(df.columns, pd.MultiIndex) else df.columns
+
+
+def unique_top_level_rows(df: pd.DataFrame):
+    return unique(df.index.get_level_values(0)) if isinstance(df.index, pd.MultiIndex) else df.index
 
 
 def unique(items):

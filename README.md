@@ -239,7 +239,7 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 * features and labels can now handle multi dimensions as a cell may contain another numpy array
 
 ### 0.0.25 / 26
-* refactored how traing and test data sets are split
+* refactored how training and test data sets are split
 * allow to control the amount of young test data being used (useful for time series)
 * add sample weights i.e. to penalize loss per sample in a keras model 
  

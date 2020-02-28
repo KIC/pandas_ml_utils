@@ -6,7 +6,7 @@ import logging
 from pandas.core.base import PandasObject as _PandasObject
 
 import numpy as np
-import pandas_ml_utils.monkey_patched_dataframe as pd
+import pandas as pd
 import pandas_ml_utils.pandas_utils_extension as _df_ext
 from pandas_ml_utils.analysis.correlation_analysis import plot_correlation_matrix as _plot_correlation_matrix
 from pandas_ml_utils.analysis.selection import feature_selection as _feature_selection
