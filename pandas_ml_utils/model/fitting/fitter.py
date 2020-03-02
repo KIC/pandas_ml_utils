@@ -166,7 +166,7 @@ def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.Data
 
     # make training and test data sets
     x = features_and_labels.features_df
-    y_hat = model.predict(x.values)
+    y_hat = model.predict(x.feature_values)
 
     df_backtest = features_and_labels.prediction_to_frame(y_hat, index=x.index, inclusive_labels=True, inclusive_source=True)
     return (summary_provider or model.summary_provider)(df_backtest)
