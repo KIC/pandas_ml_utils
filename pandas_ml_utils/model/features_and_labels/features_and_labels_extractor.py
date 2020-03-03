@@ -163,7 +163,7 @@ class FeatureTargetLabelExtractor(object):
         # select only joining index values
         df_features = df_features.loc[index_intersect]
         df_labels = df_labels.loc[index_intersect]
-        df_weights = None if self.weighs_df is None else self.weighs_df[index_intersect]
+        df_weights = None if self.weighs_df is None else self.weighs_df.loc[index_intersect]
 
         # sanity check
         if not len(df_features) == len(df_labels):

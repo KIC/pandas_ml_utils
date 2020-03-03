@@ -90,8 +90,8 @@ def fit(df: pd.DataFrame,
 
 
 def __train_loop(model, cross_validation, train, test):
-    x_train, y_train, w_train = train[0].feature_values, train[1].label_values, train[2].label_values if train[2] is not None else None
-    x_test, y_test, w_test = test[0].feature_values, test[1].label_values, test[2].label_values if test[2] is not None else None
+    x_train, y_train, w_train = train[0].feature_values, train[1].label_values, train[2].values if train[2] is not None else None
+    x_test, y_test, w_test = test[0].feature_values, test[1].label_values, test[2].values if test[2] is not None else None
 
     # apply cross validation
     if cross_validation is not None and isinstance(cross_validation, Tuple) and callable(cross_validation[1]):

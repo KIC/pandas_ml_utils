@@ -432,12 +432,12 @@ class MultiModel(Model):
         losses = []
         pos = 0
 
-        for target, labels in self.features_and_labels.labels.items():
+        for i, (target, labels) in enumerate(self.features_and_labels.labels.items()):
             index = range(pos, pos + len(labels))
-            target_y = y[:,index]
-            target_y_val = y_val[:,index]
-            target_w = sample_weight_train[:,index] if sample_weight_train is not None else None
-            target_w_val = sample_weight_test[:,index] if sample_weight_test is not None else None
+            target_y = y[:, index]
+            target_y_val = y_val[:, index]
+            target_w = sample_weight_train[:, i] if sample_weight_train is not None else None
+            target_w_val = sample_weight_test[:, i] if sample_weight_test is not None else None
             _log.info(f"fit model for target {target}")
             losses.append(self.models[target].fit(x, target_y, x_val, target_y_val, target_w, target_w_val))
             pos += len(labels)
