@@ -8,6 +8,7 @@ cachetools
 requests
 yfinance
 hyperopt
+pymongo
 keras-rl
 requests
 seaborn

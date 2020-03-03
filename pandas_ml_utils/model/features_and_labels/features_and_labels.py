@@ -27,6 +27,7 @@ class FeaturesAndLabels(object):
                  features: List[str],
                  labels: _LABELS,
                  label_type: Type = None,
+                 weights: Union[Dict[str, str], List[str]] = None,
                  gross_loss: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  targets: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  feature_lags: Iterable[int] = None,
@@ -68,6 +69,7 @@ class FeaturesAndLabels(object):
         """
         self._features = features
         self._labels = labels
+        self._weights = weights
         self._targets = targets
         self._gross_loss = gross_loss
         self.label_type = label_type
@@ -88,6 +90,10 @@ class FeaturesAndLabels(object):
     @property
     def labels(self):
         return self._labels
+
+    @property
+    def weights(self):
+        return self._weights
 
     @property
     def targets(self):

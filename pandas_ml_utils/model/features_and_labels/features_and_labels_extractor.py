@@ -24,6 +24,7 @@ class FeatureTargetLabelExtractor(object):
     def __init__(self, df: pd.DataFrame, features_and_labels: FeaturesAndLabels, **kwargs):
         # prepare fields
         labels = features_and_labels.labels
+        weights = features_and_labels.weights
         encoder = lambda frame, **kwargs: frame
         label_columns = None
         joined_kwargs = join_kwargs(features_and_labels.kwargs, kwargs)
@@ -49,12 +50,18 @@ class FeatureTargetLabelExtractor(object):
                 t: l if isinstance(l, TargetLabelEncoder) else IdentityEncoder(l) for t, l in labels.items()
             }).encode
 
+        # flatten weights for multi models
+        if isinstance(weights, Dict):
+            weights = [l for t in labels.keys() for l in weights[t]]
+
         # assign all fields
         self._features_and_labels = features_and_labels # depricated copy all fields here
         self._features = features_and_labels.features
         self._labels_columns = label_columns
+
         self._labels = labels
         self._label_type = features_and_labels.label_type
+        self._weight_columns = weights
         self._targets = features_and_labels.targets
         self._gross_loss = features_and_labels.gross_loss
         self._encoder = encoder
@@ -156,8 +163,7 @@ class FeatureTargetLabelExtractor(object):
         # select only joining index values
         df_features = df_features.loc[index_intersect]
         df_labels = df_labels.loc[index_intersect]
-        # TODO add proper label weights
-        df_weights = None #pd.DataFrame(np.ones(len(df_labels)), index=df_labels.index)
+        df_weights = None if self.weighs_df is None else self.weighs_df[index_intersect]
 
         # sanity check
         if not len(df_features) == len(df_labels):
@@ -240,11 +246,19 @@ class FeatureTargetLabelExtractor(object):
             return labels if level_above is None else [(level_above, col) for col in labels]
 
     @property
+    @lru_cache(maxsize=1)
     def labels_df(self) -> pd.DataFrame:
         # here we can do all sorts of tricks and encodings ...
         # joined_kwargs(self._features_and_labels.kwargs, self.)
         df = self._encoder(self._df[self._labels_columns], **self._joined_kwargs).dropna().copy()
         return df if self._label_type is None else df.astype(self._label_type)
+
+    @property
+    def weighs_df(self) -> pd.DataFrame:
+        if self._weight_columns is not None:
+            return self._df[self._weight_columns].dropna().copy()
+        else:
+            return None
 
     @property
     def source_df(self):
