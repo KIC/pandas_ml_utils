@@ -237,6 +237,7 @@ df.predict(pmu.Model.load("/tmp/burrito.model")).tail()
 ### 0.0.27
 * I made my life easier, now i just do "from pandas_ml_utils import pd, np, FeaturesAndLabels, ..."
 * features and labels can now handle multi dimensions as a cell may contain another numpy array
+* introduced sample weights which can be passed to the fit function i.e. for keras fit
 
 ### 0.0.25 / 26
 * refactored how training and test data sets are split
