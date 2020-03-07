@@ -160,10 +160,15 @@ class FeatureTargetLabelExtractor(object):
         df_labels = self.labels_df
         index_intersect = df_features.index.intersection(df_labels.index)
 
+        # engineer sample weights
+        df_weights = self.weighs_df
+        if df_weights is not None:
+            index_intersect = index_intersect.intersection(df_weights.index)
+
         # select only joining index values
         df_features = df_features.loc[index_intersect]
         df_labels = df_labels.loc[index_intersect]
-        df_weights = None if self.weighs_df is None else self.weighs_df.loc[index_intersect]
+        df_weights = None if df_weights is None else df_weights.loc[index_intersect]
 
         # sanity check
         if not len(df_features) == len(df_labels):
