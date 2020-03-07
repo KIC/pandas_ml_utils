@@ -70,7 +70,7 @@ class ClassificationTest(unittest.TestCase):
         predict_df = df.predict(fit.model, tail=1)
 
         """then"""
-        self.assertEqual(len(fit_summary_df), 4023)
+        self.assertEqual(len(fit_summary_df), 4006)
         self.assertListEqual(fit_summary_df.columns.tolist(),
                              [(PREDICTION_COLUMN_NAME, '(-inf, -0.05]'), (PREDICTION_COLUMN_NAME, '(-0.05, 0.0]'), (PREDICTION_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (PREDICTION_COLUMN_NAME,  '(0.05000000000000002, inf]'),
                               (LABEL_COLUMN_NAME, '(-inf, -0.05]'), (LABEL_COLUMN_NAME, '(-0.05, 0.0]'), (LABEL_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (LABEL_COLUMN_NAME,  '(0.05000000000000002, inf]'),
@@ -80,7 +80,7 @@ class ClassificationTest(unittest.TestCase):
                              [(PREDICTION_COLUMN_NAME, '(-inf, -0.05]'), (PREDICTION_COLUMN_NAME, '(-0.05, 0.0]'), (PREDICTION_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (PREDICTION_COLUMN_NAME,  '(0.05000000000000002, inf]'),
                               (TARGET_COLUMN_NAME, 'close <0.1'), (TARGET_COLUMN_NAME, 'close <0.05'), (TARGET_COLUMN_NAME, 'close >0'), (TARGET_COLUMN_NAME, 'close >0.05')])
 
-        self.assertEqual(bt_summary_df.shape, (6706, 23))
+        self.assertEqual(bt_summary_df.shape, (6677, 23))
 
     def test_target_classification(self):
         """given"""

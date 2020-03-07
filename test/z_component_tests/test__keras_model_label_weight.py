@@ -38,7 +38,7 @@ class TestKerasLossWeight(TestCase):
             FeaturesAndLabels(
                 features=["feature"],
                 labels=["label"],
-                weights="weight"
+                sample_weights="weight"
             )
         )
 

@@ -57,7 +57,7 @@ def one_hot(index: int, number_of_classes: int):
     vec = np.zeros(number_of_classes)
 
     if index >= 0:
-        vec[index] = 1
+        vec[int(index)] = 1
 
     return vec
 

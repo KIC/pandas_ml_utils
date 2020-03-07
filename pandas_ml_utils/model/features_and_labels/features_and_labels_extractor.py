@@ -181,7 +181,10 @@ class FeatureTargetLabelExtractor(object):
         feature_rescaling = self._features_and_labels.feature_rescaling
 
         # drop nan's and copy frame
-        df = self._df[features].dropna().copy()
+        try:
+            df = self._df[features].dropna().copy()
+        except KeyError:
+            raise KeyError(f'one of the keys >{features}< are not in :{self._df.columns}')
 
         # generate feature matrix
         if feature_lags is None:
@@ -250,13 +253,22 @@ class FeatureTargetLabelExtractor(object):
     def labels_df(self) -> pd.DataFrame:
         # here we can do all sorts of tricks and encodings ...
         # joined_kwargs(self._features_and_labels.kwargs, self.)
-        df = self._encoder(self._df[self._labels_columns], **self._joined_kwargs).dropna().copy()
+        try:
+            df = self._df[self._labels_columns].dropna()
+        except KeyError:
+            raise KeyError(f'one of the keys >{self._labels_columns}< are not in: {self._df.columns}')
+
+        df = self._encoder(df, **self._joined_kwargs).dropna().copy()
         return df if self._label_type is None else df.astype(self._label_type)
 
     @property
     def weighs_df(self) -> pd.DataFrame:
         if self._weight_columns is not None:
-            return self._df[self._weight_columns].dropna().copy()
+            try:
+                return self._df[self._weight_columns].dropna().copy()
+            except KeyError:
+                raise KeyError(f'one of the keys >{self._weight_columns}< are not in: {self._df.columns}')
+
         else:
             return None
 

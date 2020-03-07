@@ -94,5 +94,5 @@ class MultiModelTest(unittest.TestCase):
                               ('2', 'prediction', '(-inf, 1.95]'), ('2', 'prediction', '(1.95, 2.0]'), ('2', 'prediction', '(2.0, 2.05]'), ('2', 'prediction', '(2.05, inf]'),
                               ('1', TARGET_COLUMN_NAME, 'sma 1'), ('2', TARGET_COLUMN_NAME, 'sma 2')])
 
-        self.assertEqual(bt_summary_df.shape, (6706, 32))
+        self.assertEqual(bt_summary_df.shape, (6677, 32))
 

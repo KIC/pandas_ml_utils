@@ -27,7 +27,7 @@ class FeaturesAndLabels(object):
                  features: List[str],
                  labels: _LABELS,
                  label_type: Type = None,
-                 weights: Union[Dict[str, str], str] = None,
+                 sample_weights: Union[Dict[str, str], str] = None,
                  gross_loss: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  targets: Callable[[str, pd.DataFrame], Union[pd.Series, pd.DataFrame]] = None,
                  feature_lags: Iterable[int] = None,
@@ -44,6 +44,8 @@ class FeaturesAndLabels(object):
                        the average was. It is also possible to provide a Callable[[df, ...magic], labels] which returns
                        the expected data structure.
         :param label_type: whether to treat a label as int, float, bool
+        :param sample_weights: sample weights get passed to the model.fit function. In keras for example this can be
+                               used for imbalanced classes
         :param gross_loss: expects a callable[[df, target, ...magic], df] which receives the source data frame and a
                            target (or None) and should return a series or data frame. Let's say you want to classify
                            whether a printer is jamming the next page or not. Halting and servicing the printer costs
@@ -69,7 +71,7 @@ class FeaturesAndLabels(object):
         """
         self._features = features
         self._labels = labels
-        self._weights = weights
+        self._weights = sample_weights
         self._targets = targets
         self._gross_loss = gross_loss
         self.label_type = label_type
