@@ -2,7 +2,7 @@ import logging
 from unittest import TestCase
 
 import numpy as np
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 from matplotlib.figure import Figure
 
 from pandas_ml_utils.summary.binary_classification_summary import BinaryClassificationSummary
@@ -71,4 +71,4 @@ class TestClassificationSummary(TestCase):
         html = cs._repr_html_()
 
         """then"""
-        self.assertEqual(len(html), 154945)
+        self.assertGreater(len(html), 150000)

@@ -1,11 +1,10 @@
 import logging
 import unittest
 
-import pandas as pd
 from sklearn.neural_network import MLPRegressor
-
-import pandas_ml_utils as pdu
 from test.config import TEST_FILE
+
+from pandas_ml_utils import pd, SkModel, FeaturesAndLabels
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -19,9 +18,9 @@ class RegressionTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(
-            pdu.SkModel(
+            SkModel(
                 MLPRegressor(activation='tanh', hidden_layer_sizes=(4, 3, 2, 1, 2, 3, 4), random_state=42),
-                pdu.FeaturesAndLabels(
+                FeaturesAndLabels(
                     features=['spy_Open', 'spy_High', 'spy_Low', 'spy_Close'],
                     labels=['vix_Open', 'vix_High', 'vix_Low', 'vix_Close'],
                     targets=lambda frame: frame[['vix_Open', 'vix_High', 'vix_Low', 'vix_Close']].add_prefix("tgt_")
@@ -58,9 +57,9 @@ class RegressionTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(
-            pdu.SkModel(
+            SkModel(
                 MLPRegressor(activation='tanh', hidden_layer_sizes=(4, 3, 2, 1, 2, 3, 4), random_state=42),
-                pdu.FeaturesAndLabels(
+                FeaturesAndLabels(
                     features=['spy_Open', 'spy_High', 'spy_Low', 'spy_Close'],
                     labels={"a": ['vix_Open'], "b": ['vix_High', 'vix_Low', 'vix_Close']},
                     targets=lambda frame, t: frame[['vix_High', 'vix_Low']].add_prefix(f"{t}_")

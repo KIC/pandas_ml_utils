@@ -1,11 +1,6 @@
 from unittest import TestCase
 
-import numpy as np
-import pandas as pd
-
-import pandas_ml_utils as pml
-
-print(pml.__version__)
+from pandas_ml_utils import pd
 
 
 class TestDfExtensions(TestCase):

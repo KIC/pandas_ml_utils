@@ -1,12 +1,11 @@
 import logging
 import unittest
 
-import pandas as pd
 from sklearn.neural_network import MLPClassifier
-
-import pandas_ml_utils as pdu
-from pandas_ml_utils.constants import *
 from test.config import TEST_FILE
+
+from pandas_ml_utils import pd, SkModel, FeaturesAndLabels, LazyDataFrame
+from pandas_ml_utils.constants import *
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -20,11 +19,11 @@ class PreprocessorTest(unittest.TestCase):
 
         """when"""
         fit = df.fit(
-            pdu.SkModel(
+            SkModel(
                 MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), alpha=0.001, random_state=42),
-                pdu.FeaturesAndLabels(features=['feature'], labels=['label'], label_type=int,
-                                      gross_loss=lambda df: df["spy_Close"] - df["spy_Open"],
-                                      pre_processor=lambda _df: pdu.LazyDataFrame(
+                FeaturesAndLabels(features=['feature'], labels=['label'], label_type=int,
+                                  gross_loss=lambda df: df["spy_Close"] - df["spy_Open"],
+                                  pre_processor=lambda _df: LazyDataFrame(
                                           _df,
                                           feature=lambda f: f["vix_Close"].rolling(2).mean(),
                                           label=lambda f: (f["spy_Close"].shift(1) > f["spy_Open"]).shift(-1)).to_dataframe())),

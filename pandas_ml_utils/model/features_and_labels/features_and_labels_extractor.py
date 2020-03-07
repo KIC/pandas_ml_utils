@@ -4,7 +4,7 @@ from time import perf_counter as pc
 from typing import Tuple, Dict, Union, List
 
 import numpy as np
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 from sortedcontainers import SortedDict
 
 from pandas_ml_utils.constants import *
@@ -24,6 +24,7 @@ class FeatureTargetLabelExtractor(object):
     def __init__(self, df: pd.DataFrame, features_and_labels: FeaturesAndLabels, **kwargs):
         # prepare fields
         labels = features_and_labels.labels
+        weights = features_and_labels.weights
         encoder = lambda frame, **kwargs: frame
         label_columns = None
         joined_kwargs = join_kwargs(features_and_labels.kwargs, kwargs)
@@ -49,12 +50,18 @@ class FeatureTargetLabelExtractor(object):
                 t: l if isinstance(l, TargetLabelEncoder) else IdentityEncoder(l) for t, l in labels.items()
             }).encode
 
+        # flatten weights for multi models
+        if isinstance(weights, Dict):
+            weights = [l for t in labels.keys() for l in weights[t]]
+
         # assign all fields
         self._features_and_labels = features_and_labels # depricated copy all fields here
         self._features = features_and_labels.features
         self._labels_columns = label_columns
+
         self._labels = labels
         self._label_type = features_and_labels.label_type
+        self._weight_columns = weights
         self._targets = features_and_labels.targets
         self._gross_loss = features_and_labels.gross_loss
         self._encoder = encoder
@@ -133,19 +140,17 @@ class FeatureTargetLabelExtractor(object):
     def training_and_test_data(self,
                                test_size: float = 0.4,
                                youngest_size: float = None,
-                               seed: int = 42) -> Tuple[Tuple[np.ndarray,...], Tuple[np.ndarray,...]]:
+                               seed: int = 42) -> Tuple[Tuple[pd.DataFrame,...], Tuple[pd.DataFrame,...]]:
         features, labels, weights = self.features_labels_weights_df
         train_ix, test_ix = train_test_split(features.index, test_size, youngest_size, seed=seed)
 
         return (
-            (train_ix,
-             features.loc[train_ix].values,
-             integrate_nested_arrays(labels.loc[train_ix].values),
-             weights.loc[train_ix].values if weights is not None else None),
-            (test_ix,
-             features.loc[test_ix].values,
-             integrate_nested_arrays(labels.loc[test_ix].values),
-             weights.loc[test_ix].values if weights is not None else None)
+            (features.loc[train_ix],
+             labels.loc[train_ix],
+             weights.loc[train_ix] if weights is not None else None),
+            (features.loc[test_ix],
+             labels.loc[test_ix],
+             weights.loc[test_ix] if weights is not None else None)
         )
 
     @property
@@ -155,11 +160,15 @@ class FeatureTargetLabelExtractor(object):
         df_labels = self.labels_df
         index_intersect = df_features.index.intersection(df_labels.index)
 
+        # engineer sample weights
+        df_weights = self.weighs_df
+        if df_weights is not None:
+            index_intersect = index_intersect.intersection(df_weights.index)
+
         # select only joining index values
         df_features = df_features.loc[index_intersect]
         df_labels = df_labels.loc[index_intersect]
-        # TODO add proper label weights
-        df_weights = None #pd.DataFrame(np.ones(len(df_labels)), index=df_labels.index)
+        df_weights = None if df_weights is None else df_weights.loc[index_intersect]
 
         # sanity check
         if not len(df_features) == len(df_labels):
@@ -177,7 +186,10 @@ class FeatureTargetLabelExtractor(object):
         feature_rescaling = self._features_and_labels.feature_rescaling
 
         # drop nan's and copy frame
-        df = self._df[features].dropna().copy()
+        try:
+            df = self._df[features].dropna().copy()
+        except KeyError:
+            raise KeyError(f'one of the keys >{features}< are not in :{self._df.columns}')
 
         # generate feature matrix
         if feature_lags is None:
@@ -221,9 +233,6 @@ class FeatureTargetLabelExtractor(object):
                     dff[col] = tmp[col]
 
         _log.info(f" make features ... done in {pc() - start_pc: .2f} sec!")
-
-        # finally patch the "values" property for features data frame and return
-        dff.__class__ = _RNNShapedValuesDataFrame
         return dff
 
     @property
@@ -245,11 +254,28 @@ class FeatureTargetLabelExtractor(object):
             return labels if level_above is None else [(level_above, col) for col in labels]
 
     @property
+    @lru_cache(maxsize=1)
     def labels_df(self) -> pd.DataFrame:
         # here we can do all sorts of tricks and encodings ...
         # joined_kwargs(self._features_and_labels.kwargs, self.)
-        df = self._encoder(self._df[self._labels_columns], **self._joined_kwargs).dropna().copy()
+        try:
+            df = self._df[self._labels_columns].dropna()
+        except KeyError:
+            raise KeyError(f'one of the keys >{self._labels_columns}< are not in: {self._df.columns}')
+
+        df = self._encoder(df, **self._joined_kwargs).dropna().copy()
         return df if self._label_type is None else df.astype(self._label_type)
+
+    @property
+    def weighs_df(self) -> pd.DataFrame:
+        if self._weight_columns is not None:
+            try:
+                return self._df[self._weight_columns].dropna().copy()
+            except KeyError:
+                raise KeyError(f'one of the keys >{self._weight_columns}< are not in: {self._df.columns}')
+
+        else:
+            return None
 
     @property
     def source_df(self):
@@ -306,51 +332,6 @@ class FeatureTargetLabelExtractor(object):
 
         return df
 
-    def _fix_shape(self, df_features):
-        # features eventually are in [feature, row, time_step]
-        # but need to be in RNN shape which is [row, time_step, feature]
-        feature_arr = df_features.values if self._features_and_labels.feature_lags is None else \
-            np.array([df_features[cols].values for cols in self.feature_names], ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
-
-        if len(feature_arr) <= 0:
-            _log.warning("empty feature array!")
-
-        return feature_arr
-
     def __str__(self):
         return f'min required data = {self.min_required_samples}'
 
-
-class _RNNShapedValuesDataFrame(pd.DataFrame):
-
-    class Loc():
-        def __init__(self, df):
-            self.df = df
-
-        def __getitem__(self, item):
-            res = self.df.loc[item]
-            res.__class__ = _RNNShapedValuesDataFrame
-            return res
-
-    @property
-    def loc(self):
-        return _RNNShapedValuesDataFrame.Loc(super(pd.DataFrame, self))
-
-    @property
-    def values(self):
-        top_level_columns = unique_top_level_columns(self)
-
-        # we need to do a sneaky trick here to get a proper "super" object as super() does not work as expected
-        # so we simply rename with an empty dict
-        df = self.rename({})
-
-        # features eventually are in [feature, row, time_step]
-        # but need to be in RNN shape which is [row, time_step, feature]
-        feature_arr = df.values if top_level_columns is None else \
-            np.array([df[feature].values for feature in top_level_columns],
-                     ndmin=3).swapaxes(0, 1).swapaxes(1, 2)
-
-        if len(feature_arr) <= 0:
-            _log.warning("empty feature array!")
-
-        return feature_arr

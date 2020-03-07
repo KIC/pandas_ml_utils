@@ -5,11 +5,10 @@ from time import perf_counter
 from typing import Callable, Tuple, Dict, TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.model_selection import train_test_split as sk_train_test_split
 from sklearn.utils.testing import ignore_warnings
 
+import pandas_ml_utils.monkey_patched_dataframe as pd
 from pandas_ml_utils.model.features_and_labels.features_and_labels_extractor import FeatureTargetLabelExtractor
 from pandas_ml_utils.model.fitting.fit import Fit
 from pandas_ml_utils.model.models import Model
@@ -79,8 +78,8 @@ def fit(df: pd.DataFrame,
     _log.info(f"fitting model done in {perf_counter() - start_performance_count: .2f} sec!")
 
     # assemble result objects
-    df_train = features_and_labels.prediction_to_frame(model.predict(train[1]), index=train[0], inclusive_labels=True)
-    df_test = features_and_labels.prediction_to_frame(model.predict(test[1]), index=test[0], inclusive_labels=True) \
+    df_train = features_and_labels.prediction_to_frame(model.predict(train[0].feature_values), index=train[0].index, inclusive_labels=True)
+    df_test = features_and_labels.prediction_to_frame(model.predict(test[0].feature_values), index=test[0].index, inclusive_labels=True) \
         if len(test[0]) > 0 else None
 
     # update minimum required samples
@@ -91,8 +90,8 @@ def fit(df: pd.DataFrame,
 
 
 def __train_loop(model, cross_validation, train, test):
-    x_train, y_train, w_train = train[1], train[2], train[3]
-    x_test, y_test, w_test = test[1], test[2], test[3]
+    x_train, y_train, w_train = train[0].feature_values, train[1].label_values, train[2].values if train[2] is not None else None
+    x_test, y_test, w_test = test[0].feature_values, test[1].label_values, test[2].values if test[2] is not None else None
 
     # apply cross validation
     if cross_validation is not None and isinstance(cross_validation, Tuple) and callable(cross_validation[1]):
@@ -157,7 +156,7 @@ def predict(df: pd.DataFrame, model: Model, tail: int = None) -> pd.DataFrame:
 
     features_and_labels = FeatureTargetLabelExtractor(df, model.features_and_labels, **model.kwargs)
     x = features_and_labels.features_df
-    y_hat = model.predict(x.values)
+    y_hat = model.predict(x.feature_values)
 
     return features_and_labels.prediction_to_frame(y_hat, index=x.index, inclusive_labels=False)
 
@@ -167,7 +166,7 @@ def backtest(df: pd.DataFrame, model: Model, summary_provider: Callable[[pd.Data
 
     # make training and test data sets
     x = features_and_labels.features_df
-    y_hat = model.predict(x.values)
+    y_hat = model.predict(x.feature_values)
 
     df_backtest = features_and_labels.prediction_to_frame(y_hat, index=x.index, inclusive_labels=True, inclusive_source=True)
     return (summary_provider or model.summary_provider)(df_backtest)

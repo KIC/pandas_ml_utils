@@ -1,5 +1,5 @@
 from unittest import TestCase
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 import numpy as np
 from pandas._libs.interval import Interval
 

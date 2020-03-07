@@ -2,7 +2,7 @@ import logging
 import traceback
 
 import cachetools.func
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 
 from ..pandas_utils_extension import inner_join
 from ..utils.functions import join_kwargs

@@ -4,7 +4,7 @@ import datetime
 import logging
 import time
 
-import cachetools
+import cachetools.func
 import requests
 
 _log = logging.getLogger(__name__)

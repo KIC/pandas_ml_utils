@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 import numpy as np
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 
 from pandas_ml_utils.utils.functions import call_callable_dynamic_args, integrate_nested_arrays
 
@@ -39,7 +39,7 @@ class TestUtilFunctions(TestCase):
         self.assertRaises(Exception, lambda: call_callable_dynamic_args(lambda a, b: True, 1))
         self.assertRaises(Exception, lambda: call_callable_dynamic_args(lambda a, b: True, 1, c=1))
 
-    def test_inegrate_nested_array(self):
+    def test_integrate_nested_array(self):
         """given"""
         x = np.array([1, 2])
         df = pd.DataFrame({"a": [np.zeros((4, 3)) for _ in range(10)],

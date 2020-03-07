@@ -2,14 +2,13 @@ import logging
 import unittest
 
 import numpy as np
-import pandas as pd
 from sklearn.neural_network import MLPClassifier
-
-import pandas_ml_utils as pdu
-from pandas_ml_utils.constants import *
-from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets, OneHotEncodedDiscrete
 from test.config import TEST_FILE
 from test.utils import SMA
+
+from pandas_ml_utils import pd, SkModel, FeaturesAndLabels
+from pandas_ml_utils.constants import *
+from pandas_ml_utils.model.features_and_labels.target_encoder import OneHotEncodedTargets, OneHotEncodedDiscrete
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -24,12 +23,12 @@ class ClassificationTest(unittest.TestCase):
         df["sma"] = SMA(df["spy_Close"])
         df["is_above"] = (df["spy_Close"] / df["sma"]) > 1
 
-        model = pdu.SkModel(
+        model = SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
-            pdu.FeaturesAndLabels(features=['vix_Close'],
-                                  labels=["is_above"],
-                                  targets=lambda frame: frame["sma"],
-                                  gross_loss=lambda frame: frame["spy_Close"] - frame["sma"]))
+            FeaturesAndLabels(features=['vix_Close'],
+                              labels=["is_above"],
+                              targets=lambda frame: frame["sma"],
+                              gross_loss=lambda frame: frame["spy_Close"] - frame["sma"]))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42)
@@ -58,11 +57,11 @@ class ClassificationTest(unittest.TestCase):
             res.columns = ["close <0.1", "close <0.05", "close >0", "close >0.05"]
             return res
 
-        model = pdu.SkModel(
+        model = SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
-            pdu.FeaturesAndLabels(features=['vix_Close'],
-                                  labels=OneHotEncodedTargets("label", np.linspace(-0.1, 0.1, 5, endpoint=True)),
-                                  targets=make_targets))
+            FeaturesAndLabels(features=['vix_Close'],
+                              labels=OneHotEncodedTargets("label", np.linspace(-0.1, 0.1, 5, endpoint=True)),
+                              targets=make_targets))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)
@@ -71,7 +70,7 @@ class ClassificationTest(unittest.TestCase):
         predict_df = df.predict(fit.model, tail=1)
 
         """then"""
-        self.assertEqual(len(fit_summary_df), 4023)
+        self.assertEqual(len(fit_summary_df), 4006)
         self.assertListEqual(fit_summary_df.columns.tolist(),
                              [(PREDICTION_COLUMN_NAME, '(-inf, -0.05]'), (PREDICTION_COLUMN_NAME, '(-0.05, 0.0]'), (PREDICTION_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (PREDICTION_COLUMN_NAME,  '(0.05000000000000002, inf]'),
                               (LABEL_COLUMN_NAME, '(-inf, -0.05]'), (LABEL_COLUMN_NAME, '(-0.05, 0.0]'), (LABEL_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (LABEL_COLUMN_NAME,  '(0.05000000000000002, inf]'),
@@ -81,7 +80,7 @@ class ClassificationTest(unittest.TestCase):
                              [(PREDICTION_COLUMN_NAME, '(-inf, -0.05]'), (PREDICTION_COLUMN_NAME, '(-0.05, 0.0]'), (PREDICTION_COLUMN_NAME,  '(0.0, 0.05000000000000002]'), (PREDICTION_COLUMN_NAME,  '(0.05000000000000002, inf]'),
                               (TARGET_COLUMN_NAME, 'close <0.1'), (TARGET_COLUMN_NAME, 'close <0.05'), (TARGET_COLUMN_NAME, 'close >0'), (TARGET_COLUMN_NAME, 'close >0.05')])
 
-        self.assertEqual(bt_summary_df.shape, (6706, 23))
+        self.assertEqual(bt_summary_df.shape, (6677, 23))
 
     def test_target_classification(self):
         """given"""
@@ -90,10 +89,10 @@ class ClassificationTest(unittest.TestCase):
         df["is_above_1.0"] = (df["spy_Close"] / df["sma"]) > 1
         df["is_above_1.2"] = (df["spy_Close"] / df["sma"]) > 1.2
 
-        model = pdu.SkModel(
+        model = SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
-            pdu.FeaturesAndLabels(features=['vix_Close'],
-                                  labels={"a": ["is_above_1.0"], "b": ["is_above_1.2"]}))
+            FeaturesAndLabels(features=['vix_Close'],
+                              labels={"a": ["is_above_1.0"], "b": ["is_above_1.2"]}))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42)
@@ -117,11 +116,11 @@ class ClassificationTest(unittest.TestCase):
         df["sma"] = SMA(df["spy_Close"])
         df["is_above"] = (df["spy_Close"] / df["sma"]) > 1
 
-        model = pdu.SkModel(
+        model = SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
-            pdu.FeaturesAndLabels(features=['vix_Close'],
-                                  feature_lags=[0, 1, 2],
-                                  labels=["is_above"]))
+            FeaturesAndLabels(features=['vix_Close'],
+                              feature_lags=[0, 1, 2],
+                              labels=["is_above"]))
 
 
         """when"""
@@ -147,10 +146,10 @@ class ClassificationTest(unittest.TestCase):
         df["label"] = (((df["spy_Close"] / df["sma"] -1) > 0.02).astype(int) - ((df["spy_Close"] / df["sma"] -1) < -0.02).astype(int)) + 1
 
 
-        model = pdu.SkModel(
+        model = SkModel(
             MLPClassifier(activation='tanh', hidden_layer_sizes=(60, 50), random_state=42),
-            pdu.FeaturesAndLabels(features=['vix_Close'],
-                                  labels=OneHotEncodedDiscrete("label", 3)))
+            FeaturesAndLabels(features=['vix_Close'],
+                              labels=OneHotEncodedDiscrete("label", 3)))
 
         """when"""
         fit = df.fit(model, test_size=0.4, test_validate_split_seed=42,)

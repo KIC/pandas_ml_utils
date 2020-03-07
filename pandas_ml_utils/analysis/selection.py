@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 from typing import List, Iterable, Union, Tuple
 from sklearn.ensemble import ExtraTreesClassifier, ExtraTreesRegressor
 from pandas_ml_utils.analysis.correlation_analysis import plot_correlation_matrix, _sort_correlation, _plot_heatmap

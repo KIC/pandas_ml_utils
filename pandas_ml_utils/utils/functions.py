@@ -6,7 +6,7 @@ from time import perf_counter as pc
 from typing import Callable, Dict, Iterable, Any, List
 
 import numpy as np
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 
 
 def join_kwargs(*dicts) -> Dict:
@@ -33,7 +33,11 @@ def unfold_parameter_space(parameter_space: Dict[str, Iterable], parameters: Dic
 
 
 def unique_top_level_columns(df: pd.DataFrame):
-    return unique(df.columns.get_level_values(0)) if isinstance(df.columns, pd.MultiIndex) else None
+    return unique(df.columns.get_level_values(0)) if isinstance(df.columns, pd.MultiIndex) else df.columns
+
+
+def unique_top_level_rows(df: pd.DataFrame):
+    return unique(df.index.get_level_values(0)) if isinstance(df.index, pd.MultiIndex) else df.index
 
 
 def unique(items):
@@ -53,7 +57,7 @@ def one_hot(index: int, number_of_classes: int):
     vec = np.zeros(number_of_classes)
 
     if index >= 0:
-        vec[index] = 1
+        vec[int(index)] = 1
 
     return vec
 

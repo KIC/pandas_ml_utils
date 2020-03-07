@@ -2,7 +2,7 @@ import uuid
 from functools import lru_cache
 from typing import Callable, Union
 
-import pandas as pd
+import pandas_ml_utils.monkey_patched_dataframe as pd
 
 from pandas_ml_utils.model.fitting.fitter import fit, predict, backtest
 
